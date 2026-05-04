@@ -1,0 +1,523 @@
+package com.tablet.hid.ui.touchmouse
+
+import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.PointF
+import android.os.Bundle
+import android.view.GestureDetector
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.tablet.hid.HidViewModel
+import com.tablet.hid.R
+import com.tablet.hid.bluetooth.HidManager
+import com.tablet.hid.databinding.FragmentTouchMouseBinding
+import com.tablet.hid.model.ClickBehavior
+import com.tablet.hid.model.TouchMode
+import com.tablet.hid.model.TouchMouseConfig
+import com.tablet.hid.model.ZoneType
+import kotlinx.coroutines.launch
+
+class TouchMouseFragment : Fragment() {
+
+    private var _binding: FragmentTouchMouseBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: HidViewModel by activityViewModels()
+
+    // ── Zone-edit state ──────────────────────────────────────────────────────
+    private enum class EditMode { NONE, LEFT_ZONE, RIGHT_ZONE }
+    private var editMode = EditMode.NONE
+
+    // ── Touch-mode state (TOUCH profile) ────────────────────────────────────
+    private var touchPrimaryId = -1
+    private var touchLastX = 0f
+    private var touchLastY = 0f
+    private var touchRightClickActive = false
+
+    // ── Mouse-mode state (MOUSE profile) ────────────────────────────────────
+    private var mousePrimaryId = -1
+    private var mouseLastX = 0f
+    private var mouseLastY = 0f
+    // pointerZone[id] = BTN_LEFT or BTN_RIGHT (zone the pointer is committed to)
+    private val pointerZone = mutableMapOf<Int, Int>()
+    // Momentary: track which pointers are currently pressing each button
+    private val leftPressPointers = mutableSetOf<Int>()
+    private val rightPressPointers = mutableSetOf<Int>()
+    // Latching state
+    private var leftLatched = false
+    private var rightLatched = false
+
+    companion object {
+        private const val BTN_LEFT = 1
+        private const val BTN_RIGHT = 2
+        private const val TOUCH_SENSITIVITY = 1.5f
+        private const val RIGHT_CLICK_ZONE_FRAC = 0.82f
+    }
+
+    // GestureDetector used only in Touch mode for double-tap → double-click.
+    private val touchGesture by lazy {
+        GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
+                repeat(2) {
+                    viewModel.sendMouseReport(buttons = btn, dx = 0, dy = 0)
+                    viewModel.sendMouseReport(buttons = 0, dx = 0, dy = 0)
+                }
+                return true
+            }
+        })
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Lifecycle
+    // ────────────────────────────────────────────────────────────────────────
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentTouchMouseBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    // ── Immersive-mode helpers ───────────────────────────────────────────────
+
+    private fun enterImmersiveMode() {
+        val ctrl = WindowCompat.getInsetsController(requireActivity().window, requireView())
+        ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        ctrl.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    private fun exitImmersiveMode() {
+        WindowCompat.getInsetsController(requireActivity().window, requireView())
+            .show(WindowInsetsCompat.Type.systemBars())
+    }
+
+    override fun onResume() {
+        super.onResume()
+        enterImmersiveMode()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        exitImmersiveMode()
+    }
+
+    // ── Back-press guard ─────────────────────────────────────────────────────
+
+    private val backPressCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.exit_mode_title)
+                .setMessage(R.string.exit_mode_message)
+                .setPositiveButton(R.string.exit_mode_confirm) { _, _ ->
+                    isEnabled = false
+                    viewModel.disconnect()
+                    findNavController().navigate(R.id.action_touchMouse_to_home)
+                }
+                .setNegativeButton(R.string.exit_mode_stay, null)
+                .show()
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
+
+        // Insets are applied before immersive mode kicks in (onResume);
+        // once immersive hides bars the padding returns to 0 automatically.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(bottom = bars.bottom)
+            insets
+        }
+
+        binding.btnSettings.setOnClickListener { showConfigSheet() }
+        binding.btnCancelEdit.setOnClickListener { cancelZoneEdit() }
+
+        binding.touchZoneOverlay.setOnTouchListener { _, event -> handleTouch(event) }
+
+        observeState()
+        observeConfig()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Config sheet + zone-edit flow
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun showConfigSheet() {
+        val sheet = TouchMouseConfigSheet().apply {
+            onZoneEditRequested = { isLeft -> startZoneEdit(isLeft) }
+        }
+        sheet.show(childFragmentManager, "tmConfig")
+    }
+
+    private fun startZoneEdit(isLeft: Boolean) {
+        editMode = if (isLeft) EditMode.LEFT_ZONE else EditMode.RIGHT_ZONE
+        binding.zoneEditOverlay.isVisible = true
+        binding.labelZoneEditHint.setText(
+            if (isLeft) R.string.zone_edit_hint_left else R.string.zone_edit_hint_right
+        )
+        binding.touchZoneOverlay.editingLeft = isLeft
+        binding.touchZoneOverlay.editDragStart = null
+        binding.touchZoneOverlay.editDragEnd = null
+    }
+
+    private fun cancelZoneEdit() {
+        editMode = EditMode.NONE
+        binding.zoneEditOverlay.isVisible = false
+        binding.touchZoneOverlay.editingLeft = null
+        binding.touchZoneOverlay.editDragStart = null
+        binding.touchZoneOverlay.editDragEnd = null
+    }
+
+    private fun confirmZoneEdit(endX: Float, endY: Float) {
+        val start = binding.touchZoneOverlay.editDragStart ?: return cancelZoneEdit()
+        val w = binding.touchZoneOverlay.width.toFloat().takeIf { it > 0 } ?: return cancelZoneEdit()
+        val h = binding.touchZoneOverlay.height.toFloat().takeIf { it > 0 } ?: return cancelZoneEdit()
+
+        val left   = minOf(start.x, endX) / w
+        val top    = minOf(start.y, endY) / h
+        val right  = maxOf(start.x, endX) / w
+        val bottom = maxOf(start.y, endY) / h
+
+        // Require the zone to be at least 5% in each dimension.
+        if (right - left < 0.05f || bottom - top < 0.05f) return cancelZoneEdit()
+
+        val prev = viewModel.touchMouseConfig.value
+        val isLeft = editMode == EditMode.LEFT_ZONE
+        val newConfig = if (isLeft) {
+            prev.copy(leftButton = prev.leftButton.copy(
+                staticLeft = left, staticTop = top, staticRight = right, staticBottom = bottom
+            ))
+        } else {
+            prev.copy(rightButton = prev.rightButton.copy(
+                staticLeft = left, staticTop = top, staticRight = right, staticBottom = bottom
+            ))
+        }
+        viewModel.updateTouchMouseConfig(newConfig)
+        cancelZoneEdit()
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Master touch dispatcher
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun handleTouch(event: MotionEvent): Boolean {
+        if (editMode != EditMode.NONE) return handleZoneEditTouch(event)
+
+        return when (viewModel.touchMouseConfig.value.mode) {
+            TouchMode.TOUCH -> handleTouchModeEvent(event)
+            TouchMode.MOUSE -> handleMouseModeEvent(event, viewModel.touchMouseConfig.value)
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Zone-edit touch: rubber-band rectangle drawing
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun handleZoneEditTouch(event: MotionEvent): Boolean {
+        val overlay = binding.touchZoneOverlay
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                overlay.editDragStart = PointF(event.x, event.y)
+                overlay.editDragEnd   = PointF(event.x, event.y)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                overlay.editDragEnd = PointF(event.x, event.y)
+            }
+            MotionEvent.ACTION_UP -> {
+                confirmZoneEdit(event.x, event.y)
+            }
+            MotionEvent.ACTION_CANCEL -> cancelZoneEdit()
+        }
+        return true
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Touch mode: original trackpad-with-tap-click behaviour
+    //   Bottom RIGHT_CLICK_ZONE_FRAC of the surface = right-click modifier zone
+    //   Main area: touch down = left/right click + movement
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun handleTouchModeEvent(event: MotionEvent): Boolean {
+        touchGesture.onTouchEvent(event)
+
+        val surfaceH = binding.touchZoneOverlay.height.toFloat()
+        val threshold = surfaceH * RIGHT_CLICK_ZONE_FRAC
+
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                val y = event.y
+                if (y >= threshold) {
+                    touchRightClickActive = true
+                    binding.touchZoneOverlay.rightActive = true
+                    viewModel.sendMouseReport(buttons = BTN_RIGHT, dx = 0, dy = 0)
+                } else {
+                    touchPrimaryId = event.getPointerId(0)
+                    touchLastX = event.x; touchLastY = event.y
+                    val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
+                    viewModel.sendMouseReport(buttons = btn, dx = 0, dy = 0)
+                }
+            }
+
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                val idx = event.actionIndex
+                val y = event.getY(idx)
+                if (y >= threshold && !touchRightClickActive) {
+                    touchRightClickActive = true
+                    binding.touchZoneOverlay.rightActive = true
+                }
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                val idx = event.findPointerIndex(touchPrimaryId)
+                if (idx >= 0) {
+                    val dx = ((event.getX(idx) - touchLastX) * TOUCH_SENSITIVITY).toInt()
+                        .coerceIn(-32768, 32767)
+                    val dy = ((event.getY(idx) - touchLastY) * TOUCH_SENSITIVITY).toInt()
+                        .coerceIn(-32768, 32767)
+                    val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
+                    viewModel.sendMouseReport(buttons = btn, dx = dx, dy = dy)
+                    touchLastX = event.getX(idx); touchLastY = event.getY(idx)
+                }
+            }
+
+            MotionEvent.ACTION_POINTER_UP -> {
+                val pid = event.getPointerId(event.actionIndex)
+                if (pid == touchPrimaryId) {
+                    touchPrimaryId = -1
+                    viewModel.sendMouseReport(buttons = 0, dx = 0, dy = 0)
+                }
+                // Release right-click if no remaining pointer is in the zone.
+                val anyInZone = (0 until event.pointerCount).any { i ->
+                    event.getPointerId(i) != pid && event.getY(i) >= threshold
+                }
+                if (!anyInZone) {
+                    touchRightClickActive = false
+                    binding.touchZoneOverlay.rightActive = false
+                }
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                touchPrimaryId = -1
+                touchRightClickActive = false
+                binding.touchZoneOverlay.rightActive = false
+                viewModel.sendMouseReport(buttons = 0, dx = 0, dy = 0)
+            }
+        }
+        return true
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Mouse mode: trackpad-style movement + configurable button zones
+    //   First pointer → movement (delta only on MOVE, never on DOWN)
+    //   Additional pointers → hit-tested against button zones
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun handleMouseModeEvent(event: MotionEvent, config: TouchMouseConfig): Boolean {
+        val overlay = binding.touchZoneOverlay
+
+        when (event.actionMasked) {
+
+            MotionEvent.ACTION_DOWN -> {
+                // Trackpad-style: record start position but don't send a delta.
+                mousePrimaryId = event.getPointerId(0)
+                mouseLastX = event.x; mouseLastY = event.y
+                pointerZone[mousePrimaryId] = 0
+                overlay.updatePrimaryPointer(event.x, event.y)
+            }
+
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                val idx = event.actionIndex
+                val pid = event.getPointerId(idx)
+                val x = event.getX(idx); val y = event.getY(idx)
+
+                val zone = when {
+                    overlay.hitTestLeft(x, y)  -> BTN_LEFT
+                    overlay.hitTestRight(x, y) -> BTN_RIGHT
+                    else -> 0
+                }
+                pointerZone[pid] = zone
+                if (zone != 0) onZoneDown(zone, pid, config)
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                val idx = event.findPointerIndex(mousePrimaryId)
+                if (idx >= 0) {
+                    val x = event.getX(idx); val y = event.getY(idx)
+                    val scale = config.sensitivity * 0.3f
+                    val dx = ((x - mouseLastX) * scale).toInt().coerceIn(-32768, 32767)
+                    val dy = ((y - mouseLastY) * scale).toInt().coerceIn(-32768, 32767)
+                    mouseLastX = x; mouseLastY = y
+                    overlay.updatePrimaryPointer(x, y)
+                    viewModel.sendMouseReport(
+                        buttons = currentButtonBits(config), dx = dx, dy = dy
+                    )
+                }
+            }
+
+            MotionEvent.ACTION_POINTER_UP -> {
+                val pid = event.getPointerId(event.actionIndex)
+                val zone = pointerZone.remove(pid) ?: 0
+                if (pid == mousePrimaryId) {
+                    mousePrimaryId = -1
+                    overlay.clearPrimaryPointer()
+                }
+                if (zone != 0) onZoneUp(zone, pid, config)
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // Release everything. Momentary buttons are released; latching remains.
+                pointerZone.clear()
+                mousePrimaryId = -1
+                overlay.clearPrimaryPointer()
+
+                // Release any momentary button presses.
+                val hadLeft  = leftPressPointers.isNotEmpty()
+                val hadRight = rightPressPointers.isNotEmpty()
+                leftPressPointers.clear()
+                rightPressPointers.clear()
+                if (hadLeft  && config.leftButton.behavior  == ClickBehavior.MOMENTARY)
+                    overlay.leftActive = false
+                if (hadRight && config.rightButton.behavior == ClickBehavior.MOMENTARY)
+                    overlay.rightActive = false
+
+                // Send final report (latched buttons may still be active).
+                viewModel.sendMouseReport(buttons = currentButtonBits(config), dx = 0, dy = 0)
+            }
+        }
+        return true
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Zone press / release with momentary vs latching semantics
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun onZoneDown(zone: Int, pointerId: Int, config: TouchMouseConfig) {
+        val overlay = binding.touchZoneOverlay
+        if (zone == BTN_LEFT) {
+            when (config.leftButton.behavior) {
+                ClickBehavior.MOMENTARY -> {
+                    leftPressPointers.add(pointerId)
+                    overlay.leftActive = true
+                }
+                ClickBehavior.LATCHING -> {
+                    leftLatched = !leftLatched
+                    overlay.leftActive = leftLatched
+                }
+            }
+        } else {
+            when (config.rightButton.behavior) {
+                ClickBehavior.MOMENTARY -> {
+                    rightPressPointers.add(pointerId)
+                    overlay.rightActive = true
+                }
+                ClickBehavior.LATCHING -> {
+                    rightLatched = !rightLatched
+                    overlay.rightActive = rightLatched
+                }
+            }
+        }
+        viewModel.sendMouseReport(buttons = currentButtonBits(config), dx = 0, dy = 0)
+    }
+
+    private fun onZoneUp(zone: Int, pointerId: Int, config: TouchMouseConfig) {
+        val overlay = binding.touchZoneOverlay
+        if (zone == BTN_LEFT) {
+            if (config.leftButton.behavior == ClickBehavior.MOMENTARY) {
+                leftPressPointers.remove(pointerId)
+                overlay.leftActive = leftPressPointers.isNotEmpty()
+            }
+        } else {
+            if (config.rightButton.behavior == ClickBehavior.MOMENTARY) {
+                rightPressPointers.remove(pointerId)
+                overlay.rightActive = rightPressPointers.isNotEmpty()
+            }
+        }
+        viewModel.sendMouseReport(buttons = currentButtonBits(config), dx = 0, dy = 0)
+    }
+
+    private fun currentButtonBits(config: TouchMouseConfig): Int {
+        var bits = 0
+        val leftDown = when (config.leftButton.behavior) {
+            ClickBehavior.MOMENTARY -> leftPressPointers.isNotEmpty()
+            ClickBehavior.LATCHING  -> leftLatched
+        }
+        val rightDown = when (config.rightButton.behavior) {
+            ClickBehavior.MOMENTARY -> rightPressPointers.isNotEmpty()
+            ClickBehavior.LATCHING  -> rightLatched
+        }
+        if (leftDown  && config.leftButton.enabled)  bits = bits or BTN_LEFT
+        if (rightDown && config.rightButton.enabled) bits = bits or BTN_RIGHT
+        return bits
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // State & config observation
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun observeState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect { state ->
+                    val connected = state is HidManager.State.Connected
+                    binding.ledStatus.backgroundTintList = ColorStateList.valueOf(
+                        if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
+                    )
+                    binding.textConnStatus.text = if (connected)
+                        getString(R.string.status_connected)
+                    else
+                        getString(R.string.status_disconnected)
+                }
+            }
+        }
+    }
+
+    private fun observeConfig() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.touchMouseConfig.collect { config ->
+                    binding.touchZoneOverlay.config = config
+
+                    // Reset latching state when mode or button config changes.
+                    if (config.mode == TouchMode.TOUCH) {
+                        leftLatched = false; rightLatched = false
+                        binding.touchZoneOverlay.leftActive  = false
+                        binding.touchZoneOverlay.rightActive = false
+                    }
+
+                    binding.textHint.setText(
+                        if (config.mode == TouchMode.MOUSE)
+                            R.string.touch_mouse_hint_mouse
+                        else
+                            R.string.touch_mouse_hint
+                    )
+                }
+            }
+        }
+    }
+}

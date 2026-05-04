@@ -1,0 +1,25 @@
+﻿<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <float name="r_s_left" value="0.75" />
+    <float name="r_d_oy" value="0.2" />
+    <float name="l_d_ox" value="-0.15" />
+    <float name="r_d_ox" value="0.2" />
+    <float name="l_s_top" value="0.75" />
+    <string name="l_zone_type">DYNAMIC</string>
+    <string name="l_behavior">MOMENTARY</string>
+    <float name="r_s_right" value="1.0" />
+    <boolean name="r_enabled" value="true" />
+    <float name="l_d_oy" value="0.2" />
+    <float name="l_s_bottom" value="1.0" />
+    <string name="mode">MOUSE</string>
+    <boolean name="l_enabled" value="true" />
+    <string name="r_zone_type">DYNAMIC</string>
+    <float name="l_s_right" value="0.25" />
+    <float name="l_d_radius" value="0.1" />
+    <string name="r_behavior">MOMENTARY</string>
+    <float name="r_d_radius" value="0.07" />
+    <float name="r_s_top" value="0.75" />
+    <float name="r_s_bottom" value="1.0" />
+    <int name="sensitivity" value="7" />
+    <float name="l_s_left" value="0.0" />
+</map>

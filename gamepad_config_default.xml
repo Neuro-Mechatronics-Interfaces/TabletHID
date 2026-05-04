@@ -1,0 +1,111 @@
+﻿<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <int name="rb_tri" value="100" />
+    <boolean name="y_trb" value="false" />
+    <int name="dright_tri" value="100" />
+    <float name="back_ox" value="27.333334" />
+    <int name="rb_trd" value="50" />
+    <boolean name="rb_trb" value="false" />
+    <float name="back_oy" value="182.0" />
+    <float name="rt_sc" value="2.3754106" />
+    <string name="ddown_beh">MOMENTARY</string>
+    <string name="rt_beh">MOMENTARY</string>
+    <int name="ddown_tri" value="100" />
+    <int name="back_tri" value="100" />
+    <string name="a_beh">MOMENTARY</string>
+    <float name="x_oy" value="-57.333332" />
+    <float name="x_ox" value="-363.33334" />
+    <float name="ddown_sc" value="1.0" />
+    <float name="lt_ox" value="361.78452" />
+    <float name="lt_oy" value="60.215496" />
+    <float name="rb_ox" value="-110.666664" />
+    <float name="rb_oy" value="94.0" />
+    <int name="rt_trd" value="50" />
+    <float name="start_sc" value="1.896277" />
+    <int name="dright_trd" value="50" />
+    <string name="start_beh">MOMENTARY</string>
+    <int name="y_tri" value="100" />
+    <boolean name="dright_trb" value="false" />
+    <float name="right_sc" value="2.0" />
+    <int name="y_trd" value="50" />
+    <int name="rt_tri" value="100" />
+    <boolean name="ddown_trb" value="false" />
+    <boolean name="back_trb" value="false" />
+    <int name="ddown_trd" value="50" />
+    <int name="back_trd" value="50" />
+    <boolean name="rt_trb" value="false" />
+    <float name="x_sc" value="1.9026875" />
+    <string name="back_beh">MOMENTARY</string>
+    <boolean name="a_trb" value="false" />
+    <float name="y_oy" value="-104.666664" />
+    <int name="a_trd" value="50" />
+    <float name="lb_oy" value="96.47135" />
+    <float name="lb_ox" value="301.75586" />
+    <int name="a_tri" value="100" />
+    <float name="lt_sc" value="2.1772532" />
+    <float name="left_gn" value="1.0" />
+    <int name="start_trd" value="50" />
+    <int name="start_tri" value="100" />
+    <float name="y_ox" value="-247.33333" />
+    <boolean name="start_trb" value="false" />
+    <float name="b_sc" value="1.8925415" />
+    <float name="dup_ox" value="86.0" />
+    <float name="dup_oy" value="-214.0" />
+    <string name="y_beh">MOMENTARY</string>
+    <float name="left_oy" value="-73.333336" />
+    <float name="left_ox" value="121.333336" />
+    <float name="dright_ox" value="83.333336" />
+    <float name="dright_oy" value="-217.33333" />
+    <float name="rt_ox" value="-181.33333" />
+    <float name="rt_oy" value="41.333332" />
+    <float name="dleft_oy" value="-212.0" />
+    <float name="dleft_ox" value="21.333334" />
+    <int name="lb_trd" value="50" />
+    <float name="left_dz" value="0.08" />
+    <boolean name="lb_trb" value="false" />
+    <int name="dup_tri" value="100" />
+    <boolean name="dup_trb" value="false" />
+    <float name="right_oy" value="-13.333333" />
+    <int name="dup_trd" value="50" />
+    <float name="right_ox" value="-614.0" />
+    <float name="right_gn" value="1.0" />
+    <string name="lt_beh">MOMENTARY</string>
+    <float name="dright_sc" value="1.0" />
+    <int name="x_trd" value="50" />
+    <boolean name="x_trb" value="false" />
+    <float name="start_ox" value="8.0" />
+    <float name="start_oy" value="183.50325" />
+    <string name="dleft_beh">MOMENTARY</string>
+    <int name="x_tri" value="100" />
+    <float name="a_oy" value="-17.63737" />
+    <float name="lb_sc" value="1.9242105" />
+    <string name="dup_beh">MOMENTARY</string>
+    <float name="a_ox" value="-248.0586" />
+    <int name="lt_tri" value="100" />
+    <int name="lt_trd" value="50" />
+    <boolean name="lt_trb" value="false" />
+    <string name="b_beh">MOMENTARY</string>
+    <int name="lb_tri" value="100" />
+    <float name="a_sc" value="1.9474353" />
+    <float name="left_sc" value="2.0" />
+    <float name="b_oy" value="-56.0" />
+    <float name="b_ox" value="-222.0" />
+    <float name="rb_sc" value="1.8948308" />
+    <float name="ddown_ox" value="77.333336" />
+    <float name="ddown_oy" value="-220.0" />
+    <string name="dright_beh">MOMENTARY</string>
+    <boolean name="b_trb" value="false" />
+    <int name="b_trd" value="50" />
+    <float name="dup_sc" value="1.0" />
+    <int name="b_tri" value="100" />
+    <string name="lb_beh">MOMENTARY</string>
+    <float name="back_sc" value="1.771897" />
+    <float name="dleft_sc" value="1.0" />
+    <string name="rb_beh">MOMENTARY</string>
+    <float name="y_sc" value="1.9783237" />
+    <string name="x_beh">MOMENTARY</string>
+    <int name="dleft_tri" value="100" />
+    <boolean name="dleft_trb" value="false" />
+    <float name="right_dz" value="0.08" />
+    <int name="dleft_trd" value="50" />
+</map>

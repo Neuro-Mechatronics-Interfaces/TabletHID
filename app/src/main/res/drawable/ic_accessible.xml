@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- wheelchair user -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M17,11.5c0,-0.55 -0.45,-1 -1,-1h-3.29l-2,-3.71C10.22,6.13 9.55,5.5 8.7,5.5c-0.37,0 -0.73,0.12 -1.02,0.33L4.29,8.09C3.85,8.27 3.5,8.9 3.5,9.55c0,0.93 0.75,1.68 1.68,1.68 0.33,0 0.63,-0.1 0.89,-0.25L8,9.72V14H6v2h6v-2h-2v-3.38l0.87,-1.07L12.25,11H16c0.55,0 1,-0.45 1,-1V11.5zM7.5,5.5C8.33,5.5 9,4.83 9,4S8.33,2.5 7.5,2.5 6,3.17 6,4 6.67,5.5 7.5,5.5zM14.5,16c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z" />
+</vector>

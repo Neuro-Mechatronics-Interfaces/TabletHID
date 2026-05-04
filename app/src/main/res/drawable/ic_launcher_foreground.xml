@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive icon foreground — 108×108dp viewport.
+    Safe-zone content lives in the central 66×66 (approx x=21–87, y=21–87).
+
+    Composition (left → right, top → bottom):
+      • Bluetooth badge — centred at (54, 27) with r=8 circle + BT symbol
+      • Mouse silhouette — cyan, centred around (36, 57)
+      • Xbox-style gamepad — white/light, body x=51–93, handles drop to y=87
+          – Bumpers, body, handles, D-pad, face buttons (ABXY), sticks, Select/Start
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:scaleX="0.7173913"
+      android:scaleY="0.7173913"
+      android:translateX="12.032609"
+      android:translateY="16.336956">
+
+      <!-- ═══════════════════════════════════════════════════════
+           MOUSE  (drawn first so gamepad sits visually on top)
+      ═══════════════════════════════════════════════════════════ -->
+
+      <!-- Mouse body — cyan -->
+      <path
+          android:fillColor="#29B6F6"
+          android:pathData="M 36,41
+                            C 45,41 48,47 48,57
+                            C 48,67 44,73 36,73
+                            C 28,73 24,67 24,57
+                            C 24,47 27,41 36,41 Z" />
+
+      <!-- Left-button highlight (lighter cyan) -->
+      <path
+          android:fillColor="#81D4FA"
+          android:pathData="M 36,41
+                            C 27,41 24,47 24,50
+                            L 36,50 Z" />
+
+      <!-- Button divider — very dark so it's a clear line -->
+      <path
+          android:fillColor="#04111E"
+          android:pathData="M 24,50 L 48,50 L 48,51.5 L 24,51.5 Z" />
+
+      <!-- Scroll wheel — dark pill centred at (36, 45.5) -->
+      <path
+          android:fillColor="#0A2844"
+          android:pathData="M 33,43
+                            Q 33,41.5 36,41.5
+                            Q 39,41.5 39,43
+                            L 39,49
+                            Q 39,50 36,50
+                            Q 33,50 33,49 Z" />
+
+      <!-- ═══════════════════════════════════════════════════════
+           GAMEPAD — bumpers drawn under the body so they tuck in
+      ═══════════════════════════════════════════════════════════ -->
+
+      <!-- LB bumper -->
+      <path
+          android:fillColor="#CCCCCC"
+          android:pathData="M 52,37
+                            L 61,37
+                            Q 63,37 63,39.5
+                            L 63,43
+                            L 51,43
+                            L 51,39.5
+                            Q 51,37 52,37 Z" />
+
+      <!-- RB bumper -->
+      <path
+          android:fillColor="#CCCCCC"
+          android:pathData="M 90,37
+                            L 81,37
+                            Q 79,37 79,39.5
+                            L 79,43
+                            L 91,43
+                            L 91,39.5
+                            Q 91,37 90,37 Z" />
+
+      <!-- Left handle (drawn before body so body caps it cleanly) -->
+      <path
+          android:fillColor="#E8E8E8"
+          android:pathData="M 51,57
+                            L 63,57
+                            L 63,81
+                            Q 63,87 57,87
+                            Q 51,87 51,81 Z" />
+
+      <!-- Right handle -->
+      <path
+          android:fillColor="#E8E8E8"
+          android:pathData="M 93,57
+                            L 81,57
+                            L 81,81
+                            Q 81,87 87,87
+                            Q 93,87 93,81 Z" />
+
+      <!-- Main body — lightest layer, sits on top of handles + bumpers -->
+      <path
+          android:fillColor="#F0F0F0"
+          android:pathData="M 58,43
+                            L 86,43
+                            Q 93,43 93,50
+                            L 93,56
+                            Q 93,63 86,63
+                            L 58,63
+                            Q 51,63 51,56
+                            L 51,50
+                            Q 51,43 58,43 Z" />
+
+      <!-- ── D-pad  (cross centred at 62, 52) ───────────────── -->
+      <path
+          android:fillColor="#1E2F45"
+          android:pathData="M 60,46
+                            L 64,46 L 64,50 L 68,50 L 68,54
+                            L 64,54 L 64,58 L 60,58 L 60,54
+                            L 56,54 L 56,50 L 60,50 Z" />
+
+      <!-- ── Select / Start  (two small circles at body centre) -->
+      <path
+          android:fillColor="#AAAAAA"
+          android:pathData="M 65.5,51
+                            A 2.5,2.5 0 1,0 70.5,51
+                            A 2.5,2.5 0 1,0 65.5,51 Z" />
+      <path
+          android:fillColor="#AAAAAA"
+          android:pathData="M 71.5,51
+                            A 2.5,2.5 0 1,0 76.5,51
+                            A 2.5,2.5 0 1,0 71.5,51 Z" />
+
+      <!-- ── Face buttons (cluster centred at ~83, 52) ──────── -->
+      <!-- Y — yellow, top -->
+      <path
+          android:fillColor="#FFD600"
+          android:pathData="M 80,46 A 3,3 0 1,0 86,46 A 3,3 0 1,0 80,46 Z" />
+      <!-- X — blue, left -->
+      <path
+          android:fillColor="#2196F3"
+          android:pathData="M 75,52 A 3,3 0 1,0 81,52 A 3,3 0 1,0 75,52 Z" />
+      <!-- B — red, right -->
+      <path
+          android:fillColor="#F44336"
+          android:pathData="M 85,52 A 3,3 0 1,0 91,52 A 3,3 0 1,0 85,52 Z" />
+      <!-- A — green, bottom -->
+      <path
+          android:fillColor="#4CAF50"
+          android:pathData="M 80,58 A 3,3 0 1,0 86,58 A 3,3 0 1,0 80,58 Z" />
+
+      <!-- ── Left analog stick (cx=57, cy=72, r=5) ─────────── -->
+      <path
+          android:fillColor="#1E2F45"
+          android:pathData="M 52,72 A 5,5 0 1,0 62,72 A 5,5 0 1,0 52,72 Z" />
+      <path
+          android:fillColor="#8A9BB0"
+          android:pathData="M 54,72 A 3,3 0 1,0 60,72 A 3,3 0 1,0 54,72 Z" />
+
+      <!-- ── Right analog stick (cx=83, cy=72, r=5) ────────── -->
+      <path
+          android:fillColor="#1E2F45"
+          android:pathData="M 78,72 A 5,5 0 1,0 88,72 A 5,5 0 1,0 78,72 Z" />
+      <path
+          android:fillColor="#8A9BB0"
+          android:pathData="M 80,72 A 3,3 0 1,0 86,72 A 3,3 0 1,0 80,72 Z" />
+
+      <!-- ═══════════════════════════════════════════════════════
+           BLUETOOTH BADGE — top-centre, drawn last (always on top)
+      ═══════════════════════════════════════════════════════════ -->
+
+      <!-- Badge circle fill -->
+      <path
+          android:fillColor="#0A2040"
+          android:pathData="M 46,27 A 8,8 0 1,0 62,27 A 8,8 0 1,0 46,27 Z" />
+
+      <!-- Badge circle ring -->
+      <path
+          android:fillColor="#00000000"
+          android:strokeColor="#4FC3F7"
+          android:strokeWidth="1.2"
+          android:pathData="M 46,27 A 8,8 0 1,0 62,27 A 8,8 0 1,0 46,27 Z" />
+
+      <!-- Bluetooth symbol — stroked path tracing the classic ♦ zigzag
+           Starting at bottom, going up then zigzagging right:
+             bottom (54,33) → top (54,21) → upper-right (57.5,24)
+             → mid (54,27) → lower-right (57.5,30) → bottom (54,33)         -->
+      <path
+          android:fillColor="#00000000"
+          android:strokeColor="#4FC3F7"
+          android:strokeWidth="1.8"
+          android:strokeLineCap="round"
+          android:strokeLineJoin="round"
+          android:pathData="M 54,33
+                            L 54,21
+                            L 57.5,24
+                            L 54,27
+                            L 57.5,30
+                            L 54,33" />
+
+  </group>
+</vector>

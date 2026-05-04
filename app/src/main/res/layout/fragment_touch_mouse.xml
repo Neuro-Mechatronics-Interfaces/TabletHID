@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <!-- Thin status bar at the very top -->
+    <LinearLayout
+        android:id="@+id/statusBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:background="#CC1a1a1a"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- LED status indicator -->
+        <View
+            android:id="@+id/ledStatus"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/shape_led"
+            android:backgroundTint="#F44336" />
+
+        <TextView
+            android:id="@+id/textConnStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/status_disconnected"
+            android:textColor="#99FFFFFF"
+            android:textSize="12sp" />
+
+        <!-- Settings (config drawer) button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSettings"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/config_title"
+            app:icon="@drawable/ic_settings"
+            app:iconSize="28dp"
+            app:iconTint="@android:color/white" />
+
+    </LinearLayout>
+
+    <!-- Main touch surface — TouchZoneOverlayView handles both rendering and touch events -->
+    <com.tablet.hid.ui.touchmouse.TouchZoneOverlayView
+        android:id="@+id/touchZoneOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#0A0A0A"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusBar" />
+
+    <!-- Hint text centred in the touch surface — pointer events pass through -->
+    <TextView
+        android:id="@+id/textHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/touch_mouse_hint"
+        android:textColor="#33FFFFFF"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:focusable="false"
+        android:clickable="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusBar"
+        app:layout_constraintVertical_bias="0.35" />
+
+    <!--
+        Zone-edit overlay panel — sits at the top of the surface area.
+        Uses wrap_content height so it doesn't cover the whole screen,
+        leaving the drawing area below free for touch capture by touchZoneOverlay.
+    -->
+    <LinearLayout
+        android:id="@+id/zoneEditOverlay"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="16dp"
+        android:background="#B3000000"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/statusBar">
+
+        <TextView
+            android:id="@+id/labelZoneEditHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/zone_edit_hint_left"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginBottom="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelEdit"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

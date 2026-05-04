@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp">
+
+    <!-- Status chip -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tutorial_status_idle"
+        app:chipBackgroundColor="?attr/colorSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp" />
+
+    <!-- OS selector -->
+    <RadioGroup
+        android:id="@+id/radioGroupOs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chipStatus">
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radioWindows"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_tab_windows"
+            android:checked="true" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radioMacos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tutorial_tab_macos"
+            android:layout_marginStart="24dp" />
+    </RadioGroup>
+
+    <!-- Instructions (HTML-formatted, switches between Windows/macOS) -->
+    <ScrollView
+        android:id="@+id/scrollInstructions"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintBottom_toTopOf="@id/btnMakeDiscoverable"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/radioGroupOs">
+
+        <TextView
+            android:id="@+id/textInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingMultiplier="1.4"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            tools:text="Instructions appear here" />
+    </ScrollView>
+
+    <!-- Shown only when a matching bonded device is detected -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnReconnect"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_reconnect"
+        android:visibility="gone"
+        android:layout_marginBottom="6dp"
+        app:layout_constraintBottom_toTopOf="@id/btnMakeDiscoverable"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMakeDiscoverable"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_make_discoverable"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/btnEnterMode"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnEnterMode"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_enter_mouse_mode"
+        android:enabled="false"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        style="@style/Widget.Material3.Button.OutlinedButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

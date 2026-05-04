@@ -1,0 +1,80 @@
+<resources>
+    <string name="app_name">TabletHID</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- Navigation labels -->
+    <string name="label_home">TabletHID</string>
+    <string name="label_tutorial">Setup</string>
+    <string name="label_touch_mouse">Touch Mouse</string>
+    <string name="label_gamepad">Gamepad</string>
+
+    <!-- Home screen -->
+    <string name="home_title">Choose a mode</string>
+    <string name="home_subtitle">Select an HID peripheral type to configure and pair</string>
+    <string name="mode_touch_mouse">Touch Mouse</string>
+    <string name="mode_touch_mouse_desc">Use the tablet screen as a relative-movement mouse with left/right click</string>
+    <string name="mode_gamepad">Gamepad</string>
+    <string name="mode_gamepad_desc">Xbox-style virtual controller with configurable layout</string>
+
+    <!-- Tutorial screen -->
+    <string name="tutorial_title_mouse">Setting up Touch Mouse</string>
+    <string name="tutorial_title_gamepad">Setting up Gamepad</string>
+    <string name="tutorial_tab_windows">Windows</string>
+    <string name="tutorial_tab_macos">macOS</string>
+    <string name="tutorial_status_idle">Tap Make Discoverable to begin pairing</string>
+    <string name="tutorial_status_registering">Registering HID profile…</string>
+    <string name="tutorial_status_waiting">Discoverable — open Bluetooth on your host and connect to %1$s</string>
+    <string name="tutorial_status_connected">Connected to %1$s</string>
+    <string name="tutorial_status_error">Error: %1$s</string>
+    <string name="btn_make_discoverable">Make Discoverable (new pair)</string>
+    <string name="btn_enter_mouse_mode">Enter Touch Mouse</string>
+    <string name="btn_enter_gamepad_mode">Enter Gamepad</string>
+    <string name="btn_reconnect">Reconnect to %1$s</string>
+    <string name="tutorial_status_reconnecting">Connecting to %1$s…</string>
+    <string name="tutorial_bonded_hint">Previously paired device found</string>
+
+    <!-- Windows pairing instructions (use <br> not \n — Html.fromHtml collapses bare newlines) -->
+    <string name="instructions_windows_mouse"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Windows PC open <b>Settings &#8594; Bluetooth &amp; devices &#8594; Add device</b>.<br/><br/><b>3.</b> Choose <b>Bluetooth</b> and wait for <b>TabletHID Mouse</b> to appear.<br/><br/><b>4.</b> Click it to pair — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Touch Mouse</b> below.</string>
+    <string name="instructions_windows_gamepad"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Windows PC open <b>Settings &#8594; Bluetooth &amp; devices &#8594; Add device</b>.<br/><br/><b>3.</b> Choose <b>Bluetooth</b> and wait for <b>TabletHID Gamepad</b> to appear.<br/><br/><b>4.</b> Click it to pair — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Gamepad</b> below.</string>
+
+    <!-- macOS pairing instructions -->
+    <string name="instructions_macos_mouse"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Mac open <b>System Settings &#8594; Bluetooth</b>.<br/><br/><b>3.</b> Wait for <b>TabletHID Mouse</b> to appear in the device list.<br/><br/><b>4.</b> Click <b>Connect</b> — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Touch Mouse</b> below.</string>
+    <string name="instructions_macos_gamepad"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Mac open <b>System Settings &#8594; Bluetooth</b>.<br/><br/><b>3.</b> Wait for <b>TabletHID Gamepad</b> to appear in the device list.<br/><br/><b>4.</b> Click <b>Connect</b> — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Gamepad</b> below.</string>
+
+    <!-- Touch Mouse screen -->
+    <string name="touch_mouse_hint">Touch and drag to move • lift to release • double-tap to double-click</string>
+    <string name="touch_mouse_hint_mouse">Move pointer with touch • tap configured zones to click</string>
+    <string name="right_click_zone_label">RIGHT CLICK ZONE — hold here to activate right-click</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="btn_switch_mode">Switch Mode</string>
+    <string name="btn_disconnect">Disconnect</string>
+
+    <!-- Touch Mouse config sheet -->
+    <string name="config_title">Touch Mouse Settings</string>
+    <string name="config_mode">Mode</string>
+    <string name="config_mode_touch">Touch</string>
+    <string name="config_mode_mouse">Mouse</string>
+    <string name="config_sensitivity">Sensitivity</string>
+    <string name="config_left_button">Left Button (L)</string>
+    <string name="config_right_button">Right Button (R)</string>
+    <string name="config_zone_type">Zone type</string>
+    <string name="config_static">Static</string>
+    <string name="config_dynamic">Dynamic</string>
+    <string name="config_click_behavior">Click behavior</string>
+    <string name="config_momentary">Momentary</string>
+    <string name="config_latching">Latching</string>
+    <string name="config_set_zone">Set Zone (drag on screen)</string>
+    <string name="config_offset_x">Offset X</string>
+    <string name="config_offset_y">Offset Y</string>
+    <string name="config_zone_size">Size</string>
+    <string name="zone_edit_hint_left">Drag to define the Left (L) click zone — lift to confirm</string>
+    <string name="zone_edit_hint_right">Drag to define the Right (R) click zone — lift to confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Exit-mode confirmation dialog (TouchMouse / Gamepad) -->
+    <string name="exit_mode_title">Disconnect and exit?</string>
+    <string name="exit_mode_message">Leaving this screen will disconnect from the host. You can reconnect from the Setup screen without re-pairing.</string>
+    <string name="exit_mode_confirm">Exit</string>
+    <string name="exit_mode_stay">Stay</string>
+</resources>
