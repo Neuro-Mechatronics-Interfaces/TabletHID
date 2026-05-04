@@ -45,6 +45,18 @@ struct ConfigStore {
         save(config, key: gamepadKey(profile))
     }
 
+    func loadLastHost() -> HIDHost? {
+        load(HIDHost.self, key: "last_hid_host")
+    }
+
+    func saveLastHost(_ host: HIDHost) {
+        save(host, key: "last_hid_host")
+    }
+
+    func clearLastHost() {
+        defaults.removeObject(forKey: "last_hid_host")
+    }
+
     private func touchKey(_ profile: Profile) -> String {
         "touch_mouse_config_\(profile.key)"
     }

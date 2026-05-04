@@ -19,11 +19,13 @@
 - [x] Add `NoopHIDTransport` that makes the iOS public API limitation visible in-app.
 - [x] Add `ExperimentalBLEHIDTransport` using the expanded HID service UUID workaround (`00001812-0000-1000-8000-00805F9B34FB`) and HID-over-GATT characteristics.
 - [x] Wire experimental BLE HID transport into `AppState`.
+- [x] Add iOS quick reconnect flow that remembers the last subscribed host and restarts advertising for that host.
 - [ ] Test `ExperimentalBLEHIDTransport` on a physical iPhone/iPad against macOS, Windows, Android, and iPadOS hosts.
 - [ ] Confirm whether hosts subscribe to the Report characteristics and accept mouse/gamepad reports from the combined report map.
 - [ ] If combined mouse+gamepad fails, split iOS advertisement into keyboard/mouse-only, mouse-only, and gamepad-only BLE HID variants.
 - [ ] Add transport diagnostics UI/logging for `didAdd`, advertising, read/write requests, subscriptions, and `updateValue` backpressure.
 - [ ] Evaluate pairing/reconnect behavior after app restart, force quit, host forget-device, and iOS Bluetooth toggle.
+- [ ] Confirm whether Windows/macOS automatically reattach when iOS enters reconnect advertising mode, or whether the host still needs a manual Connect click.
 - [ ] Decide whether read/write permissions need encryption-required flags for stable host pairing.
 - [ ] Decide the real iOS transport path:
   - Public iOS Bluetooth HID peripheral mode is not clearly documented as supported; the expanded UUID path may be an undocumented workaround.

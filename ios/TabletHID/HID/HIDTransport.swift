@@ -2,7 +2,8 @@ import Foundation
 
 enum HIDTransportEvent {
     case waiting(DeviceMode)
-    case connected(mode: DeviceMode, hostName: String)
+    case reconnecting(mode: DeviceMode, hostName: String)
+    case connected(mode: DeviceMode, host: HIDHost)
     case disconnected(DeviceMode?)
     case unavailable(String)
     case error(String)
@@ -14,6 +15,7 @@ protocol HIDTransport: AnyObject {
     var onEvent: ((HIDTransportEvent) -> Void)? { get set }
 
     func initialize(mode: DeviceMode) throws
+    func reconnect(mode: DeviceMode, host: HIDHost) throws
     func sendReport(id: UInt8, data: Data)
     func disconnect()
 }
@@ -24,6 +26,7 @@ final class NoopHIDTransport: HIDTransport {
     var onEvent: ((HIDTransportEvent) -> Void)?
 
     func initialize(mode: DeviceMode) throws {}
+    func reconnect(mode: DeviceMode, host: HIDHost) throws {}
     func sendReport(id: UInt8, data: Data) {}
     func disconnect() {}
 }

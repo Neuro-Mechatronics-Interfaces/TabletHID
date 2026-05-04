@@ -10,6 +10,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     private var peripheralManager: CBPeripheralManager?
     private var activeMode: DeviceMode?
     private var pendingStart = false
+    private var reconnectTarget: HIDHost?
     private var subscribedCentrals: [CBCentral] = []
 
     private var hidService: CBMutableService?
@@ -45,8 +46,29 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     func initialize(mode: DeviceMode) throws {
         activeMode = mode
         pendingStart = true
+        reconnectTarget = nil
         unavailableReason = ""
         isAvailable = true
+
+        if peripheralManager == nil {
+            peripheralManager = CBPeripheralManager(delegate: self, queue: .main)
+            return
+        }
+
+        if peripheralManager?.state == .poweredOn {
+            startHIDPeripheral()
+        } else {
+            evaluateState(peripheralManager?.state ?? .unknown)
+        }
+    }
+
+    func reconnect(mode: DeviceMode, host: HIDHost) throws {
+        activeMode = mode
+        pendingStart = true
+        reconnectTarget = host
+        unavailableReason = ""
+        isAvailable = true
+        onEvent?(.reconnecting(mode: mode, hostName: host.displayName))
 
         if peripheralManager == nil {
             peripheralManager = CBPeripheralManager(delegate: self, queue: .main)
@@ -75,6 +97,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
     func disconnect() {
         pendingStart = false
+        reconnectTarget = nil
         subscribedCentrals.removeAll()
         peripheralManager?.stopAdvertising()
         peripheralManager?.removeAllServices()
@@ -222,7 +245,11 @@ extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
             return
         }
         if let activeMode {
-            onEvent?(.waiting(activeMode))
+            if let reconnectTarget {
+                onEvent?(.reconnecting(mode: activeMode, hostName: reconnectTarget.displayName))
+            } else {
+                onEvent?(.waiting(activeMode))
+            }
         }
     }
 
@@ -231,7 +258,8 @@ extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
             subscribedCentrals.append(central)
         }
         if let activeMode {
-            onEvent?(.connected(mode: activeMode, hostName: central.identifier.uuidString))
+            reconnectTarget = nil
+            onEvent?(.connected(mode: activeMode, host: .fromCentralIdentifier(central.identifier.uuidString, mode: activeMode)))
         }
     }
 

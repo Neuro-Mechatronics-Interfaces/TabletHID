@@ -54,9 +54,9 @@
 		90AFFF1F643DD39CDE91127B /* HIDReportDescriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIDReportDescriptors.swift; sourceTree = "<group>"; };
 		90DABEF767731FD767CF1C73 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A91CEAA7A49C6BEA3F09D403 /* TouchMouseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMouseConfig.swift; sourceTree = "<group>"; };
-		B327DD51D148C2850E2B1FF8 /* TabletHID.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TabletHID.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B327DD51D148C2850E2B1FF8 /* TabletHID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletHID.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B95106ED456AC2120E36D22C /* ConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigStore.swift; sourceTree = "<group>"; };
-		BD86738B2112B3738C83CF92 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BD86738B2112B3738C83CF92 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DBE3A504E407B2EBA4429A46 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DE6434D074460CA3B1934C10 /* GamepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamepadView.swift; sourceTree = "<group>"; };
 		F1D15B5C2281208EFE006734 /* TouchMouseSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMouseSettingsView.swift; sourceTree = "<group>"; };
@@ -210,7 +210,6 @@
 						DevelopmentTeam = S6F754UF9T;
 					};
 					8E2E61C7907337750149C310 = {
-						DevelopmentTeam = S6F754UF9T;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -296,6 +295,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -314,6 +314,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

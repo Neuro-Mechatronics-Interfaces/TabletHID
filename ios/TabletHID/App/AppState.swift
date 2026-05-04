@@ -7,6 +7,7 @@ final class AppState: ObservableObject {
     @Published var customProfiles: [Profile]
     @Published var touchMouseConfig: TouchMouseConfig
     @Published var gamepadConfig: GamepadConfig
+    @Published var lastHost: HIDHost?
 
     private let store = ConfigStore()
     private let transport: HIDTransport
@@ -19,6 +20,7 @@ final class AppState: ObservableObject {
         self.activeProfile = activeProfile
         self.touchMouseConfig = store.loadTouchMouseConfig(profile: activeProfile)
         self.gamepadConfig = store.loadGamepadConfig(profile: activeProfile)
+        self.lastHost = store.loadLastHost()
         self.transport.onEvent = { [weak self] event in
             Task { @MainActor in
                 self?.handleTransportEvent(event)
@@ -55,13 +57,45 @@ final class AppState: ObservableObject {
         }
     }
 
+    func reconnect(mode: DeviceMode) {
+        guard let host = lastHost else {
+            initialize(mode: mode)
+            return
+        }
+        connectionState = .reconnecting(mode: mode, hostName: host.displayName)
+        do {
+            try transport.reconnect(mode: mode, host: host)
+            if !transport.isAvailable {
+                connectionState = .unavailable(transport.unavailableReason)
+            }
+        } catch {
+            connectionState = .error(error.localizedDescription)
+        }
+    }
+
     func developmentConnect(mode: DeviceMode) {
-        connectionState = .connected(mode: mode, hostName: "Development Preview")
+        connectionState = .connected(
+            mode: mode,
+            host: HIDHost(
+                identifier: "development-preview",
+                displayName: "Development Preview",
+                lastMode: mode,
+                lastSeen: Date()
+            )
+        )
     }
 
     func disconnect() {
         transport.disconnect()
         connectionState = .idle
+    }
+
+    func forgetLastHost() {
+        store.clearLastHost()
+        lastHost = nil
+        if !connectionState.isConnected {
+            connectionState = .idle
+        }
     }
 
     func updateTouchMouseConfig(_ config: TouchMouseConfig) {
@@ -106,8 +140,18 @@ final class AppState: ObservableObject {
         switch event {
         case .waiting(let mode):
             connectionState = .waitingForConnection(mode)
-        case .connected(let mode, let hostName):
-            connectionState = .connected(mode: mode, hostName: hostName)
+        case .reconnecting(let mode, let hostName):
+            connectionState = .reconnecting(mode: mode, hostName: hostName)
+        case .connected(let mode, let host):
+            let updatedHost = HIDHost(
+                identifier: host.identifier,
+                displayName: host.displayName,
+                lastMode: mode,
+                lastSeen: Date()
+            )
+            store.saveLastHost(updatedHost)
+            lastHost = updatedHost
+            connectionState = .connected(mode: mode, host: updatedHost)
         case .disconnected:
             connectionState = .idle
         case .unavailable(let reason):
