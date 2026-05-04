@@ -45,7 +45,7 @@
             android:layout_marginStart="24dp" />
     </RadioGroup>
 
-    <!-- Instructions (HTML-formatted, switches between Windows/macOS) -->
+    <!-- Instructions — numbered step list, switches between Windows/macOS and mode -->
     <ScrollView
         android:id="@+id/scrollInstructions"
         android:layout_width="0dp"
@@ -57,13 +57,77 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/radioGroupOs">
 
-        <TextView
-            android:id="@+id/textInstructions"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lineSpacingMultiplier="1.4"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            tools:text="Instructions appear here" />
+            android:orientation="horizontal"
+            android:paddingTop="4dp">
+
+            <!-- Reconnect column — shown only when a bonded device is detected -->
+            <LinearLayout
+                android:id="@+id/columnReconnect"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/labelReconnect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tutorial_col_reconnect"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorPrimary"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:id="@+id/instructionsListReconnect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+            <!-- Vertical divider between columns -->
+            <View
+                android:id="@+id/columnDivider"
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?attr/colorOutlineVariant"
+                android:visibility="gone"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp" />
+
+            <!-- Main / fresh-pair column -->
+            <LinearLayout
+                android:id="@+id/columnPair"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/labelPair"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tutorial_col_new_pair"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorOutline"
+                    android:visibility="gone"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:id="@+id/instructionsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </LinearLayout>
     </ScrollView>
 
     <!-- Shown only when a matching bonded device is detected -->

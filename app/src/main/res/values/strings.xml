@@ -33,13 +33,35 @@
     <string name="tutorial_status_reconnecting">Connecting to %1$s…</string>
     <string name="tutorial_bonded_hint">Previously paired device found</string>
 
-    <!-- Windows pairing instructions (use <br> not \n — Html.fromHtml collapses bare newlines) -->
-    <string name="instructions_windows_mouse"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Windows PC open <b>Settings &#8594; Bluetooth &amp; devices &#8594; Add device</b>.<br/><br/><b>3.</b> Choose <b>Bluetooth</b> and wait for <b>TabletHID Mouse</b> to appear.<br/><br/><b>4.</b> Click it to pair — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Touch Mouse</b> below.</string>
-    <string name="instructions_windows_gamepad"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Windows PC open <b>Settings &#8594; Bluetooth &amp; devices &#8594; Add device</b>.<br/><br/><b>3.</b> Choose <b>Bluetooth</b> and wait for <b>TabletHID Gamepad</b> to appear.<br/><br/><b>4.</b> Click it to pair — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Gamepad</b> below.</string>
-
-    <!-- macOS pairing instructions -->
-    <string name="instructions_macos_mouse"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Mac open <b>System Settings &#8594; Bluetooth</b>.<br/><br/><b>3.</b> Wait for <b>TabletHID Mouse</b> to appear in the device list.<br/><br/><b>4.</b> Click <b>Connect</b> — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Touch Mouse</b> below.</string>
-    <string name="instructions_macos_gamepad"><b>1.</b> Tap <b>Make Discoverable</b> below.<br/><br/><b>2.</b> On your Mac open <b>System Settings &#8594; Bluetooth</b>.<br/><br/><b>3.</b> Wait for <b>TabletHID Gamepad</b> to appear in the device list.<br/><br/><b>4.</b> Click <b>Connect</b> — no PIN required.<br/><br/><b>5.</b> Once connected, tap <b>Enter Gamepad</b> below.</string>
+    <!-- Pairing instruction steps — each item is one step; bold via escaped HTML tags -->
+    <string-array name="instructions_windows_mouse">
+        <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
+        <item>On your Windows PC, open &lt;b&gt;Settings → Bluetooth &amp; devices → Add device&lt;/b&gt;.</item>
+        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear.</item>
+        <item>Click it to pair — no PIN required.</item>
+        <item>Once connected, tap &lt;b&gt;Enter Touch Mouse&lt;/b&gt; below.</item>
+    </string-array>
+    <string-array name="instructions_windows_gamepad">
+        <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
+        <item>On your Windows PC, open &lt;b&gt;Settings → Bluetooth &amp; devices → Add device&lt;/b&gt;.</item>
+        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear.</item>
+        <item>Click it to pair — no PIN required.</item>
+        <item>Once connected, tap &lt;b&gt;Enter Gamepad&lt;/b&gt; below.</item>
+    </string-array>
+    <string-array name="instructions_macos_mouse">
+        <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
+        <item>On your Mac, open &lt;b&gt;System Settings → Bluetooth&lt;/b&gt;.</item>
+        <item>Wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear in the device list.</item>
+        <item>Click &lt;b&gt;Connect&lt;/b&gt; — no PIN required.</item>
+        <item>Once connected, tap &lt;b&gt;Enter Touch Mouse&lt;/b&gt; below.</item>
+    </string-array>
+    <string-array name="instructions_macos_gamepad">
+        <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
+        <item>On your Mac, open &lt;b&gt;System Settings → Bluetooth&lt;/b&gt;.</item>
+        <item>Wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear in the device list.</item>
+        <item>Click &lt;b&gt;Connect&lt;/b&gt; — no PIN required.</item>
+        <item>Once connected, tap &lt;b&gt;Enter Gamepad&lt;/b&gt; below.</item>
+    </string-array>
 
     <!-- Touch Mouse screen -->
     <string name="touch_mouse_hint">Touch and drag to move • lift to release • double-tap to double-click</string>
@@ -71,6 +93,12 @@
     <string name="zone_edit_hint_left">Drag to define the Left (L) click zone — lift to confirm</string>
     <string name="zone_edit_hint_right">Drag to define the Right (R) click zone — lift to confirm</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Tutorial two-column labels (shown when a bonded device is detected) -->
+    <string name="tutorial_col_reconnect">Quick connect</string>
+    <string name="tutorial_col_new_pair">New pair</string>
+    <string name="step_reconnect_tap">Tap &lt;b&gt;Reconnect&lt;/b&gt; below to connect to &lt;b&gt;%1$s&lt;/b&gt;.</string>
+    <string name="step_reconnect_enter">Once connected, tap &lt;b&gt;%1$s&lt;/b&gt; below.</string>
 
     <!-- Exit-mode confirmation dialog (TouchMouse / Gamepad) -->
     <string name="exit_mode_title">Disconnect and exit?</string>
