@@ -12,6 +12,10 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     private var reconnectTarget: HIDHost?
     private var subscribedCentrals: [CBCentral] = []
 
+    // The GATT service is built once and kept alive for the app session.
+    // Rebuilding it changes attribute handles; hosts identify the two same-UUID (2A4D)
+    // Input Report characteristics by handle, so a rebuild scrambles routing and
+    // breaks cross-mode switching even when the descriptor bytes are identical.
     private var hidService: CBMutableService?
     private var protocolModeCharacteristic: CBMutableCharacteristic?
     private var hidControlPointCharacteristic: CBMutableCharacteristic?
@@ -19,7 +23,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     private var gamepadReportCharacteristic: CBMutableCharacteristic?
 
     private var protocolMode = Data([0x01])
-    private var lastMouseReport = HIDReportDescriptors.buildMouseReport(buttons: 0, dx: 0, dy: 0)
+    private var lastMouseReport   = HIDReportDescriptors.buildMouseReport(buttons: 0, dx: 0, dy: 0)
     private var lastGamepadReport = HIDReportDescriptors.buildGamepadReport(
         leftX: 0, leftY: 0, rightX: 0, rightY: 0,
         leftTrigger: 0, rightTrigger: 0, buttons: 0,
@@ -47,7 +51,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
         if peripheralManager == nil {
             peripheralManager = CBPeripheralManager(delegate: self, queue: .main)
-            return
+            return  // evaluateState(.poweredOn) will call startHIDPeripheral when ready
         }
 
         guard peripheralManager?.state == .poweredOn else {
@@ -56,13 +60,14 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         }
 
         if hidService != nil {
-            // Service already running — no teardown needed, just switch the active mode.
-            // Emit the correct state based on current subscriber list.
+            // Service is already live — just switch mode without any teardown.
+            // The GATT handles stay stable, so the host keeps routing correctly.
             if !subscribedCentrals.isEmpty {
                 let host = HIDHost.fromCentralIdentifier(
                     subscribedCentrals[0].identifier.uuidString, mode: mode)
                 onEvent?(.connected(mode: mode, host: host))
             } else {
+                restartAdvertisingIfNeeded()
                 onEvent?(.waiting(mode))
             }
         } else {
@@ -88,15 +93,17 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         }
 
         if hidService != nil {
-            // Service already up. If the host is already subscribed, we're done.
-            // Otherwise stay in reconnecting state — the host will re-subscribe on its own.
             if !subscribedCentrals.isEmpty {
                 reconnectTarget = nil
                 let h = HIDHost.fromCentralIdentifier(
                     subscribedCentrals[0].identifier.uuidString, mode: mode)
                 onEvent?(.connected(mode: mode, host: h))
+            } else {
+                // Service up but host disconnected — restart advertising.
+                // The host will auto-reconnect using the existing bond.
+                restartAdvertisingIfNeeded()
+                // Stay in reconnecting state; didSubscribeTo will fire when host rejoins.
             }
-            // else: keep emitting .reconnecting until didSubscribeTo fires
         } else {
             startHIDPeripheral()
         }
@@ -115,18 +122,16 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         }
     }
 
+    /// Soft disconnect — keeps the GATT service and its attribute handles alive so the
+    /// host can reconnect (same or different mode) without re-pairing.
+    /// Advertising is NOT restarted here; call initialize() or reconnect() to become
+    /// discoverable again. This avoids the peripheral emitting .waiting immediately
+    /// after the user intentionally exits a control screen.
     func disconnect() {
         reconnectTarget = nil
-        subscribedCentrals.removeAll()
-        peripheralManager?.stopAdvertising()
-        peripheralManager?.removeAllServices()
-        hidService = nil
-        protocolModeCharacteristic = nil
-        hidControlPointCharacteristic = nil
-        mouseReportCharacteristic = nil
-        gamepadReportCharacteristic = nil
-        onEvent?(.disconnected(activeMode))
-        activeMode = nil
+        let mode = activeMode
+        onEvent?(.disconnected(mode))
+        // activeMode, hidService, subscribedCentrals intentionally preserved.
     }
 
     // MARK: – Private
@@ -193,6 +198,17 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         ])
     }
 
+    private func restartAdvertisingIfNeeded() {
+        guard let pm = peripheralManager,
+              pm.state == .poweredOn,
+              hidService != nil,
+              !pm.isAdvertising else { return }
+        pm.startAdvertising([
+            CBAdvertisementDataLocalNameKey:    "TabletHID",
+            CBAdvertisementDataServiceUUIDsKey: [UUIDs.hidService]
+        ])
+    }
+
     private func inputReportCharacteristic(reportID: UInt8, initialValue: Data) -> CBMutableCharacteristic {
         let characteristic = CBMutableCharacteristic(
             type: UUIDs.report,
@@ -208,11 +224,9 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
     private func send(_ data: Data, via characteristic: CBMutableCharacteristic?) {
         guard let peripheralManager, let characteristic else { return }
-        peripheralManager.updateValue(
-            data,
-            for: characteristic,
-            onSubscribedCentrals: subscribedCentrals.isEmpty ? nil : subscribedCentrals
-        )
+        // Pass nil so CoreBluetooth routes to whichever centrals are subscribed to
+        // this specific characteristic — avoids stale CBCentral references.
+        peripheralManager.updateValue(data, for: characteristic, onSubscribedCentrals: nil)
     }
 
     private func evaluateState(_ state: CBManagerState) {
@@ -220,7 +234,6 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         case .poweredOn:
             isAvailable = true
             unavailableReason = ""
-            // Start the peripheral if a mode has been requested but no service is running yet.
             if hidService == nil, activeMode != nil {
                 startHIDPeripheral()
             }
@@ -285,8 +298,12 @@ extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
 
     func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didUnsubscribeFrom characteristic: CBCharacteristic) {
         subscribedCentrals.removeAll { $0.identifier == central.identifier }
-        if subscribedCentrals.isEmpty, let activeMode {
-            onEvent?(.waiting(activeMode))
+        if subscribedCentrals.isEmpty {
+            // Host disconnected — restart advertising so it (or a new host) can reconnect.
+            restartAdvertisingIfNeeded()
+            if let activeMode {
+                onEvent?(.waiting(activeMode))
+            }
         }
     }
 
