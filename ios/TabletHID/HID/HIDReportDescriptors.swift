@@ -1,0 +1,102 @@
+import Foundation
+
+enum HIDReportDescriptors {
+    static let reportIDMouse: UInt8 = 0x01
+    static let reportIDGamepad: UInt8 = 0x02
+
+    static let mouseReportDescriptor: [UInt8] = [
+        0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, 0x01,
+        0x09, 0x01, 0xA1, 0x00, 0x05, 0x09, 0x19, 0x01,
+        0x29, 0x03, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01,
+        0x95, 0x03, 0x81, 0x02, 0x75, 0x05, 0x95, 0x01,
+        0x81, 0x03, 0x05, 0x01, 0x09, 0x30, 0x09, 0x31,
+        0x16, 0x00, 0x80, 0x26, 0xFF, 0x7F, 0x75, 0x10,
+        0x95, 0x02, 0x81, 0x06, 0x09, 0x38, 0x15, 0x81,
+        0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+        0xC0, 0xC0
+    ]
+
+    static let gamepadReportDescriptor: [UInt8] = [
+        0x05, 0x01, 0x09, 0x05, 0xA1, 0x01, 0x85, 0x02,
+        0x09, 0x30, 0x09, 0x31, 0x16, 0x00, 0x80, 0x26,
+        0xFF, 0x7F, 0x75, 0x10, 0x95, 0x02, 0x81, 0x02,
+        0x09, 0x32, 0x09, 0x35, 0x15, 0x00, 0x26, 0xFF,
+        0x00, 0x75, 0x08, 0x95, 0x02, 0x81, 0x02, 0x09,
+        0x33, 0x09, 0x34, 0x16, 0x00, 0x80, 0x26, 0xFF,
+        0x7F, 0x75, 0x10, 0x95, 0x02, 0x81, 0x02, 0x05,
+        0x09, 0x19, 0x01, 0x29, 0x0A, 0x15, 0x00, 0x25,
+        0x01, 0x75, 0x01, 0x95, 0x0A, 0x81, 0x02, 0x75,
+        0x06, 0x95, 0x01, 0x81, 0x03, 0x05, 0x01, 0x09,
+        0x39, 0x15, 0x00, 0x25, 0x07, 0x35, 0x00, 0x46,
+        0x3B, 0x01, 0x65, 0x14, 0x75, 0x04, 0x95, 0x01,
+        0x81, 0x42, 0x65, 0x00, 0x75, 0x04, 0x95, 0x01,
+        0x81, 0x03, 0xC0
+    ]
+
+    static var combinedReportDescriptor: [UInt8] {
+        mouseReportDescriptor + gamepadReportDescriptor
+    }
+
+    static func buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) -> Data {
+        var report = Data(count: 6)
+        report[0] = UInt8(buttons & 0x07)
+        putInt16LE(clampedInt16(dx), into: &report, at: 1)
+        putInt16LE(clampedInt16(dy), into: &report, at: 3)
+        report[5] = UInt8(bitPattern: Int8(clamping: wheel))
+        return report
+    }
+
+    static func buildGamepadReport(
+        leftX: Int,
+        leftY: Int,
+        rightX: Int,
+        rightY: Int,
+        leftTrigger: Int,
+        rightTrigger: Int,
+        buttons: Int,
+        hat: Int
+    ) -> Data {
+        var report = Data(count: 13)
+        putInt16LE(clampedInt16(leftX), into: &report, at: 0)
+        putInt16LE(clampedInt16(leftY), into: &report, at: 2)
+        report[4] = UInt8(clamping: leftTrigger)
+        report[5] = UInt8(clamping: rightTrigger)
+        putInt16LE(clampedInt16(rightX), into: &report, at: 6)
+        putInt16LE(clampedInt16(rightY), into: &report, at: 8)
+        report[10] = UInt8(buttons & 0xFF)
+        report[11] = UInt8((buttons >> 8) & 0x03)
+        report[12] = UInt8(hat & 0x0F)
+        return report
+    }
+
+    static let btnA = 0
+    static let btnB = 1
+    static let btnX = 2
+    static let btnY = 3
+    static let btnLB = 4
+    static let btnRB = 5
+    static let btnBack = 6
+    static let btnStart = 7
+    static let btnL3 = 8
+    static let btnR3 = 9
+
+    static let hatN = 0
+    static let hatNE = 1
+    static let hatE = 2
+    static let hatSE = 3
+    static let hatS = 4
+    static let hatSW = 5
+    static let hatW = 6
+    static let hatNW = 7
+    static let hatNone = 8
+
+    private static func clampedInt16(_ value: Int) -> Int16 {
+        Int16(clamping: value)
+    }
+
+    private static func putInt16LE(_ value: Int16, into data: inout Data, at index: Int) {
+        let bits = UInt16(bitPattern: value)
+        data[index] = UInt8(bits & 0x00FF)
+        data[index + 1] = UInt8((bits >> 8) & 0x00FF)
+    }
+}
