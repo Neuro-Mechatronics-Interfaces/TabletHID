@@ -67,7 +67,7 @@
 - [ ] Bring built-in Android XML defaults over to iOS as bundled JSON or plist defaults.
 - [ ] Add profile import/export to aid parity testing.
 - [ ] Add onboarding copy explaining iOS transport limits and development mode.
-- [ ] Add app icon asset catalog.
+- [x] Add app icon asset catalog.
 - [ ] Add device signing notes after a development team is selected in Xcode.
 - [ ] Add CI for iOS build/test once simulator test launch is stable.
 
@@ -77,7 +77,7 @@
 - [x] Add `PrivacyInfo.xcprivacy` for app-local `UserDefaults` usage and no declared data collection.
 - [x] Add App Store/TestFlight release checklist in `ios/APP_STORE.md`.
 - [ ] Confirm the permanent bundle ID before creating the App Store Connect app record.
-- [ ] Add complete AppIcon asset catalog.
+- [x] Add complete AppIcon asset catalog.
 - [ ] Validate BLE HID pairing/control on a physical iPhone or iPad.
 - [ ] Validate behavior after host forget-device, app relaunch, Bluetooth toggle, backgrounding, and screen lock.
 - [ ] Create App Store Connect app record.
