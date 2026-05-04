@@ -9,7 +9,6 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
     private var peripheralManager: CBPeripheralManager?
     private var activeMode: DeviceMode?
-    private var pendingStart = false
     private var reconnectTarget: HIDHost?
     private var subscribedCentrals: [CBCentral] = []
 
@@ -22,30 +21,26 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     private var protocolMode = Data([0x01])
     private var lastMouseReport = HIDReportDescriptors.buildMouseReport(buttons: 0, dx: 0, dy: 0)
     private var lastGamepadReport = HIDReportDescriptors.buildGamepadReport(
-        leftX: 0,
-        leftY: 0,
-        rightX: 0,
-        rightY: 0,
-        leftTrigger: 0,
-        rightTrigger: 0,
-        buttons: 0,
+        leftX: 0, leftY: 0, rightX: 0, rightY: 0,
+        leftTrigger: 0, rightTrigger: 0, buttons: 0,
         hat: HIDReportDescriptors.hatNone
     )
 
     private enum UUIDs {
         // Expanded form is intentional. Short "1812" is rejected on many iOS versions.
-        static let hidService = CBUUID(string: "00001812-0000-1000-8000-00805F9B34FB")
-        static let hidInformation = CBUUID(string: "2A4A")
-        static let reportMap = CBUUID(string: "2A4B")
+        static let hidService      = CBUUID(string: "00001812-0000-1000-8000-00805F9B34FB")
+        static let hidInformation  = CBUUID(string: "2A4A")
+        static let reportMap       = CBUUID(string: "2A4B")
         static let hidControlPoint = CBUUID(string: "2A4C")
-        static let report = CBUUID(string: "2A4D")
-        static let protocolMode = CBUUID(string: "2A4E")
+        static let report          = CBUUID(string: "2A4D")
+        static let protocolMode    = CBUUID(string: "2A4E")
         static let reportReference = CBUUID(string: "2908")
     }
 
+    // MARK: – HIDTransport
+
     func initialize(mode: DeviceMode) throws {
         activeMode = mode
-        pendingStart = true
         reconnectTarget = nil
         unavailableReason = ""
         isAvailable = true
@@ -55,16 +50,28 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
             return
         }
 
-        if peripheralManager?.state == .poweredOn {
-            startHIDPeripheral()
-        } else {
+        guard peripheralManager?.state == .poweredOn else {
             evaluateState(peripheralManager?.state ?? .unknown)
+            return
+        }
+
+        if hidService != nil {
+            // Service already running — no teardown needed, just switch the active mode.
+            // Emit the correct state based on current subscriber list.
+            if !subscribedCentrals.isEmpty {
+                let host = HIDHost.fromCentralIdentifier(
+                    subscribedCentrals[0].identifier.uuidString, mode: mode)
+                onEvent?(.connected(mode: mode, host: host))
+            } else {
+                onEvent?(.waiting(mode))
+            }
+        } else {
+            startHIDPeripheral()
         }
     }
 
     func reconnect(mode: DeviceMode, host: HIDHost) throws {
         activeMode = mode
-        pendingStart = true
         reconnectTarget = host
         unavailableReason = ""
         isAvailable = true
@@ -75,10 +82,23 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
             return
         }
 
-        if peripheralManager?.state == .poweredOn {
-            startHIDPeripheral()
-        } else {
+        guard peripheralManager?.state == .poweredOn else {
             evaluateState(peripheralManager?.state ?? .unknown)
+            return
+        }
+
+        if hidService != nil {
+            // Service already up. If the host is already subscribed, we're done.
+            // Otherwise stay in reconnecting state — the host will re-subscribe on its own.
+            if !subscribedCentrals.isEmpty {
+                reconnectTarget = nil
+                let h = HIDHost.fromCentralIdentifier(
+                    subscribedCentrals[0].identifier.uuidString, mode: mode)
+                onEvent?(.connected(mode: mode, host: h))
+            }
+            // else: keep emitting .reconnecting until didSubscribeTo fires
+        } else {
+            startHIDPeripheral()
         }
     }
 
@@ -96,7 +116,6 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     }
 
     func disconnect() {
-        pendingStart = false
         reconnectTarget = nil
         subscribedCentrals.removeAll()
         peripheralManager?.stopAdvertising()
@@ -110,8 +129,10 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         activeMode = nil
     }
 
+    // MARK: – Private
+
     private func startHIDPeripheral() {
-        guard let peripheralManager, let activeMode else { return }
+        guard let peripheralManager else { return }
 
         peripheralManager.stopAdvertising()
         peripheralManager.removeAllServices()
@@ -133,7 +154,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
             permissions: [.readable]
         )
 
-        let protocolMode = CBMutableCharacteristic(
+        let protocolModeChar = CBMutableCharacteristic(
             type: UUIDs.protocolMode,
             properties: [.read, .writeWithoutResponse],
             value: nil,
@@ -147,33 +168,27 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
             permissions: [.writeable]
         )
 
-        let mouseReport = inputReportCharacteristic(
-            reportID: HIDReportDescriptors.reportIDMouse,
-            initialValue: lastMouseReport
-        )
-        let gamepadReport = inputReportCharacteristic(
-            reportID: HIDReportDescriptors.reportIDGamepad,
-            initialValue: lastGamepadReport
-        )
+        let mouseReport   = inputReportCharacteristic(reportID: HIDReportDescriptors.reportIDMouse,   initialValue: lastMouseReport)
+        let gamepadReport = inputReportCharacteristic(reportID: HIDReportDescriptors.reportIDGamepad, initialValue: lastGamepadReport)
 
         service.characteristics = [
             hidInformation,
             reportMap,
-            protocolMode,
+            protocolModeChar,
             hidControlPoint,
             mouseReport,
             gamepadReport
         ]
 
-        self.hidService = service
-        self.protocolModeCharacteristic = protocolMode
+        self.hidService                    = service
+        self.protocolModeCharacteristic    = protocolModeChar
         self.hidControlPointCharacteristic = hidControlPoint
-        self.mouseReportCharacteristic = mouseReport
-        self.gamepadReportCharacteristic = gamepadReport
+        self.mouseReportCharacteristic     = mouseReport
+        self.gamepadReportCharacteristic   = gamepadReport
 
         peripheralManager.add(service)
         peripheralManager.startAdvertising([
-            CBAdvertisementDataLocalNameKey: activeMode.deviceName,
+            CBAdvertisementDataLocalNameKey:    "TabletHID",
             CBAdvertisementDataServiceUUIDsKey: [UUIDs.hidService]
         ])
     }
@@ -205,7 +220,8 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         case .poweredOn:
             isAvailable = true
             unavailableReason = ""
-            if pendingStart {
+            // Start the peripheral if a mode has been requested but no service is running yet.
+            if hidService == nil, activeMode != nil {
                 startHIDPeripheral()
             }
         case .unsupported:
@@ -228,6 +244,8 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
     }
 }
 
+// MARK: – CBPeripheralManagerDelegate
+
 extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
     func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
         evaluateState(peripheral.state)
@@ -244,12 +262,11 @@ extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
             onEvent?(.error("Failed to advertise BLE HID service: \(error.localizedDescription)"))
             return
         }
-        if let activeMode {
-            if let reconnectTarget {
-                onEvent?(.reconnecting(mode: activeMode, hostName: reconnectTarget.displayName))
-            } else {
-                onEvent?(.waiting(activeMode))
-            }
+        guard let activeMode else { return }
+        if let reconnectTarget {
+            onEvent?(.reconnecting(mode: activeMode, hostName: reconnectTarget.displayName))
+        } else {
+            onEvent?(.waiting(activeMode))
         }
     }
 
@@ -259,7 +276,10 @@ extension ExperimentalBLEHIDTransport: CBPeripheralManagerDelegate {
         }
         if let activeMode {
             reconnectTarget = nil
-            onEvent?(.connected(mode: activeMode, host: .fromCentralIdentifier(central.identifier.uuidString, mode: activeMode)))
+            onEvent?(.connected(
+                mode: activeMode,
+                host: .fromCentralIdentifier(central.identifier.uuidString, mode: activeMode)
+            ))
         }
     }
 

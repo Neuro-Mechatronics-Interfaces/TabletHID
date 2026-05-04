@@ -13,12 +13,8 @@ enum DeviceMode: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var deviceName: String {
-        switch self {
-        case .touchMouse: "TabletHID Mouse"
-        case .gamepad: "TabletHID Gamepad"
-        }
-    }
+    // Single fixed name so both modes share one BLE bond — host never needs to re-pair.
+    var deviceName: String { "TabletHID" }
 
     var symbolName: String {
         switch self {
