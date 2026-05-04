@@ -96,7 +96,7 @@ export default function Support() {
           Open a GitHub issue and include your device model, OS version, and host OS.
           Bug reports with reproduction steps are resolved fastest.
         </p>
-        <a href="https://github.com/maxmurphy/TabletHID/issues" target="_blank" rel="noreferrer">
+        <a href="github.com/Neuro-Mechatronics-Interfaces/TabletHID/issues" target="_blank" rel="noreferrer">
           Open an issue on GitHub →
         </a>
       </div>

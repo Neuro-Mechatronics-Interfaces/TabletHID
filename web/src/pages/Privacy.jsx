@@ -69,9 +69,9 @@ export default function Privacy() {
         <p>
           Questions about this privacy policy can be directed to the project's GitHub
           repository at{' '}
-          <a href="https://github.com/maxmurphy/TabletHID" target="_blank" rel="noreferrer"
+          <a href="https://github.com/Neuro-Mechatronics-Interfaces/TabletHID" target="_blank" rel="noreferrer"
             style={{ color: 'var(--primary)' }}>
-            github.com/maxmurphy/TabletHID
+            github.com/Neuro-Mechatronics-Interfaces/TabletHID
           </a>.
         </p>
 
