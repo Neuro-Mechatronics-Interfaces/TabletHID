@@ -63,7 +63,7 @@ export default function Home() {
         </p>
         <div className="hero-btns">
           <Link to="/support" className="btn btn-primary">Get Support</Link>
-          <a href="https://github.com/maxmurphy/TabletHID" className="btn btn-outline" target="_blank" rel="noreferrer">View on GitHub</a>
+          <a href="https://github.com/Neuro-Mechatronics-Interfaces/TabletHID" className="btn btn-outline" target="_blank" rel="noreferrer">View on GitHub</a>
         </div>
         <div className="platform-badges">
           <a href="#" className="badge">
