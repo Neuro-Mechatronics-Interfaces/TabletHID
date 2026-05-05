@@ -63,10 +63,7 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Use this iPhone or iPad as a virtual HID control surface.")
-                .font(.title2.weight(.semibold))
-            Text("The iOS UI and report builders are ready for development; Bluetooth HID peripheral transport is still pending a supported platform path.")
-                .foregroundStyle(.secondary)
+            Text("A virtual HID control surface.")
         }
     }
 
