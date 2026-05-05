@@ -70,7 +70,7 @@ export default function Home() {
             <AppleLogo />
             App Store — iOS
           </a>
-          <a href="https://play.google.com/apps/internaltest/4701190471374740652" className="badge">
+          <a href="https://play.google.com/store/apps/details?id=com.tablet.hid" className="badge">
             <AndroidLogo />
             Google Play — Android
           </a>
