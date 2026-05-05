@@ -8,7 +8,6 @@ import imgMouseConfig      from '../../img/Mouse Config - Android.png';
 import imgMouseStatic      from '../../img/Mouse Config Static - Android.png';
 import imgGamepadConnect   from '../../img/Gamepad Connect - Android.png';
 import imgGamepadReconnect from '../../img/Gamepad Reconnect - Android.png';
-import imgGamepadLandscape from '../../img/Gamepad Layout Landscape - Android.png';
 
 import imgTabletLanding      from '../../img/Landing Permissions - Android Tablet.png';
 import imgTabletMousePairing from '../../img/Touch Mouse Pairing - Android Tablet.png';
@@ -356,7 +355,7 @@ function AndroidWalkthrough() {
         <Step
           tag="Gamepad"
           title="Use the virtual controller"
-          imgs={[imgGamepadLandscape, imgTabletGamepad]}
+          imgs={[imgTabletGamepad]}
           compact
         >
           Gamepad mode presents a full Xbox-style layout in landscape orientation:
