@@ -171,15 +171,21 @@ struct SetupView: View {
 
     private var actionButtons: some View {
         HStack {
-            Button {
-                appState.initialize(mode: mode)
-            } label: {
-                Label(
-                    appState.knownHosts.isEmpty ? "Prepare Transport" : "Prepare New Pair",
-                    systemImage: "antenna.radiowaves.left.and.right"
-                )
+            if appState.knownHosts.isEmpty {
+                Button {
+                    appState.initialize(mode: mode)
+                } label: {
+                    Label("Prepare Transport", systemImage: "antenna.radiowaves.left.and.right")
+                }
+                .buttonStyle(.borderedProminent)
+            } else {
+                Button {
+                    appState.initialize(mode: mode)
+                } label: {
+                    Label("Prepare New Pair", systemImage: "antenna.radiowaves.left.and.right")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(appState.knownHosts.isEmpty ? .borderedProminent : .bordered)
 
             Button {
                 appState.developmentConnect(mode: mode)

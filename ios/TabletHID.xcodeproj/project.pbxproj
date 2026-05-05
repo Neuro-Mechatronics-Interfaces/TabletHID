@@ -15,17 +15,21 @@
 		36038AECA7FF483377CE2C27 /* TouchMouseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91CEAA7A49C6BEA3F09D403 /* TouchMouseConfig.swift */; };
 		39A7A08811EC7DD31CD7AEEA /* ExperimentalBLEHIDTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7409BA3EAFDEE54C2860ED /* ExperimentalBLEHIDTransport.swift */; };
 		46A12F87AB4784C827075070 /* GamepadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6434D074460CA3B1934C10 /* GamepadView.swift */; };
+		46B663264C4CF49BAD61BA17 /* SessionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3AC1DAD6468C43F05C78FD /* SessionLogger.swift */; };
 		594E7F0BD801D8681C78C96E /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00611FA3990888935C20B379 /* SetupView.swift */; };
 		6519E7329F9C7886657E48F4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E2EB8C8FBB2248A632DD20 /* ContentView.swift */; };
 		707B94467BEC81529FF0B627 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC80437AB027317DF9B14669 /* AppState.swift */; };
 		74FDC2481999BA9DB4C7739C /* TouchMouseSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D15B5C2281208EFE006734 /* TouchMouseSettingsView.swift */; };
 		7955F8070BE8966E39523CAA /* TouchMouseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6970AEA5313182D55D01F5 /* TouchMouseView.swift */; };
 		7E6B4BDD61F29390888E1DF1 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113A0B8302A9595A815F5459 /* HomeView.swift */; };
+		835E16A97B89C199F0B8CC6B /* GamepadSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21CDB7761FBC09E650B4967B /* GamepadSettingsView.swift */; };
 		B3FB197EB569DCADDED39426 /* TabletHIDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114F63DE419F4A6F6E3CA69A /* TabletHIDApp.swift */; };
 		C5B7D3515B1DB0ADCBF38D9E /* GamepadConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 638F20A4E2017EE6F10CE220 /* GamepadConfig.swift */; };
+		D7994446DF3240A1AEA722EB /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45AB97B1559AA73CF7C918F /* AppSettingsView.swift */; };
 		DA5F49AB61E808387B2B2700 /* DeviceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F243CF26CE942FE6D2688C7C /* DeviceMode.swift */; };
 		ED33A965B0D8D0AB2FB567EB /* ConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B95106ED456AC2120E36D22C /* ConfigStore.swift */; };
 		F524C22794DAB392FA146D9B /* HIDReportDescriptors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AFFF1F643DD39CDE91127B /* HIDReportDescriptors.swift */; };
+		FB8CBEBEE09054146BA605CE /* AppearanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789977B7EBA158FAE2D62B68 /* AppearanceMode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +47,7 @@
 		113A0B8302A9595A815F5459 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		114F63DE419F4A6F6E3CA69A /* TabletHIDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabletHIDApp.swift; sourceTree = "<group>"; };
 		19E2EB8C8FBB2248A632DD20 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		21CDB7761FBC09E650B4967B /* GamepadSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamepadSettingsView.swift; sourceTree = "<group>"; };
 		248A3AE424C4EEB026917423 /* HIDTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIDTransport.swift; sourceTree = "<group>"; };
 		39D14F51983E0E59E5E9E9E9 /* TabletHIDTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TabletHIDTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		51FA794E714D73E429568F22 /* HIDReportDescriptorsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIDReportDescriptorsTests.swift; sourceTree = "<group>"; };
@@ -50,15 +55,18 @@
 		638F20A4E2017EE6F10CE220 /* GamepadConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamepadConfig.swift; sourceTree = "<group>"; };
 		6E41EB2593E354E0CB8F04D6 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
 		6E6970AEA5313182D55D01F5 /* TouchMouseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMouseView.swift; sourceTree = "<group>"; };
+		789977B7EBA158FAE2D62B68 /* AppearanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceMode.swift; sourceTree = "<group>"; };
 		7A7409BA3EAFDEE54C2860ED /* ExperimentalBLEHIDTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalBLEHIDTransport.swift; sourceTree = "<group>"; };
+		8D3AC1DAD6468C43F05C78FD /* SessionLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogger.swift; sourceTree = "<group>"; };
 		90AFFF1F643DD39CDE91127B /* HIDReportDescriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIDReportDescriptors.swift; sourceTree = "<group>"; };
 		90DABEF767731FD767CF1C73 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A91CEAA7A49C6BEA3F09D403 /* TouchMouseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMouseConfig.swift; sourceTree = "<group>"; };
-		B327DD51D148C2850E2B1FF8 /* TabletHID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletHID.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B327DD51D148C2850E2B1FF8 /* TabletHID.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TabletHID.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B95106ED456AC2120E36D22C /* ConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigStore.swift; sourceTree = "<group>"; };
-		BD86738B2112B3738C83CF92 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BD86738B2112B3738C83CF92 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DBE3A504E407B2EBA4429A46 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DE6434D074460CA3B1934C10 /* GamepadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamepadView.swift; sourceTree = "<group>"; };
+		E45AB97B1559AA73CF7C918F /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
 		F1D15B5C2281208EFE006734 /* TouchMouseSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMouseSettingsView.swift; sourceTree = "<group>"; };
 		F243CF26CE942FE6D2688C7C /* DeviceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMode.swift; sourceTree = "<group>"; };
 		FC80437AB027317DF9B14669 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -78,6 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				B95106ED456AC2120E36D22C /* ConfigStore.swift */,
+				8D3AC1DAD6468C43F05C78FD /* SessionLogger.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -119,6 +128,7 @@
 		B4C682B3C9A982AEA730D45B /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				789977B7EBA158FAE2D62B68 /* AppearanceMode.swift */,
 				F243CF26CE942FE6D2688C7C /* DeviceMode.swift */,
 				638F20A4E2017EE6F10CE220 /* GamepadConfig.swift */,
 				6E41EB2593E354E0CB8F04D6 /* Profile.swift */,
@@ -139,7 +149,9 @@
 		C1198B3C9FDE90E95AB52A4F /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E45AB97B1559AA73CF7C918F /* AppSettingsView.swift */,
 				19E2EB8C8FBB2248A632DD20 /* ContentView.swift */,
+				21CDB7761FBC09E650B4967B /* GamepadSettingsView.swift */,
 				DE6434D074460CA3B1934C10 /* GamepadView.swift */,
 				113A0B8302A9595A815F5459 /* HomeView.swift */,
 				00611FA3990888935C20B379 /* SetupView.swift */,
@@ -207,9 +219,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					4C6FBE0A2050091535492669 = {
-						DevelopmentTeam = S6F754UF9T;
+						DevelopmentTeam = "Max Murphy";
 					};
 					8E2E61C7907337750149C310 = {
+						DevelopmentTeam = "Max Murphy";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -259,17 +272,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7994446DF3240A1AEA722EB /* AppSettingsView.swift in Sources */,
 				707B94467BEC81529FF0B627 /* AppState.swift in Sources */,
+				FB8CBEBEE09054146BA605CE /* AppearanceMode.swift in Sources */,
 				ED33A965B0D8D0AB2FB567EB /* ConfigStore.swift in Sources */,
 				6519E7329F9C7886657E48F4 /* ContentView.swift in Sources */,
 				DA5F49AB61E808387B2B2700 /* DeviceMode.swift in Sources */,
 				39A7A08811EC7DD31CD7AEEA /* ExperimentalBLEHIDTransport.swift in Sources */,
 				C5B7D3515B1DB0ADCBF38D9E /* GamepadConfig.swift in Sources */,
+				835E16A97B89C199F0B8CC6B /* GamepadSettingsView.swift in Sources */,
 				46A12F87AB4784C827075070 /* GamepadView.swift in Sources */,
 				F524C22794DAB392FA146D9B /* HIDReportDescriptors.swift in Sources */,
 				0B7BA54CD1389202E85FC559 /* HIDTransport.swift in Sources */,
 				7E6B4BDD61F29390888E1DF1 /* HomeView.swift in Sources */,
 				0EC6BE1B74864863F4F0B7FF /* Profile.swift in Sources */,
+				46B663264C4CF49BAD61BA17 /* SessionLogger.swift in Sources */,
 				594E7F0BD801D8681C78C96E /* SetupView.swift in Sources */,
 				B3FB197EB569DCADDED39426 /* TabletHIDApp.swift in Sources */,
 				36038AECA7FF483377CE2C27 /* TouchMouseConfig.swift in Sources */,
@@ -295,7 +312,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -314,7 +330,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -363,7 +378,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = S6F754UF9T;
+				DEVELOPMENT_TEAM = "Max Murphy";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -429,7 +444,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S6F754UF9T;
+				DEVELOPMENT_TEAM = "Max Murphy";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
