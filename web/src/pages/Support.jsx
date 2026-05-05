@@ -16,6 +16,7 @@ import imgIosSetupPhone    from '../../img/Simulator Screenshot - iPhone Air - 2
 import imgIosMousePhone    from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.56.52.png';
 import imgIosGamepadPhone  from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.57.01.png';
 import imgIosHomePhone     from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.58.36.png';
+import imgIosAppSettings   from '../../img/Simulator Screenshot - iPhone Air - 2026-05-05 at 09.56.36.png';
 
 const FAQS = {
   common: [
@@ -91,6 +92,74 @@ function Step({ tag, title, imgs, compact, reverse, children }) {
   );
 }
 
+function LogInstructions({ platform }) {
+  if (platform === 'android') {
+    return (
+      <div className="log-guide">
+        <h2>Pulling Local Logs</h2>
+        <p>
+          Turn on <b>Enable local session logging</b> in TabletHID settings, connect
+          to a host, reproduce the issue, then leave the control screen so the log
+          can close. Each session writes a <code>.config</code> snapshot and a{' '}
+          <code>.log</code> event file.
+        </p>
+        <div className="log-steps">
+          <div>
+            <h3>Android with adb</h3>
+            <ol>
+              <li>Enable USB debugging on the Android tablet and connect it to your laptop.</li>
+              <li>Run <code>adb devices</code> and accept the device trust prompt.</li>
+              <li>Pull the session folder from app external storage.</li>
+            </ol>
+            <pre>{`adb pull /sdcard/Android/data/com.tablet.hid/files/sessions ./TabletHID-sessions`}</pre>
+          </div>
+          <div>
+            <h3>Files app fallback</h3>
+            <p>
+              On devices that expose app storage, browse to{' '}
+              <code>Android/data/com.tablet.hid/files/sessions</code> and copy the
+              newest <code>.config</code> and <code>.log</code> files to your laptop.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (platform === 'ios') {
+    return (
+      <div className="log-guide">
+        <h2>Pulling Local Logs</h2>
+        <p>
+          Turn on <b>Enable local session logging</b> in TabletHID settings, connect
+          to a host, reproduce the issue, then leave the control screen so the log
+          can close. Logs are written to <code>Files app &gt; TabletHID &gt; sessions</code>.
+        </p>
+        <div className="log-steps">
+          <div>
+            <h3>macOS Finder</h3>
+            <ol>
+              <li>Connect the iPhone or iPad to your Mac with USB and trust the computer.</li>
+              <li>Open Finder, select the device in the sidebar, then open the Files tab.</li>
+              <li>Expand TabletHID and drag the <code>sessions</code> folder to your Mac.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>Files app or Windows</h3>
+            <p>
+              From the iOS Files app, open <code>On My iPhone/iPad &gt; TabletHID &gt; sessions</code>
+              and share or AirDrop the newest files. On Windows, use Apple Devices or
+              iTunes File Sharing, select TabletHID, then save the <code>sessions</code> folder.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 function IosWalkthrough() {
   return (
     <>
@@ -109,7 +178,14 @@ function IosWalkthrough() {
           or use case.
         </Step>
 
-        <Step tag="Transport" title="Prepare the Bluetooth connection" imgs={[imgIosSetupPhone]} reverse>
+        <Step tag="App settings" title="Set appearance and orientation" imgs={[imgIosAppSettings]} reverse>
+          Tap the <b>gear icon</b> on the home screen to open app-wide settings.
+          Choose light, dark, or system appearance; lock control surfaces to portrait
+          or landscape; and enable local session logging when you need a diagnostic
+          record of HID events.
+        </Step>
+
+        <Step tag="Transport" title="Prepare the Bluetooth connection" imgs={[imgIosSetupPhone]}>
           Open either mode and tap <b>Prepare Transport</b>. iOS uses Core Bluetooth
           peripheral mode, so the app prepares the HID-over-GATT advertisement before
           you enter the control surface.
@@ -286,6 +362,7 @@ export default function Support() {
 
       {tab === 'ios' && <IosWalkthrough />}
       {tab === 'android' && <AndroidWalkthrough />}
+      <LogInstructions platform={tab} />
 
       <div className="support-section">
         <h2>
