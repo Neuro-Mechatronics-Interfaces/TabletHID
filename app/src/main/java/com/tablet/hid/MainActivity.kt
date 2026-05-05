@@ -31,6 +31,7 @@ import com.google.android.material.divider.MaterialDivider
 import com.tablet.hid.databinding.ActivityMainBinding
 import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.LoggingStore
+import com.tablet.hid.util.OrientationStore
 
 class MainActivity : AppCompatActivity() {
 
@@ -143,6 +144,34 @@ class MainActivity : AppCompatActivity() {
             dp4, dp16
         ))
 
+        // ── Divider ────────────────────────────────────────────────────────────
+        root.addView(MaterialDivider(this).apply {
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp16; lp.bottomMargin = dp4
+            layoutParams = lp
+        })
+
+        // ── Orientation Lock ───────────────────────────────────────────────────
+        root.addView(sectionLabel("Orientation Lock", dp8, dp8))
+
+        var selectedOrientation = OrientationStore.get(this)
+        val orientationGroup = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
+        listOf("System default", "Portrait", "Landscape").forEachIndexed { i, label ->
+            orientationGroup.addView(RadioButton(this).apply {
+                text = label; id = i; isChecked = (i == selectedOrientation)
+            })
+        }
+        orientationGroup.setOnCheckedChangeListener { _, id -> selectedOrientation = id }
+        root.addView(orientationGroup)
+
+        root.addView(hintText(
+            "Locks screen rotation for Touch Mouse and Gamepad canvas views.",
+            dp4, dp16
+        ))
+
         // ── Build dialog ───────────────────────────────────────────────────────
         MaterialAlertDialogBuilder(this)
             .setTitle("Settings")
@@ -153,6 +182,8 @@ class MainActivity : AppCompatActivity() {
                 val enabled = loggingCheck.isChecked
                 LoggingStore.setEnabled(this, enabled)
                 viewModel.setLoggingEnabled(enabled)
+                OrientationStore.set(this, selectedOrientation)
+                requestedOrientation = OrientationStore.toActivityOrientation(selectedOrientation)
             }
             .setNegativeButton("Cancel", null)
             .show()

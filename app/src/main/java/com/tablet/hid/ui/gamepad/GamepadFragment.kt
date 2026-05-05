@@ -43,10 +43,12 @@ import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_SE
 import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_SW
 import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_W
 import com.tablet.hid.databinding.FragmentGamepadBinding
+import androidx.core.content.ContextCompat
 import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.TriggerDragAxis
+import com.tablet.hid.util.OrientationStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -125,7 +127,8 @@ class GamepadFragment : Fragment() {
                 .setPositiveButton(R.string.exit_mode_confirm) { _, _ ->
                     isEnabled = false
                     exitImmersiveMode()
-                    requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    requireActivity().requestedOrientation =
+                        OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
                     viewModel.disconnect()
                     findNavController().navigate(R.id.action_gamepad_to_home)
                 }
@@ -144,8 +147,12 @@ class GamepadFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requireActivity().requestedOrientation =
+            OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
+
+        binding.btnOrientationLock.setOnClickListener { cycleOrientationLock() }
+        updateOrientationIcon()
 
         setupJoysticks()
         setupButtons()
@@ -601,13 +608,30 @@ class GamepadFragment : Fragment() {
         )
     }
 
+    // ── Orientation lock ─────────────────────────────────────────────────────
+
+    private fun cycleOrientationLock() {
+        val next = (OrientationStore.get(requireContext()) + 1) % 3
+        OrientationStore.set(requireContext(), next)
+        requireActivity().requestedOrientation = OrientationStore.toActivityOrientation(next)
+        updateOrientationIcon()
+    }
+
+    private fun updateOrientationIcon() {
+        val icon = when (OrientationStore.get(requireContext())) {
+            OrientationStore.PORTRAIT  -> R.drawable.ic_orientation_portrait
+            OrientationStore.LANDSCAPE -> R.drawable.ic_orientation_landscape
+            else                       -> R.drawable.ic_orientation_auto
+        }
+        binding.btnOrientationLock.icon = ContextCompat.getDrawable(requireContext(), icon)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         turboJobs.values.forEach { it.cancel() }
         turboJobs.clear()
-        if (requireActivity().requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
+        requireActivity().requestedOrientation =
+            OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
         _binding = null
     }
 }

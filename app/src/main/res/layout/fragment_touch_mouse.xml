@@ -38,6 +38,17 @@
             android:textColor="#99FFFFFF"
             android:textSize="12sp" />
 
+        <!-- Orientation lock button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOrientationLock"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/orientation_lock"
+            app:icon="@drawable/ic_orientation_auto"
+            app:iconSize="24dp"
+            app:iconTint="@android:color/white" />
+
         <!-- Settings (config drawer) button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"

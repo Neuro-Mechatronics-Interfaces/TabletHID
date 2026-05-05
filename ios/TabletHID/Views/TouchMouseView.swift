@@ -44,6 +44,15 @@ struct TouchMouseView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
+                #if canImport(UIKit)
+                Button {
+                    appState.setOrientationLock(appState.orientationLock.next)
+                } label: {
+                    Image(systemName: appState.orientationLock.symbolName)
+                }
+                .buttonStyle(.bordered)
+                #endif
+
                 Button {
                     showingSettings = true
                 } label: {

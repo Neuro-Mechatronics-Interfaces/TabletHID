@@ -20,6 +20,23 @@ struct AppSettingsView: View {
                 }
 
                 Section {
+                    Picker("Orientation", selection: Binding(
+                        get: { appState.orientationLock },
+                        set: { appState.setOrientationLock($0) }
+                    )) {
+                        ForEach(OrientationLock.allCases) { lock in
+                            Text(lock.label).tag(lock)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Text("Locks screen rotation for Touch Mouse and Gamepad canvas views.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Orientation Lock")
+                }
+
+                Section {
                     Toggle("Enable local session logging", isOn: Binding(
                         get: { appState.loggingEnabled },
                         set: { appState.setLoggingEnabled($0) }

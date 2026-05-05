@@ -43,7 +43,10 @@
 - [x] Add Mouse mode: trackpad-style delta movement.
 - [x] Add static/dynamic left and right click zones.
 - [x] Add momentary/latching zone state.
+- [x] Fix first-touch zone assignment — check zones before assigning movement pointer in `beginMouseMode`.
+- [x] Process coalesced touches (`event?.coalescedTouches`) and accumulate sub-pixel deltas for smooth movement.
 - [x] Add settings sheet for mode, sensitivity, dynamic zone offset/radius, and button behavior.
+- [x] Add dynamic zone auto-calibrate — 3-step finger placement flow (`CalibrationSurface` UIViewRepresentable + Coordinator) derives offset + radius for L/R buttons.
 - [ ] Add static zone edit flow matching Android's rubber-band editor.
 - [ ] Add two-finger scroll.
 - [ ] Add middle click gesture.
@@ -66,6 +69,9 @@
 
 ## Phase 2 - Parity And Polish
 
+- [x] Session logging — `SessionLogger` writes `.config` snapshot + timestamped `.log` of all HID events to `Documents/sessions/` on each connection; toggle in Settings.
+- [x] Appearance / dark mode — gear icon on Home opens `AppSettingsView`; segmented picker (System / Light / Dark) drives `preferredColorScheme`.
+- [x] Orientation lock — `OrientationLock` enum (System / Portrait / Landscape); `AppDelegate` + `UIApplicationDelegateAdaptor`; `UIWindowScene.requestGeometryUpdate` (iOS 16+); picker in Settings; cycle button in Touch Mouse and Gamepad canvas bars.
 - [ ] Bring built-in Android XML defaults over to iOS as bundled JSON or plist defaults.
 - [ ] Add profile import/export to aid parity testing.
 - [ ] Add onboarding copy explaining iOS transport limits and development mode.

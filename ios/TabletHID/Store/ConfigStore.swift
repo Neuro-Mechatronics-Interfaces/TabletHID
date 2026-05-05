@@ -123,6 +123,16 @@ struct ConfigStore {
         defaults.set(enabled, forKey: "logging_enabled")
     }
 
+    func loadOrientationLock() -> OrientationLock {
+        guard let raw = defaults.string(forKey: "orientation_lock"),
+              let lock = OrientationLock(rawValue: raw) else { return .system }
+        return lock
+    }
+
+    func saveOrientationLock(_ lock: OrientationLock) {
+        defaults.set(lock.rawValue, forKey: "orientation_lock")
+    }
+
     private func touchKey(_ profile: Profile) -> String {
         "touch_mouse_config_\(profile.key)"
     }

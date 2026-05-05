@@ -69,6 +69,9 @@ struct GamepadView: View {
                     HStack {
                         backButton
                         Spacer()
+                        #if canImport(UIKit)
+                        orientationButton
+                        #endif
                         settingsButton
                         profileLabel
                     }
@@ -83,6 +86,9 @@ struct GamepadView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                     Spacer()
+                    #if canImport(UIKit)
+                    orientationButton
+                    #endif
                     settingsButton
                     profileLabel
                 }
@@ -104,6 +110,17 @@ struct GamepadView: View {
         }
         .buttonStyle(.bordered)
     }
+
+    #if canImport(UIKit)
+    private var orientationButton: some View {
+        Button {
+            appState.setOrientationLock(appState.orientationLock.next)
+        } label: {
+            Image(systemName: appState.orientationLock.symbolName)
+        }
+        .buttonStyle(.bordered)
+    }
+    #endif
 
     private var profileLabel: some View {
         Text(appState.activeProfile.name)

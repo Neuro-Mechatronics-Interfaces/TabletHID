@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @MainActor
 final class AppState: ObservableObject {
@@ -10,6 +13,7 @@ final class AppState: ObservableObject {
     @Published var knownHosts: [HIDHost]
     @Published var appearanceMode: AppearanceMode
     @Published var loggingEnabled: Bool
+    @Published var orientationLock: OrientationLock
 
     private let store = ConfigStore()
     private let transport: HIDTransport
@@ -26,6 +30,11 @@ final class AppState: ObservableObject {
         self.knownHosts = store.loadKnownHosts()
         self.appearanceMode = store.loadAppearanceMode()
         self.loggingEnabled = store.loadLoggingEnabled()
+        let lock = store.loadOrientationLock()
+        self.orientationLock = lock
+        #if canImport(UIKit)
+        AppDelegate.orientationLock = lock.interfaceOrientationMask
+        #endif
         self.transport.onEvent = { [weak self] event in
             Task { @MainActor in
                 self?.handleTransportEvent(event)
@@ -118,6 +127,21 @@ final class AppState: ObservableObject {
     func setAppearanceMode(_ mode: AppearanceMode) {
         appearanceMode = mode
         store.saveAppearanceMode(mode)
+    }
+
+    func setOrientationLock(_ lock: OrientationLock) {
+        orientationLock = lock
+        store.saveOrientationLock(lock)
+        #if canImport(UIKit)
+        AppDelegate.orientationLock = lock.interfaceOrientationMask
+        if #available(iOS 16.0, *) {
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                scene.requestGeometryUpdate(
+                    UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: lock.interfaceOrientationMask)
+                ) { _ in }
+            }
+        }
+        #endif
     }
 
     func setLoggingEnabled(_ enabled: Bool) {

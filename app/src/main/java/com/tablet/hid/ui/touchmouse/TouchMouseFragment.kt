@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
@@ -33,6 +34,7 @@ import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.ZoneType
+import com.tablet.hid.util.OrientationStore
 import kotlin.math.sqrt
 import kotlinx.coroutines.launch
 
@@ -160,6 +162,12 @@ class TouchMouseFragment : Fragment() {
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
 
+        requireActivity().requestedOrientation =
+            OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
+
+        binding.btnOrientationLock.setOnClickListener { cycleOrientationLock() }
+        updateOrientationIcon()
+
         // Insets are applied before immersive mode kicks in (onResume);
         // once immersive hides bars the padding returns to 0 automatically.
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
@@ -193,6 +201,24 @@ class TouchMouseFragment : Fragment() {
             onCalibrationRequested = { startCalibration() }
         }
         sheet.show(childFragmentManager, "tmConfig")
+    }
+
+    // ── Orientation lock ─────────────────────────────────────────────────────
+
+    private fun cycleOrientationLock() {
+        val next = (OrientationStore.get(requireContext()) + 1) % 3
+        OrientationStore.set(requireContext(), next)
+        requireActivity().requestedOrientation = OrientationStore.toActivityOrientation(next)
+        updateOrientationIcon()
+    }
+
+    private fun updateOrientationIcon() {
+        val icon = when (OrientationStore.get(requireContext())) {
+            OrientationStore.PORTRAIT  -> R.drawable.ic_orientation_portrait
+            OrientationStore.LANDSCAPE -> R.drawable.ic_orientation_landscape
+            else                       -> R.drawable.ic_orientation_auto
+        }
+        binding.btnOrientationLock.icon = ContextCompat.getDrawable(requireContext(), icon)
     }
 
     private fun startZoneEdit(isLeft: Boolean) {

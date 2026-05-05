@@ -112,6 +112,13 @@
     <string name="exit_mode_confirm">Exit</string>
     <string name="exit_mode_stay">Stay</string>
 
+    <!-- Orientation lock -->
+    <string name="orientation_lock">Orientation Lock</string>
+    <string name="orientation_system">System default</string>
+    <string name="orientation_portrait">Portrait</string>
+    <string name="orientation_landscape">Landscape</string>
+    <string name="orientation_lock_hint">Locks screen rotation when using Touch Mouse or Gamepad canvas views.</string>
+
     <!-- Dynamic zone calibration -->
     <string name="config_auto_calibrate">Auto-calibrate Dynamic Zones</string>
     <string name="calibrate_hint_primary">Step 1 of 3 — Place your pointer finger anywhere on the screen</string>

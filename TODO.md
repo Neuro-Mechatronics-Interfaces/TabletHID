@@ -21,7 +21,10 @@
 - [x] Dynamic zone — click pad follows pointer at configurable offset and radius
 - [x] Momentary / Latching behavior per button
 - [x] Multi-pointer routing
+- [x] First-touch zone hit-testing — checks zones before assigning movement pointer on `ACTION_DOWN`
+- [x] Sub-pixel accumulation (`accumDx`/`accumDy`) to prevent quantization noise in mouse movement
 - [x] Zone-edit flow with rubber-band overlay and Cancel
+- [x] Dynamic zone auto-calibrate — 3-step finger placement derives offset + radius for L/R buttons
 - [x] `TouchZoneOverlayView` — touch surface + canvas renderer
 - [x] Config sheet (BottomSheetDialogFragment); live-pushes changes to ViewModel
 - [x] Persist `TouchMouseConfig` to SharedPreferences (survives app restart)
@@ -52,6 +55,12 @@
 - [x] Joystick deadzone and gain sliders
 - [x] D-pad diagonal input (NE/NW/SE/SW hat codes)
 - [x] Back/Start button text auto-sizing (prevents clipping)
+
+## Phase 2 — Settings & app controls ✅
+
+- [x] Settings dialog — Appearance (system/light/dark) + session logging toggle + orientation lock
+- [x] Session logging — `.config` snapshot + timestamped `.log` of all HID events written to app storage on each connection
+- [x] Orientation lock — System/Portrait/Landscape preference; in-canvas cycle button on both Touch Mouse and Gamepad status bars; applies immediately via `requestedOrientation`
 
 ## Phase 2 — Connection & pairing ✅
 
@@ -85,9 +94,9 @@
 ### UX & polish
 
 - [ ] **Screen pinning** (`startLockTask()`) — optional advanced lock-in; toggle in Settings
-- [ ] **Settings fragment** — device name, global preferences
+- [ ] **Settings fragment** — device name, global preferences (basic settings dialog exists; no dedicated fragment yet)
 - [ ] **Onboarding screen** — shown once on first launch
-- [ ] **Landscape lock toggle** — make orientation preference configurable per mode
+- [x] **Orientation lock** — System / Portrait / Landscape, accessible from Settings dialog and in-canvas status bar
 - [ ] **Connection status chip** — persistent across all fragments
 
 ### Quality / CI

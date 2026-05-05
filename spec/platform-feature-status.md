@@ -55,15 +55,18 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 
 | Feature | Android status | iOS status |
 | --- | --- | --- |
-| Touch mode movement with button held | Implemented | Initial UIKit touch surface |
-| Double-tap double-click | Implemented | Initial implementation |
-| Bottom right-click zone | Implemented | Initial implementation |
-| Mouse/trackpad mode | Implemented | Initial implementation |
-| Sensitivity | Implemented | Initial settings sheet |
-| Static left/right zones | Implemented | Initial rendering and hit testing |
-| Dynamic left/right zones | Implemented | Initial rendering and hit testing |
-| Momentary/latching zones | Implemented | Initial implementation |
-| Zone editing | Implemented | Not yet implemented |
+| Touch mode movement with button held | Implemented | Implemented |
+| Double-tap double-click | Implemented | Implemented |
+| Bottom right-click zone | Implemented | Implemented |
+| Mouse/trackpad mode | Implemented | Implemented |
+| Sensitivity | Implemented | Implemented |
+| Static left/right zones | Implemented | Implemented |
+| Dynamic left/right zones | Implemented | Implemented |
+| Momentary/latching zones | Implemented | Implemented |
+| First-touch zone hit-test (no spurious movement on zone tap) | Implemented | Implemented |
+| Sub-pixel delta accumulation (smooth movement) | Implemented | Implemented (coalesced touches) |
+| Dynamic zone auto-calibrate (3-finger placement flow) | Implemented | Implemented |
+| Zone editing (rubber-band drag to set static zone) | Implemented | Not yet implemented |
 | Persist config | Implemented | Implemented |
 | Two-finger scroll | TODO | TODO |
 | Middle click | TODO | TODO |
@@ -87,6 +90,16 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Multiple presets | Built-in plus custom profiles | Built-in plus custom profiles |
 | Visual press feedback | Implemented | Initial press styling |
 | Rumble | TODO | TODO |
+
+## Settings & App Controls
+
+| Feature | Android status | iOS status |
+| --- | --- | --- |
+| Appearance / dark mode | System / Light / Dark; applied via `AppCompatDelegate` | System / Light / Dark; gear icon on Home opens `AppSettingsView`; drives `preferredColorScheme` |
+| Session logging | Toggle in Settings dialog; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
+| Orientation lock | System / Portrait / Landscape; Settings dialog + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
+| Known host management | Rename / forget host; last 10 hosts stored | Rename / forget host; list stored in `UserDefaults` |
+| Multi-profile support | Built-in + custom profiles; profile-namespaced config storage | Built-in + custom profiles; profile-namespaced `UserDefaults` keys |
 
 ## Quality
 
