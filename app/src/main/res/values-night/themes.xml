@@ -12,8 +12,7 @@
         <item name="colorOnSecondary">@color/black</item>
         <item name="colorSurface">@color/black</item>
         <item name="colorOnSurface">@color/white</item>
-        <item name="colorBackground">@color/black</item>
-        <item name="colorOnBackground">@color/white</item>
+        <item name="android:colorBackground">@color/black</item>
         <item name="colorOutline">@color/white</item>
     </style>
 </resources>
