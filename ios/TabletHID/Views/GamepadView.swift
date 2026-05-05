@@ -11,7 +11,10 @@ struct GamepadView: View {
     @State private var dDown = false
     @State private var dLeft = false
     @State private var dRight = false
+    @State private var showSettings = false
     let onExit: () -> Void
+
+    private var cfg: GamepadConfig { appState.gamepadConfig }
 
     var body: some View {
         GeometryReader { proxy in
@@ -42,6 +45,11 @@ struct GamepadView: View {
             }
         }
         .navigationBarBackButtonHidden()
+        .sheet(isPresented: $showSettings) {
+            GamepadSettingsView(config: appState.gamepadConfig) { newConfig in
+                appState.updateGamepadConfig(newConfig)
+            }
+        }
     }
 
     private var appBackgroundColor: Color {
@@ -61,9 +69,9 @@ struct GamepadView: View {
                     HStack {
                         backButton
                         Spacer()
+                        settingsButton
                         profileLabel
                     }
-
                     ConnectionPill(text: appState.connectionState.label, connected: appState.connectionState.isConnected)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
@@ -71,13 +79,11 @@ struct GamepadView: View {
             } else {
                 HStack {
                     backButton
-
                     ConnectionPill(text: appState.connectionState.label, connected: appState.connectionState.isConnected)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
-
                     Spacer()
-
+                    settingsButton
                     profileLabel
                 }
             }
@@ -90,6 +96,13 @@ struct GamepadView: View {
             Label("Back", systemImage: "chevron.left")
         }
         .buttonStyle(.borderedProminent)
+    }
+
+    private var settingsButton: some View {
+        Button { showSettings = true } label: {
+            Image(systemName: "gearshape")
+        }
+        .buttonStyle(.bordered)
     }
 
     private var profileLabel: some View {
@@ -119,7 +132,7 @@ struct GamepadView: View {
 
             HStack(alignment: .center, spacing: metrics.spacing) {
                 VStack(spacing: metrics.spacing) {
-                    Joystick(label: "L", size: metrics.joystickSize) { x, y in
+                    Joystick(label: "L", size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
                         leftStick = CGPoint(x: x, y: y)
                         sendReport()
                     }
@@ -130,7 +143,7 @@ struct GamepadView: View {
 
                 VStack(spacing: metrics.spacing) {
                     faceButtons(metrics)
-                    Joystick(label: "R", size: metrics.joystickSize) { x, y in
+                    Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
                         rightStick = CGPoint(x: x, y: y)
                         sendReport()
                     }
@@ -144,7 +157,7 @@ struct GamepadView: View {
     private func leftControls(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.sectionSpacing) {
             shoulderControls(metrics, side: .left)
-            Joystick(label: "L", size: metrics.joystickSize) { x, y in
+            Joystick(label: "L", size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
                 leftStick = CGPoint(x: x, y: y)
                 sendReport()
             }
@@ -152,27 +165,24 @@ struct GamepadView: View {
         }
     }
 
-    private enum ShoulderSide {
-        case left
-        case right
-    }
+    private enum ShoulderSide { case left; case right }
 
     private func shoulderControls(_ metrics: GamepadMetrics, side: ShoulderSide) -> some View {
         HStack(spacing: metrics.buttonSpacing) {
             switch side {
             case .left:
-                GamepadButton(label: "LT", size: metrics.buttonSize) { pressed in
+                GamepadButton(label: "LT", size: metrics.buttonSize, config: cfg.btnLT) { pressed in
                     leftTrigger = pressed ? 255 : 0
                     sendReport()
                 }
-                GamepadButton(label: "LB", size: metrics.buttonSize) { pressed in
+                GamepadButton(label: "LB", size: metrics.buttonSize, config: cfg.btnLB) { pressed in
                     setButton(.btnLB, pressed: pressed)
                 }
             case .right:
-                GamepadButton(label: "RB", size: metrics.buttonSize) { pressed in
+                GamepadButton(label: "RB", size: metrics.buttonSize, config: cfg.btnRB) { pressed in
                     setButton(.btnRB, pressed: pressed)
                 }
-                GamepadButton(label: "RT", size: metrics.buttonSize) { pressed in
+                GamepadButton(label: "RT", size: metrics.buttonSize, config: cfg.btnRT) { pressed in
                     rightTrigger = pressed ? 255 : 0
                     sendReport()
                 }
@@ -182,8 +192,8 @@ struct GamepadView: View {
 
     private func centerControls(_ metrics: GamepadMetrics) -> some View {
         HStack(spacing: metrics.buttonSpacing) {
-            GamepadButton(label: "Back", size: metrics.buttonSize) { pressed in setButton(.btnBack, pressed: pressed) }
-            GamepadButton(label: "Start", size: metrics.buttonSize) { pressed in setButton(.btnStart, pressed: pressed) }
+            GamepadButton(label: "Back",  size: metrics.buttonSize, config: cfg.btnBack)  { pressed in setButton(.btnBack,  pressed: pressed) }
+            GamepadButton(label: "Start", size: metrics.buttonSize, config: cfg.btnStart) { pressed in setButton(.btnStart, pressed: pressed) }
         }
     }
 
@@ -191,7 +201,7 @@ struct GamepadView: View {
         VStack(spacing: metrics.sectionSpacing) {
             shoulderControls(metrics, side: .right)
             faceButtons(metrics)
-            Joystick(label: "R", size: metrics.joystickSize) { x, y in
+            Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
                 rightStick = CGPoint(x: x, y: y)
                 sendReport()
             }
@@ -200,23 +210,23 @@ struct GamepadView: View {
 
     private func faceButtons(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: "Y", tint: .yellow, size: metrics.buttonSize) { pressed in setButton(.btnY, pressed: pressed) }
+            GamepadButton(label: "Y", tint: .yellow, size: metrics.buttonSize, config: cfg.btnY) { pressed in setButton(.btnY, pressed: pressed) }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: "X", tint: .blue, size: metrics.buttonSize) { pressed in setButton(.btnX, pressed: pressed) }
-                GamepadButton(label: "B", tint: .red, size: metrics.buttonSize) { pressed in setButton(.btnB, pressed: pressed) }
+                GamepadButton(label: "X", tint: .blue,  size: metrics.buttonSize, config: cfg.btnX) { pressed in setButton(.btnX, pressed: pressed) }
+                GamepadButton(label: "B", tint: .red,   size: metrics.buttonSize, config: cfg.btnB) { pressed in setButton(.btnB, pressed: pressed) }
             }
-            GamepadButton(label: "A", tint: .green, size: metrics.buttonSize) { pressed in setButton(.btnA, pressed: pressed) }
+            GamepadButton(label: "A", tint: .green, size: metrics.buttonSize, config: cfg.btnA) { pressed in setButton(.btnA, pressed: pressed) }
         }
     }
 
     private func dpad(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: "Up", size: metrics.buttonSize) { pressed in dUp = pressed; sendReport() }
+            GamepadButton(label: "Up",    size: metrics.buttonSize, config: cfg.dpadUp)    { pressed in dUp    = pressed; sendReport() }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: "Left", size: metrics.buttonSize) { pressed in dLeft = pressed; sendReport() }
-                GamepadButton(label: "Right", size: metrics.buttonSize) { pressed in dRight = pressed; sendReport() }
+                GamepadButton(label: "Left",  size: metrics.buttonSize, config: cfg.dpadLeft)  { pressed in dLeft  = pressed; sendReport() }
+                GamepadButton(label: "Right", size: metrics.buttonSize, config: cfg.dpadRight) { pressed in dRight = pressed; sendReport() }
             }
-            GamepadButton(label: "Down", size: metrics.buttonSize) { pressed in dDown = pressed; sendReport() }
+            GamepadButton(label: "Down",  size: metrics.buttonSize, config: cfg.dpadDown)  { pressed in dDown  = pressed; sendReport() }
         }
         .font(.caption)
     }
@@ -249,11 +259,11 @@ struct GamepadView: View {
         case (_, true, _, true): HIDReportDescriptors.hatSE
         case (_, true, true, _): HIDReportDescriptors.hatSW
         case (true, _, true, _): HIDReportDescriptors.hatNW
-        case (true, _, _, _): HIDReportDescriptors.hatN
-        case (_, true, _, _): HIDReportDescriptors.hatS
-        case (_, _, true, _): HIDReportDescriptors.hatW
-        case (_, _, _, true): HIDReportDescriptors.hatE
-        default: HIDReportDescriptors.hatNone
+        case (true, _, _, _):   HIDReportDescriptors.hatN
+        case (_, true, _, _):   HIDReportDescriptors.hatS
+        case (_, _, true, _):   HIDReportDescriptors.hatW
+        case (_, _, _, true):   HIDReportDescriptors.hatE
+        default:                HIDReportDescriptors.hatNone
         }
     }
 }
@@ -321,8 +331,12 @@ struct GamepadButton: View {
     let label: String
     var tint: Color = .gray
     var size = CGSize(width: 68, height: 52)
+    var config: ButtonConfig = ButtonConfig()
     let onChanged: (Bool) -> Void
+
     @State private var pressed = false
+    @State private var latched = false
+    @State private var turboTask: Task<Void, Never>?
 
     var body: some View {
         Text(label)
@@ -330,29 +344,66 @@ struct GamepadButton: View {
             .minimumScaleFactor(0.65)
             .lineLimit(1)
             .frame(width: size.width, height: size.height)
-            .background((pressed ? tint.opacity(0.85) : tint.opacity(0.32)))
+            .background(pressed || latched ? tint.opacity(0.85) : tint.opacity(0.32))
             .foregroundStyle(.primary)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white.opacity(0.5), lineWidth: 1))
+            .opacity(config.enabled ? 1 : 0)
+            .allowsHitTesting(config.enabled)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
                         guard !pressed else { return }
                         pressed = true
-                        onChanged(true)
+                        if config.behavior != .latching {
+                            onChanged(true)
+                            if config.turbo { startTurbo() }
+                        }
                     }
                     .onEnded { _ in
                         guard pressed else { return }
                         pressed = false
-                        onChanged(false)
+                        if config.behavior == .latching {
+                            latched.toggle()
+                            onChanged(latched)
+                        } else {
+                            onChanged(false)
+                            stopTurbo()
+                        }
                     }
             )
+            .onDisappear {
+                turboTask?.cancel()
+                turboTask = nil
+            }
+    }
+
+    private func startTurbo() {
+        turboTask?.cancel()
+        let interval = config.turboIntervalMs
+        let duration = config.turboDurationMs
+        turboTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(interval))
+                guard !Task.isCancelled else { break }
+                onChanged(false)
+                try? await Task.sleep(for: .milliseconds(duration))
+                guard !Task.isCancelled else { break }
+                onChanged(true)
+            }
+        }
+    }
+
+    private func stopTurbo() {
+        turboTask?.cancel()
+        turboTask = nil
     }
 }
 
 struct Joystick: View {
     let label: String
     var size: CGFloat = 178
+    var config: JoystickConfig = JoystickConfig()
     let onChanged: (Double, Double) -> Void
     @State private var knob = CGSize.zero
 
@@ -371,6 +422,8 @@ struct Joystick: View {
                 .offset(knob)
         }
         .frame(width: size, height: size)
+        .opacity(config.enabled ? 1 : 0.35)
+        .allowsHitTesting(config.enabled)
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
@@ -379,7 +432,18 @@ struct Joystick: View {
                     let distance = sqrt(dx * dx + dy * dy)
                     let scale = distance > radius ? radius / distance : 1
                     knob = CGSize(width: dx * scale, height: dy * scale)
-                    onChanged(Double(knob.width / radius), Double(knob.height / radius))
+
+                    var nx = Double(knob.width / radius)
+                    var ny = Double(knob.height / radius)
+                    let mag = sqrt(nx * nx + ny * ny)
+                    if mag < config.deadzone {
+                        nx = 0; ny = 0
+                    } else {
+                        let norm = min(1.0, (mag - config.deadzone) / (1.0 - config.deadzone) * config.gain)
+                        let factor = mag > 0 ? norm / mag : 0
+                        nx *= factor; ny *= factor
+                    }
+                    onChanged(nx, ny)
                 }
                 .onEnded { _ in
                     knob = .zero

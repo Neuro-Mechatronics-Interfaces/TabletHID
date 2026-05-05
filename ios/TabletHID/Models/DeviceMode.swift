@@ -26,16 +26,25 @@ enum DeviceMode: String, CaseIterable, Identifiable, Codable {
 
 struct HIDHost: Codable, Equatable, Identifiable {
     let identifier: String
-    let displayName: String
+    let displayName: String   // BLE/BT name captured at connection time
+    var alias: String?        // User-assigned label (overrides displayName in UI)
     let lastMode: DeviceMode
     let lastSeen: Date
 
     var id: String { identifier }
 
+    /// What to show in the UI: alias if set, otherwise displayName, otherwise a short identifier.
+    var label: String {
+        let a = alias?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !a.isEmpty { return a }
+        return displayName.isEmpty ? String(identifier.prefix(8)) : displayName
+    }
+
     static func fromCentralIdentifier(_ identifier: String, mode: DeviceMode) -> HIDHost {
         HIDHost(
             identifier: identifier,
             displayName: "Host \(identifier.prefix(8))",
+            alias: nil,
             lastMode: mode,
             lastSeen: Date()
         )

@@ -80,7 +80,26 @@
                     android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorPrimary"
                     android:layout_marginStart="8dp"
-                    android:layout_marginBottom="6dp" />
+                    android:layout_marginBottom="4dp" />
+
+                <!-- Device picker — shown only when 2+ cached hosts are bonded -->
+                <HorizontalScrollView
+                    android:id="@+id/devicePickerScroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:visibility="gone"
+                    android:layout_marginBottom="6dp">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/deviceChipGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        app:singleLine="true"
+                        app:singleSelection="true" />
+                </HorizontalScrollView>
 
                 <LinearLayout
                     android:id="@+id/instructionsListReconnect"

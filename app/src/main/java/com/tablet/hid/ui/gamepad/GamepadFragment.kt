@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -89,6 +90,7 @@ class GamepadFragment : Fragment() {
     // ── Immersive mode ───────────────────────────────────────────────────────
 
     private fun enterImmersiveMode() {
+        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
         val ctrl = WindowCompat.getInsetsController(requireActivity().window, requireView())
         ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         ctrl.hide(WindowInsetsCompat.Type.systemBars())
@@ -97,10 +99,20 @@ class GamepadFragment : Fragment() {
     private fun exitImmersiveMode() {
         WindowCompat.getInsetsController(requireActivity().window, requireView())
             .show(WindowInsetsCompat.Type.systemBars())
+        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, true)
     }
 
-    override fun onResume() { super.onResume(); enterImmersiveMode() }
-    override fun onPause()  { super.onPause();  exitImmersiveMode()  }
+    override fun onResume() {
+        super.onResume()
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.hide()
+        enterImmersiveMode()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        exitImmersiveMode()
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
+    }
 
     // ── Back-press guard ─────────────────────────────────────────────────────
 

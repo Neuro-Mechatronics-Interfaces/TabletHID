@@ -18,6 +18,7 @@ struct HomeView: View {
                 header
                 profilePicker
                 modeGrid
+                appearancePicker
             }
             .padding(24)
             .frame(maxWidth: 900, alignment: .leading)
@@ -96,6 +97,22 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+
+    private var appearancePicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Appearance")
+                .font(.headline)
+            Picker("Appearance", selection: Binding(
+                get: { appState.appearanceMode },
+                set: { appState.setAppearanceMode($0) }
+            )) {
+                ForEach(AppearanceMode.allCases) { mode in
+                    Text(mode.label).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
         }
     }
 

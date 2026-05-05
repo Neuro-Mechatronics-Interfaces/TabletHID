@@ -1,4 +1,13 @@
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+
+import imgLanding          from '../../img/Landing - Android.png';
+import imgMousePairing     from '../../img/Mouse Pairing - Android.png';
+import imgMouseDynamic1    from '../../img/Mouse Dynamic 1 - Android.png';
+import imgMouseDynamic2    from '../../img/Mouse Dynamic 2 - Android.png';
+import imgMouseConfig      from '../../img/Mouse Config - Android.png';
+import imgMouseStatic      from '../../img/Mouse Config Static - Android.png';
+import imgGamepadConnect   from '../../img/Gamepad Connect - Android.png';
+import imgGamepadReconnect from '../../img/Gamepad Reconnect - Android.png';
 
 const FAQS = {
   common: [
@@ -57,6 +66,125 @@ const FAQS = {
   ],
 };
 
+function Step({ tag, title, imgs, compact, reverse, children }) {
+  return (
+    <div className={`walkthrough-step${reverse ? ' reverse' : ''}`}>
+      <div className={`step-shots${compact ? ' compact' : ''}`}>
+        {imgs.map((src, i) => (
+          <img key={i} src={src} alt="" />
+        ))}
+      </div>
+      <div className="step-text">
+        <span className="step-tag">{tag}</span>
+        <div className="step-title">{title}</div>
+        <div className="step-desc">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function AndroidWalkthrough() {
+  return (
+    <>
+      {/* ── Getting started ── */}
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Getting started</div>
+
+        <Step tag="Home screen" title="Choose a mode" imgs={[imgLanding]}>
+          The home screen presents two HID peripheral types. <b>Touch Mouse</b> turns
+          the screen into a relative-movement trackpad with configurable click zones.
+          <b> Gamepad</b> presents an Xbox-style virtual controller with a fully
+          repositionable layout. Tap a card to open the Setup screen for that mode.
+          <br /><br />
+          The <b>Accessibility Profile</b> row at the top lets you save distinct
+          control configurations. <b>Default</b> gives the full layout; <b>Basic</b>{' '}
+          simplifies inputs for one-handed or switch-access use; <b>Advanced</b> adds
+          extra bindings. Tap <b>+</b> to create and name a custom profile.
+        </Step>
+
+        <Step tag="First pair" title="Connect to a new host" imgs={[imgMousePairing]} reverse>
+          From the Setup screen, tap <b>Make Discoverable (new pair)</b>. The tablet
+          advertises itself over Classic Bluetooth for up to 120 seconds. Switch the
+          toggle at the top between <b>Windows</b> and <b>macOS</b> — the numbered
+          steps update to match your host OS.
+          <br /><br />
+          On Windows, open <b>Settings → Bluetooth &amp; devices → Add device →
+          Bluetooth</b> and wait for <b>TabletHID</b> to appear. Click it to pair —
+          no PIN is required. The status bar at the top of the Setup screen will
+          confirm the connection, and the <b>Enter Touch Mouse</b> (or Enter Gamepad)
+          button becomes active.
+        </Step>
+
+        <Step
+          tag="Reconnect"
+          title="Return to a previously paired host"
+          imgs={[imgGamepadConnect, imgGamepadReconnect]}
+          compact
+        >
+          Once you've paired once, the Setup screen shows a <b>Quick connect</b> column
+          alongside the new-pair steps. The app remembers up to ten paired hosts by
+          name. Tap <b>Reconnect</b> to re-establish the Bluetooth link without going
+          through the full pairing flow again.
+          <br /><br />
+          The status bar updates from idle to <b>Connected to [device name]</b> (right
+          screenshot), and the Enter mode button becomes active. Reconnect works even
+          after the app is closed and reopened — as long as the host hasn't removed
+          the pairing.
+        </Step>
+      </div>
+
+      {/* ── Touch Mouse ── */}
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Touch Mouse</div>
+
+        <Step
+          tag="Touch area"
+          title="Moving the cursor and clicking"
+          imgs={[imgMouseDynamic1, imgMouseDynamic2]}
+          compact
+          reverse
+        >
+          The entire dark area of the screen is the touch surface — slide a finger
+          anywhere on it to move the host cursor with relative movement, just like a
+          laptop trackpad. The <b>L</b> and <b>R</b> buttons handle left and right
+          click respectively.
+          <br /><br />
+          In <b>Dynamic</b> zone mode (shown here) the buttons float near wherever
+          you place your thumb, so you can reach them from any position on screen.
+          The right screenshot shows the <b>L button highlighted in cyan</b> while
+          it is being pressed, giving clear visual feedback for each click. In
+          <b> Latching</b> mode the button stays pressed until you tap it again,
+          useful for drag operations.
+        </Step>
+
+        <Step tag="Settings" title="Adjusting sensitivity and button behaviour" imgs={[imgMouseConfig]}>
+          Tap the <b>gear icon</b> in the top-right corner to open <b>Touch Mouse
+          Settings</b>. The <b>Mode</b> toggle switches between <b>Touch</b>{' '}
+          (relative movement, like a trackpad) and <b>Mouse</b> (absolute positioning
+          mapped to the full screen).
+          <br /><br />
+          The <b>Sensitivity</b> slider (1–10) scales how far the cursor moves per
+          millimetre of finger travel. Below that, each button has its own section:
+          enable or disable it with the toggle, choose <b>Static</b> or <b>Dynamic</b>{' '}
+          zone type, and set <b>Momentary</b> (held while finger is down) or{' '}
+          <b>Latching</b> (toggles on/off) click behaviour.
+        </Step>
+
+        <Step tag="Zone editing" title="Defining static click zones" imgs={[imgMouseStatic]} reverse>
+          With <b>Static</b> zone type selected, tap <b>Set Zone (drag on screen)</b>{' '}
+          to enter zone-editing mode. A banner at the top confirms you are drawing.
+          <br /><br />
+          Drag diagonally across the screen to draw a rectangle — the <b>dashed blue
+          outline</b> shows the new zone in real time while the solid button shows
+          the current saved position. Lift your finger to confirm. The click button
+          will be anchored to that region whenever you are in Touch Mouse mode.
+          Tap <b>Cancel</b> to discard the change.
+        </Step>
+      </div>
+    </>
+  );
+}
+
 export default function Support() {
   const { platform } = useParams();
   const tab = platform === 'ios' ? 'ios' : platform === 'android' ? 'android' : 'common';
@@ -69,16 +197,18 @@ export default function Support() {
       </p>
 
       <div className="platform-tabs">
-        <Link to="/support" className={`tab${tab === 'common' ? ' active' : ''}`}>General</Link>
-        <Link to="/support/ios" className={`tab${tab === 'ios' ? ' active' : ''}`}>iOS</Link>
+        <Link to="/support"         className={`tab${tab === 'common'  ? ' active' : ''}`}>General</Link>
+        <Link to="/support/ios"     className={`tab${tab === 'ios'     ? ' active' : ''}`}>iOS</Link>
         <Link to="/support/android" className={`tab${tab === 'android' ? ' active' : ''}`}>Android</Link>
       </div>
 
+      {tab === 'android' && <AndroidWalkthrough />}
+
       <div className="support-section">
         <h2>
-          {tab === 'common' && 'General Troubleshooting'}
-          {tab === 'ios' && 'iOS — iPad'}
-          {tab === 'android' && 'Android — Tablet'}
+          {tab === 'common'  && 'General Troubleshooting'}
+          {tab === 'ios'     && 'iOS — iPad'}
+          {tab === 'android' && 'Android — Troubleshooting'}
         </h2>
         <div className="faq">
           {FAQS[tab].map((item, i) => (

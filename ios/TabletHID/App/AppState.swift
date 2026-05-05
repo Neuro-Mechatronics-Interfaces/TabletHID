@@ -7,7 +7,8 @@ final class AppState: ObservableObject {
     @Published var customProfiles: [Profile]
     @Published var touchMouseConfig: TouchMouseConfig
     @Published var gamepadConfig: GamepadConfig
-    @Published var lastHost: HIDHost?
+    @Published var knownHosts: [HIDHost]
+    @Published var appearanceMode: AppearanceMode
 
     private let store = ConfigStore()
     private let transport: HIDTransport
@@ -20,7 +21,8 @@ final class AppState: ObservableObject {
         self.activeProfile = activeProfile
         self.touchMouseConfig = store.loadTouchMouseConfig(profile: activeProfile)
         self.gamepadConfig = store.loadGamepadConfig(profile: activeProfile)
-        self.lastHost = store.loadLastHost()
+        self.knownHosts = store.loadKnownHosts()
+        self.appearanceMode = store.loadAppearanceMode()
         self.transport.onEvent = { [weak self] event in
             Task { @MainActor in
                 self?.handleTransportEvent(event)
@@ -31,6 +33,8 @@ final class AppState: ObservableObject {
     var allProfiles: [Profile] {
         Profile.builtIns + customProfiles
     }
+
+    // MARK: - Profile
 
     func setProfile(_ profile: Profile) {
         activeProfile = profile
@@ -45,6 +49,27 @@ final class AppState: ObservableObject {
         setProfile(profile)
     }
 
+    // MARK: - Known hosts
+
+    /// The most-recently connected host, used as the default reconnect target.
+    var lastHost: HIDHost? { knownHosts.first }
+
+    func renameHost(_ host: HIDHost, alias: String?) {
+        store.updateHostAlias(identifier: host.identifier, alias: alias)
+        knownHosts = store.loadKnownHosts()
+    }
+
+    func forgetHost(_ host: HIDHost) {
+        store.removeHost(identifier: host.identifier)
+        knownHosts = store.loadKnownHosts()
+        if case .connected(_, let current) = connectionState, current.identifier == host.identifier {
+            transport.disconnect()
+            connectionState = .idle
+        }
+    }
+
+    // MARK: - Transport
+
     func initialize(mode: DeviceMode) {
         connectionState = .registering(mode)
         do {
@@ -57,12 +82,8 @@ final class AppState: ObservableObject {
         }
     }
 
-    func reconnect(mode: DeviceMode) {
-        guard let host = lastHost else {
-            initialize(mode: mode)
-            return
-        }
-        connectionState = .reconnecting(mode: mode, hostName: host.displayName)
+    func reconnect(mode: DeviceMode, host: HIDHost) {
+        connectionState = .reconnecting(mode: mode, hostName: host.label)
         do {
             try transport.reconnect(mode: mode, host: host)
             if !transport.isAvailable {
@@ -79,6 +100,7 @@ final class AppState: ObservableObject {
             host: HIDHost(
                 identifier: "development-preview",
                 displayName: "Development Preview",
+                alias: nil,
                 lastMode: mode,
                 lastSeen: Date()
             )
@@ -90,13 +112,12 @@ final class AppState: ObservableObject {
         connectionState = .idle
     }
 
-    func forgetLastHost() {
-        store.clearLastHost()
-        lastHost = nil
-        if !connectionState.isConnected {
-            connectionState = .idle
-        }
+    func setAppearanceMode(_ mode: AppearanceMode) {
+        appearanceMode = mode
+        store.saveAppearanceMode(mode)
     }
+
+    // MARK: - Config
 
     func updateTouchMouseConfig(_ config: TouchMouseConfig) {
         touchMouseConfig = config
@@ -107,6 +128,8 @@ final class AppState: ObservableObject {
         gamepadConfig = config
         store.saveGamepadConfig(config, profile: activeProfile)
     }
+
+    // MARK: - HID reports
 
     func sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) {
         let report = HIDReportDescriptors.buildMouseReport(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
@@ -124,17 +147,15 @@ final class AppState: ObservableObject {
         hat: Int = HIDReportDescriptors.hatNone
     ) {
         let report = HIDReportDescriptors.buildGamepadReport(
-            leftX: leftX,
-            leftY: leftY,
-            rightX: rightX,
-            rightY: rightY,
-            leftTrigger: leftTrigger,
-            rightTrigger: rightTrigger,
-            buttons: buttons,
-            hat: hat
+            leftX: leftX, leftY: leftY,
+            rightX: rightX, rightY: rightY,
+            leftTrigger: leftTrigger, rightTrigger: rightTrigger,
+            buttons: buttons, hat: hat
         )
         transport.sendReport(id: HIDReportDescriptors.reportIDGamepad, data: report)
     }
+
+    // MARK: - Transport events
 
     private func handleTransportEvent(_ event: HIDTransportEvent) {
         switch event {
@@ -146,11 +167,12 @@ final class AppState: ObservableObject {
             let updatedHost = HIDHost(
                 identifier: host.identifier,
                 displayName: host.displayName,
+                alias: knownHosts.first(where: { $0.identifier == host.identifier })?.alias,
                 lastMode: mode,
                 lastSeen: Date()
             )
-            store.saveLastHost(updatedHost)
-            lastHost = updatedHost
+            store.upsertHost(updatedHost)
+            knownHosts = store.loadKnownHosts()
             connectionState = .connected(mode: mode, host: updatedHost)
         case .disconnected:
             connectionState = .idle

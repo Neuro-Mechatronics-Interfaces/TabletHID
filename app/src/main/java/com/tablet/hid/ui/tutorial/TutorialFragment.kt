@@ -2,15 +2,15 @@ package com.tablet.hid.ui.tutorial
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.os.Bundle
 import android.text.Html
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -24,12 +24,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.bluetooth.HidManager
 import com.tablet.hid.databinding.FragmentTutorialBinding
 import com.tablet.hid.model.DeviceMode
-import com.tablet.hid.util.HidPrefs
+import com.tablet.hid.model.HidHost
+import com.tablet.hid.util.HidHostStore
 import kotlinx.coroutines.launch
 
 class TutorialFragment : Fragment() {
@@ -54,7 +57,13 @@ class TutorialFragment : Fragment() {
     private var activeColumn = ActiveColumn.PAIR
     private var reconnectRows: List<StepRow> = emptyList()
     private var pairRows: List<StepRow> = emptyList()
-    private var bondedMatch: BluetoothDevice? = null
+
+    /** All cached hosts that are still present in the system's bonded-devices list. */
+    private var bondedHosts: List<HidHost> = emptyList()
+
+    /** The host currently targeted for reconnection (user-selected if multiple). */
+    private var selectedHost: HidHost? = null
+
     private var pulseAnimator: ObjectAnimator? = null
     private var currentPairStep = 0
     private var currentReconnectStep = 0
@@ -84,8 +93,9 @@ class TutorialFragment : Fragment() {
             else R.string.btn_enter_gamepad_mode
         )
 
-        bondedMatch = findBondedDevice()
-        activeColumn = if (bondedMatch != null) ActiveColumn.RECONNECT else ActiveColumn.PAIR
+        bondedHosts = findBondedHosts()
+        selectedHost = bondedHosts.firstOrNull()
+        activeColumn = if (selectedHost != null) ActiveColumn.RECONNECT else ActiveColumn.PAIR
 
         buildInstructions(mode, isWindows = true)
 
@@ -93,7 +103,6 @@ class TutorialFragment : Fragment() {
             buildInstructions(mode, isWindows = checkedId == R.id.radioWindows)
         }
 
-        // Reconnect button replaced by the reconnect column step; always hide it.
         binding.btnReconnect.isVisible = false
 
         binding.btnMakeDiscoverable.setOnClickListener {
@@ -106,7 +115,14 @@ class TutorialFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.state.collect { state -> updateUi(state, mode) }
+                viewModel.state.collect { state ->
+                    updateUi(state, mode)
+                    // Refresh the host list in case a connection updated btName.
+                    if (state is HidManager.State.Connected) {
+                        bondedHosts = findBondedHosts()
+                        buildDeviceChips(mode)
+                    }
+                }
             }
         }
     }
@@ -114,32 +130,16 @@ class TutorialFragment : Fragment() {
     // ── Instruction building ──────────────────────────────────────────────────
 
     private fun buildInstructions(mode: DeviceMode, isWindows: Boolean) {
-        val bonded = bondedMatch
-        val twoColumns = bonded != null
+        val twoColumns = selectedHost != null
 
         binding.columnReconnect.isVisible = twoColumns
-        binding.columnDivider.isVisible = twoColumns
-        binding.labelReconnect.isVisible = twoColumns
-        binding.labelPair.isVisible = twoColumns
+        binding.columnDivider.isVisible   = twoColumns
+        binding.labelReconnect.isVisible  = twoColumns
+        binding.labelPair.isVisible       = twoColumns
 
         if (twoColumns) {
-            val deviceLabel = bonded!!.name ?: bonded.address
-            val enterLabel = getString(
-                if (mode == DeviceMode.TOUCH_MOUSE) R.string.btn_enter_mouse_mode
-                else R.string.btn_enter_gamepad_mode
-            )
-            reconnectRows = inflateSteps(
-                binding.instructionsListReconnect,
-                listOf(
-                    getString(R.string.step_reconnect_tap, deviceLabel),
-                    getString(R.string.step_reconnect_enter, enterLabel)
-                )
-            ) { i ->
-                when (i) {
-                    0 -> { activateColumn(ActiveColumn.RECONNECT); viewModel.reconnect(mode, bonded) }
-                    1 -> if (binding.btnEnterMode.isEnabled) navigateToMode(mode)
-                }
-            }
+            buildDeviceChips(mode)
+            buildReconnectSteps(mode)
         }
 
         val arrayId = when {
@@ -162,14 +162,105 @@ class TutorialFragment : Fragment() {
             }
         }
 
-        // Column transparency
         if (twoColumns) {
             binding.columnReconnect.alpha = if (activeColumn == ActiveColumn.RECONNECT) 1f else 0.45f
             binding.columnPair.alpha      = if (activeColumn == ActiveColumn.PAIR)      1f else 0.45f
         }
 
-        // Apply current highlights without animation (fresh build)
         applyHighlightsImmediate()
+    }
+
+    /** Build or rebuild the chip group for device selection. */
+    private fun buildDeviceChips(mode: DeviceMode) {
+        val multiHost = bondedHosts.size > 1
+        binding.devicePickerScroll.isVisible = multiHost
+
+        if (!multiHost) return
+
+        binding.deviceChipGroup.removeAllViews()
+        bondedHosts.forEach { host ->
+            val chip = Chip(requireContext()).apply {
+                text        = host.displayName
+                isCheckable = true
+                isChecked   = host.address == selectedHost?.address
+                setOnClickListener {
+                    selectedHost = host
+                    buildReconnectSteps(mode)
+                }
+                setOnLongClickListener {
+                    showHostOptionsDialog(host, mode)
+                    true
+                }
+            }
+            binding.deviceChipGroup.addView(chip)
+        }
+    }
+
+    /** Rebuild only the reconnect-column step rows for [selectedHost]. */
+    private fun buildReconnectSteps(mode: DeviceMode) {
+        val host = selectedHost ?: return
+        val enterLabel = getString(
+            if (mode == DeviceMode.TOUCH_MOUSE) R.string.btn_enter_mouse_mode
+            else R.string.btn_enter_gamepad_mode
+        )
+        reconnectRows = inflateSteps(
+            binding.instructionsListReconnect,
+            listOf(
+                getString(R.string.step_reconnect_tap, host.displayName),
+                getString(R.string.step_reconnect_enter, enterLabel)
+            )
+        ) { i ->
+            when (i) {
+                0 -> {
+                    activateColumn(ActiveColumn.RECONNECT)
+                    viewModel.reconnect(mode, host)
+                }
+                1 -> if (binding.btnEnterMode.isEnabled) navigateToMode(mode)
+            }
+        }
+        applyHighlightsImmediate()
+    }
+
+    // ── Host options dialog (rename + forget) ─────────────────────────────────
+
+    private fun showHostOptionsDialog(host: HidHost, mode: DeviceMode) {
+        val editText = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            hint      = getString(R.string.hint_device_label)
+            setText(host.alias ?: "")
+        }
+        val container = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            val px16 = (16 * resources.displayMetrics.density).toInt()
+            setPadding(px16, 0, px16, 0)
+            addView(editText)
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(host.btName.ifBlank { host.address })
+            .setMessage(R.string.dialog_device_options_message)
+            .setView(container)
+            .setPositiveButton(R.string.btn_save) { _, _ ->
+                viewModel.renameHost(host.address, editText.text.toString())
+                bondedHosts = findBondedHosts()
+                buildDeviceChips(mode)
+                if (selectedHost?.address == host.address) {
+                    selectedHost = bondedHosts.firstOrNull { it.address == host.address }
+                    buildReconnectSteps(mode)
+                }
+            }
+            .setNeutralButton(R.string.btn_forget_device) { _, _ ->
+                viewModel.forgetHost(host)
+                bondedHosts = findBondedHosts()
+                if (selectedHost?.address == host.address) selectedHost = bondedHosts.firstOrNull()
+                if (bondedHosts.isEmpty()) activeColumn = ActiveColumn.PAIR
+                buildInstructions(
+                    mode,
+                    isWindows = binding.radioGroupOs.checkedRadioButtonId == R.id.radioWindows
+                )
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun inflateSteps(
@@ -199,13 +290,12 @@ class TutorialFragment : Fragment() {
     private fun activateColumn(column: ActiveColumn) {
         if (activeColumn == column) return
         activeColumn = column
-        if (bondedMatch != null) {
+        if (selectedHost != null) {
             binding.columnReconnect.animate()
                 .alpha(if (column == ActiveColumn.RECONNECT) 1f else 0.45f).setDuration(250).start()
             binding.columnPair.animate()
                 .alpha(if (column == ActiveColumn.PAIR) 1f else 0.45f).setDuration(250).start()
         }
-        // Move pulse to the newly active column
         stopPulse()
         val rows = if (column == ActiveColumn.RECONNECT) reconnectRows else pairRows
         val idx  = if (column == ActiveColumn.RECONNECT) currentReconnectStep else currentPairStep
@@ -302,9 +392,9 @@ class TutorialFragment : Fragment() {
     private fun startPulse(view: View?) {
         view ?: return
         pulseAnimator = ObjectAnimator.ofFloat(view, "alpha", 0.7f, 1f).apply {
-            duration = 1000
+            duration    = 1000
             repeatCount = ObjectAnimator.INFINITE
-            repeatMode = ObjectAnimator.REVERSE
+            repeatMode  = ObjectAnimator.REVERSE
             start()
         }
     }
@@ -323,22 +413,27 @@ class TutorialFragment : Fragment() {
         }
     }
 
+    /**
+     * Return all cached hosts whose MAC address is still present in the system's
+     * Bluetooth bonded-devices list, sorted most-recently-seen first.
+     */
     @SuppressLint("MissingPermission")
-    private fun findBondedDevice(): BluetoothDevice? {
-        val address = HidPrefs.getLastDeviceAddress(requireContext()) ?: return null
+    private fun findBondedHosts(): List<HidHost> {
         val adapter = requireContext().getSystemService(BluetoothManager::class.java)?.adapter
-            ?: return null
-        return try {
-            adapter.bondedDevices?.firstOrNull { it.address == address }
-        } catch (e: SecurityException) {
-            null
+            ?: return emptyList()
+        val bondedAddresses = try {
+            adapter.bondedDevices?.mapTo(mutableSetOf()) { it.address } ?: emptySet()
+        } catch (_: SecurityException) {
+            emptySet()
         }
+        return HidHostStore.getAll(requireContext())
+            .filter { it.address in bondedAddresses }
     }
 
     private fun requestDiscoverable() {
         @Suppress("DEPRECATION")
-        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
+        val intent = Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+            putExtra(android.bluetooth.BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
         }
         startActivity(intent)
     }

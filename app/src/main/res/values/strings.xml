@@ -100,6 +100,12 @@
     <string name="step_reconnect_tap">Tap &lt;b&gt;Reconnect&lt;/b&gt; below to connect to &lt;b&gt;%1$s&lt;/b&gt;.</string>
     <string name="step_reconnect_enter">Once connected, tap &lt;b&gt;%1$s&lt;/b&gt; below.</string>
 
+    <!-- Known-host options dialog -->
+    <string name="dialog_device_options_message">Set a label to identify this device, or forget it to remove the pairing.</string>
+    <string name="hint_device_label">Label (optional)</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_forget_device">Forget device</string>
+
     <!-- Exit-mode confirmation dialog (TouchMouse / Gamepad) -->
     <string name="exit_mode_title">Disconnect and exit?</string>
     <string name="exit_mode_message">Leaving this screen will disconnect from the host. You can reconnect from the Setup screen without re-pairing.</string>

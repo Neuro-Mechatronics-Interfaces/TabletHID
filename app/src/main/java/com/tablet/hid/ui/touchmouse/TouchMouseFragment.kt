@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -49,12 +50,16 @@ class TouchMouseFragment : Fragment() {
     private var touchPrimaryId = -1
     private var touchLastX = 0f
     private var touchLastY = 0f
+    private var touchAccumDx = 0f   // sub-pixel remainder carried across reports
+    private var touchAccumDy = 0f
     private var touchRightClickActive = false
 
     // ── Mouse-mode state (MOUSE profile) ────────────────────────────────────
     private var mousePrimaryId = -1
     private var mouseLastX = 0f
     private var mouseLastY = 0f
+    private var mouseAccumDx = 0f   // sub-pixel remainder carried across reports
+    private var mouseAccumDy = 0f
     // pointerZone[id] = BTN_LEFT or BTN_RIGHT (zone the pointer is committed to)
     private val pointerZone = mutableMapOf<Int, Int>()
     // Momentary: track which pointers are currently pressing each button
@@ -99,6 +104,7 @@ class TouchMouseFragment : Fragment() {
     // ── Immersive-mode helpers ───────────────────────────────────────────────
 
     private fun enterImmersiveMode() {
+        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
         val ctrl = WindowCompat.getInsetsController(requireActivity().window, requireView())
         ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         ctrl.hide(WindowInsetsCompat.Type.systemBars())
@@ -107,16 +113,19 @@ class TouchMouseFragment : Fragment() {
     private fun exitImmersiveMode() {
         WindowCompat.getInsetsController(requireActivity().window, requireView())
             .show(WindowInsetsCompat.Type.systemBars())
+        WindowCompat.setDecorFitsSystemWindows(requireActivity().window, true)
     }
 
     override fun onResume() {
         super.onResume()
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.hide()
         enterImmersiveMode()
     }
 
     override fun onPause() {
         super.onPause()
         exitImmersiveMode()
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
     }
 
     // ── Back-press guard ─────────────────────────────────────────────────────
@@ -279,6 +288,7 @@ class TouchMouseFragment : Fragment() {
                 } else {
                     touchPrimaryId = event.getPointerId(0)
                     touchLastX = event.x; touchLastY = event.y
+                    touchAccumDx = 0f; touchAccumDy = 0f
                     val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
                     viewModel.sendMouseReport(buttons = btn, dx = 0, dy = 0)
                 }
@@ -296,13 +306,33 @@ class TouchMouseFragment : Fragment() {
             MotionEvent.ACTION_MOVE -> {
                 val idx = event.findPointerIndex(touchPrimaryId)
                 if (idx >= 0) {
-                    val dx = ((event.getX(idx) - touchLastX) * TOUCH_SENSITIVITY).toInt()
-                        .coerceIn(-32768, 32767)
-                    val dy = ((event.getY(idx) - touchLastY) * TOUCH_SENSITIVITY).toInt()
-                        .coerceIn(-32768, 32767)
                     val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
+                    // Consume historical batched samples before the current position.
+                    // Android batches to one callback per frame; each batch may contain
+                    // multiple sensor readings. Processing them individually gives
+                    // smoother, higher-rate delta output instead of one large jump.
+                    for (h in 0 until event.historySize) {
+                        val hx = event.getHistoricalX(idx, h)
+                        val hy = event.getHistoricalY(idx, h)
+                        val rawDx = (hx - touchLastX) * TOUCH_SENSITIVITY + touchAccumDx
+                        val rawDy = (hy - touchLastY) * TOUCH_SENSITIVITY + touchAccumDy
+                        val dx = rawDx.toInt().coerceIn(-32768, 32767)
+                        val dy = rawDy.toInt().coerceIn(-32768, 32767)
+                        touchAccumDx = rawDx - dx
+                        touchAccumDy = rawDy - dy
+                        touchLastX = hx; touchLastY = hy
+                        if (dx != 0 || dy != 0) viewModel.sendMouseReport(buttons = btn, dx = dx, dy = dy)
+                    }
+                    // Current (most recent) position.
+                    val cx = event.getX(idx); val cy = event.getY(idx)
+                    val rawDx = (cx - touchLastX) * TOUCH_SENSITIVITY + touchAccumDx
+                    val rawDy = (cy - touchLastY) * TOUCH_SENSITIVITY + touchAccumDy
+                    val dx = rawDx.toInt().coerceIn(-32768, 32767)
+                    val dy = rawDy.toInt().coerceIn(-32768, 32767)
+                    touchAccumDx = rawDx - dx
+                    touchAccumDy = rawDy - dy
+                    touchLastX = cx; touchLastY = cy
                     viewModel.sendMouseReport(buttons = btn, dx = dx, dy = dy)
-                    touchLastX = event.getX(idx); touchLastY = event.getY(idx)
                 }
             }
 
@@ -324,6 +354,7 @@ class TouchMouseFragment : Fragment() {
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 touchPrimaryId = -1
+                touchAccumDx = 0f; touchAccumDy = 0f
                 touchRightClickActive = false
                 binding.touchZoneOverlay.rightActive = false
                 viewModel.sendMouseReport(buttons = 0, dx = 0, dy = 0)
@@ -347,6 +378,7 @@ class TouchMouseFragment : Fragment() {
                 // Trackpad-style: record start position but don't send a delta.
                 mousePrimaryId = event.getPointerId(0)
                 mouseLastX = event.x; mouseLastY = event.y
+                mouseAccumDx = 0f; mouseAccumDy = 0f
                 pointerZone[mousePrimaryId] = 0
                 overlay.updatePrimaryPointer(event.x, event.y)
             }
@@ -368,15 +400,32 @@ class TouchMouseFragment : Fragment() {
             MotionEvent.ACTION_MOVE -> {
                 val idx = event.findPointerIndex(mousePrimaryId)
                 if (idx >= 0) {
-                    val x = event.getX(idx); val y = event.getY(idx)
                     val scale = config.sensitivity * 0.3f
-                    val dx = ((x - mouseLastX) * scale).toInt().coerceIn(-32768, 32767)
-                    val dy = ((y - mouseLastY) * scale).toInt().coerceIn(-32768, 32767)
+                    val bits = currentButtonBits(config)
+                    // Consume historical batched samples before the current position.
+                    for (h in 0 until event.historySize) {
+                        val hx = event.getHistoricalX(idx, h)
+                        val hy = event.getHistoricalY(idx, h)
+                        val rawDx = (hx - mouseLastX) * scale + mouseAccumDx
+                        val rawDy = (hy - mouseLastY) * scale + mouseAccumDy
+                        val dx = rawDx.toInt().coerceIn(-32768, 32767)
+                        val dy = rawDy.toInt().coerceIn(-32768, 32767)
+                        mouseAccumDx = rawDx - dx
+                        mouseAccumDy = rawDy - dy
+                        mouseLastX = hx; mouseLastY = hy
+                        if (dx != 0 || dy != 0) viewModel.sendMouseReport(buttons = bits, dx = dx, dy = dy)
+                    }
+                    // Current (most recent) position.
+                    val x = event.getX(idx); val y = event.getY(idx)
+                    val rawDx = (x - mouseLastX) * scale + mouseAccumDx
+                    val rawDy = (y - mouseLastY) * scale + mouseAccumDy
+                    val dx = rawDx.toInt().coerceIn(-32768, 32767)
+                    val dy = rawDy.toInt().coerceIn(-32768, 32767)
+                    mouseAccumDx = rawDx - dx
+                    mouseAccumDy = rawDy - dy
                     mouseLastX = x; mouseLastY = y
                     overlay.updatePrimaryPointer(x, y)
-                    viewModel.sendMouseReport(
-                        buttons = currentButtonBits(config), dx = dx, dy = dy
-                    )
+                    viewModel.sendMouseReport(buttons = bits, dx = dx, dy = dy)
                 }
             }
 

@@ -8,6 +8,7 @@ struct TabletHIDApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                .preferredColorScheme(appState.appearanceMode.colorScheme)
         }
     }
 }

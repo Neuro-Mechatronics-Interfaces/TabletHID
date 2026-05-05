@@ -9,7 +9,8 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.util.Log
 import com.tablet.hid.model.DeviceMode
-import com.tablet.hid.util.HidPrefs
+import com.tablet.hid.model.HidHost
+import com.tablet.hid.util.HidHostStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,7 +57,48 @@ class HidManager(private val context: Context) {
      * immediately after the app is registered, skipping the manual discoverable flow.
      * If the mode has changed since the last bond, the old bond is removed first.
      */
-    fun initialize(mode: DeviceMode, reconnectTarget: BluetoothDevice? = null) {
+    /**
+     * Resolve [host] to a live bonded [BluetoothDevice] and call [initialize] with it.
+     * If the host is no longer bonded the state moves to Error.
+     */
+    @SuppressLint("MissingPermission")
+    fun reconnect(mode: DeviceMode, host: HidHost) {
+        val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter ?: run {
+            _state.value = State.Error("Bluetooth unavailable")
+            return
+        }
+        val device = try {
+            adapter.bondedDevices?.firstOrNull { it.address == host.address }
+        } catch (_: SecurityException) { null }
+
+        if (device == null) {
+            _state.value = State.Error("${host.displayName} is no longer bonded — remove and re-pair.")
+            return
+        }
+        initialize(mode, reconnectTarget = device, hostDisplayName = host.displayName)
+    }
+
+    /**
+     * Disconnect from [host] if currently connected, remove its Bluetooth bond,
+     * and remove it from the known-hosts list.
+     */
+    @SuppressLint("MissingPermission")
+    fun forgetDevice(host: HidHost) {
+        val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
+        val device = try {
+            adapter?.bondedDevices?.firstOrNull { it.address == host.address }
+        } catch (_: SecurityException) { null }
+
+        if (connectedDevice?.address == host.address) {
+            try { hidDevice?.disconnect(connectedDevice!!) } catch (_: Exception) {}
+            connectedDevice = null
+        }
+        device?.let { removeBond(it) }
+        HidHostStore.remove(context, host.address)
+        if (_state.value !is State.Connected) _state.value = State.Idle
+    }
+
+    fun initialize(mode: DeviceMode, reconnectTarget: BluetoothDevice? = null, hostDisplayName: String? = null) {
         val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
         if (adapter == null || !adapter.isEnabled) {
             _state.value = State.Error("Bluetooth is not available or disabled.")
@@ -66,7 +108,7 @@ class HidManager(private val context: Context) {
         activeMode = mode
         this.reconnectTarget = reconnectTarget
         _state.value = if (reconnectTarget != null)
-            State.Reconnecting(reconnectTarget.name ?: reconnectTarget.address)
+            State.Reconnecting(hostDisplayName ?: reconnectTarget.name ?: reconnectTarget.address)
         else
             State.Registering
 
@@ -139,7 +181,11 @@ class HidManager(private val context: Context) {
                     connectedDevice = device
                     reconnectTarget = null
                     restoreAdapterName()
-                    HidPrefs.saveLastDevice(context, device.address)
+                    HidHostStore.upsert(context, HidHost(
+                        address    = device.address,
+                        btName     = device.name ?: "",
+                        lastSeenMs = System.currentTimeMillis()
+                    ))
                     _state.value = State.Connected(device, activeMode!!)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
@@ -225,7 +271,6 @@ class HidManager(private val context: Context) {
     fun disconnectAndUnbond() {
         connectedDevice?.let { removeBond(it) }
         disconnect()
-        HidPrefs.clearLastDevice(context)
         activeMode = null
     }
 

@@ -45,16 +45,74 @@ struct ConfigStore {
         save(config, key: gamepadKey(profile))
     }
 
-    func loadLastHost() -> HIDHost? {
-        load(HIDHost.self, key: "last_hid_host")
+    // MARK: - Known hosts (list, replaces single last_hid_host)
+
+    private static let keyHosts  = "known_hid_hosts"
+    private static let keyLegacy = "last_hid_host"
+    private static let maxHosts  = 10
+
+    func loadKnownHosts() -> [HIDHost] {
+        // One-time migration from the old single-host key.
+        if defaults.object(forKey: Self.keyHosts) == nil,
+           let host = load(HIDHost.self, key: Self.keyLegacy) {
+            let list = [host]
+            saveHosts(list)
+            defaults.removeObject(forKey: Self.keyLegacy)
+            return list
+        }
+        return load([HIDHost].self, key: Self.keyHosts) ?? []
     }
 
-    func saveLastHost(_ host: HIDHost) {
-        save(host, key: "last_hid_host")
+    func upsertHost(_ host: HIDHost) {
+        var list = loadKnownHosts()
+        if let idx = list.firstIndex(where: { $0.identifier == host.identifier }) {
+            // Preserve alias; update displayName and lastSeen from the live connection.
+            list[idx] = HIDHost(
+                identifier: host.identifier,
+                displayName: host.displayName.isEmpty ? list[idx].displayName : host.displayName,
+                alias: list[idx].alias,
+                lastMode: host.lastMode,
+                lastSeen: host.lastSeen
+            )
+        } else {
+            list.insert(host, at: 0)
+        }
+        let trimmed = list.sorted { $0.lastSeen > $1.lastSeen }.prefix(Self.maxHosts)
+        saveHosts(Array(trimmed))
     }
 
-    func clearLastHost() {
-        defaults.removeObject(forKey: "last_hid_host")
+    func updateHostAlias(identifier: String, alias: String?) {
+        let trimmed = alias?.trimmingCharacters(in: .whitespacesAndNewlines)
+            .nilIfEmpty
+        var list = loadKnownHosts()
+        if let idx = list.firstIndex(where: { $0.identifier == identifier }) {
+            list[idx] = HIDHost(
+                identifier: list[idx].identifier,
+                displayName: list[idx].displayName,
+                alias: trimmed,
+                lastMode: list[idx].lastMode,
+                lastSeen: list[idx].lastSeen
+            )
+            saveHosts(list)
+        }
+    }
+
+    func removeHost(identifier: String) {
+        saveHosts(loadKnownHosts().filter { $0.identifier != identifier })
+    }
+
+    private func saveHosts(_ hosts: [HIDHost]) {
+        save(hosts, key: Self.keyHosts)
+    }
+
+    func loadAppearanceMode() -> AppearanceMode {
+        guard let raw = defaults.string(forKey: "appearance_mode"),
+              let mode = AppearanceMode(rawValue: raw) else { return .system }
+        return mode
+    }
+
+    func saveAppearanceMode(_ mode: AppearanceMode) {
+        defaults.set(mode.rawValue, forKey: "appearance_mode")
     }
 
     private func touchKey(_ profile: Profile) -> String {
@@ -74,4 +132,8 @@ struct ConfigStore {
         guard let data = try? JSONEncoder().encode(value) else { return }
         defaults.set(data, forKey: key)
     }
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

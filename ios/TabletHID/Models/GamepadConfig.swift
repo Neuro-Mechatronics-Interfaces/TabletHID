@@ -51,6 +51,23 @@ struct GamepadConfig: Codable, Equatable {
     var leftJoystick = JoystickConfig()
     var rightJoystick = JoystickConfig()
 
+    func withResetLayout() -> GamepadConfig {
+        func r(_ b: ButtonConfig) -> ButtonConfig {
+            var b = b; b.offsetX = 0; b.offsetY = 0; b.scaleX = 1; b.scaleY = 1; return b
+        }
+        func rj(_ j: JoystickConfig) -> JoystickConfig {
+            var j = j; j.offsetX = 0; j.offsetY = 0; j.scaleX = 1; j.scaleY = 1; return j
+        }
+        var c = self
+        c.btnA = r(c.btnA); c.btnB = r(c.btnB); c.btnX = r(c.btnX); c.btnY = r(c.btnY)
+        c.btnLB = r(c.btnLB); c.btnRB = r(c.btnRB); c.btnLT = r(c.btnLT); c.btnRT = r(c.btnRT)
+        c.btnBack = r(c.btnBack); c.btnStart = r(c.btnStart)
+        c.dpadUp = r(c.dpadUp); c.dpadDown = r(c.dpadDown)
+        c.dpadLeft = r(c.dpadLeft); c.dpadRight = r(c.dpadRight)
+        c.leftJoystick = rj(c.leftJoystick); c.rightJoystick = rj(c.rightJoystick)
+        return c
+    }
+
     static func defaultForProfile(_ profile: Profile) -> GamepadConfig {
         var config = GamepadConfig()
         if profile.key == Profile.accessBasic.key {

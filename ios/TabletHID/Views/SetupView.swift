@@ -10,11 +10,14 @@ struct SetupView: View {
     let mode: DeviceMode
     let onEnter: () -> Void
 
+    @State private var hostToRename: HIDHost?
+    @State private var renameText = ""
+
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             statusCard
             instructions
-            reconnectCard
+            knownHostsCard
             actionButtons
 
             Button {
@@ -32,7 +35,12 @@ struct SetupView: View {
         .padding(24)
         .navigationTitle(mode.title)
         .background(groupedBackgroundColor)
+        .sheet(item: $hostToRename) { host in
+            renameSheet(host: host)
+        }
     }
+
+    // MARK: - Status card
 
     private var statusCard: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -50,6 +58,8 @@ struct SetupView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    // MARK: - Instructions note
+
     private var instructions: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Implementation Note")
@@ -59,30 +69,17 @@ struct SetupView: View {
         }
     }
 
+    // MARK: - Known hosts card
+
     @ViewBuilder
-    private var reconnectCard: some View {
-        if let lastHost = appState.lastHost {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Previously paired host found", systemImage: "link")
+    private var knownHostsCard: some View {
+        if !appState.knownHosts.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Known hosts", systemImage: "link")
                     .font(.headline)
-                Text("\(lastHost.displayName) was last seen in \(lastHost.lastMode.title). Reconnect restarts the same HID advertisement so the host can reattach without a fresh pairing flow.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
 
-                HStack {
-                    Button {
-                        appState.reconnect(mode: mode)
-                    } label: {
-                        Label("Reconnect to \(lastHost.displayName)", systemImage: "arrow.triangle.2.circlepath")
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    Button(role: .destructive) {
-                        appState.forgetLastHost()
-                    } label: {
-                        Label("Forget Host", systemImage: "trash")
-                    }
-                    .buttonStyle(.bordered)
+                ForEach(appState.knownHosts) { host in
+                    hostRow(host)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -92,23 +89,97 @@ struct SetupView: View {
         }
     }
 
+    private func hostRow(_ host: HIDHost) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(host.label)
+                    .font(.body.weight(.medium))
+                if host.alias != nil {
+                    Text(host.displayName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Last seen in \(host.lastMode.title)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            // Rename
+            Button {
+                renameText = host.alias ?? ""
+                hostToRename = host
+            } label: {
+                Image(systemName: "pencil")
+                    .imageScale(.medium)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+
+            // Reconnect
+            Button {
+                appState.reconnect(mode: mode, host: host)
+            } label: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+            }
+            .buttonStyle(.bordered)
+            .tint(.blue)
+
+            // Forget
+            Button(role: .destructive) {
+                appState.forgetHost(host)
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Rename sheet
+
+    private func renameSheet(host: HIDHost) -> some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Label", text: $renameText)
+                        .autocorrectionDisabled()
+                } header: {
+                    Text("Custom label for \(host.displayName)")
+                } footer: {
+                    Text("Leave blank to use the device's Bluetooth name.")
+                }
+            }
+            .navigationTitle("Rename Host")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { hostToRename = nil }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        appState.renameHost(host, alias: renameText)
+                        hostToRename = nil
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    // MARK: - Action buttons
+
     private var actionButtons: some View {
         HStack {
-            if appState.lastHost == nil {
-                Button {
-                    appState.initialize(mode: mode)
-                } label: {
-                    Label("Prepare Transport", systemImage: "antenna.radiowaves.left.and.right")
-                }
-                .buttonStyle(.borderedProminent)
-            } else {
-                Button {
-                    appState.initialize(mode: mode)
-                } label: {
-                    Label("Prepare New Pair", systemImage: "antenna.radiowaves.left.and.right")
-                }
-                .buttonStyle(.bordered)
+            Button {
+                appState.initialize(mode: mode)
+            } label: {
+                Label(
+                    appState.knownHosts.isEmpty ? "Prepare Transport" : "Prepare New Pair",
+                    systemImage: "antenna.radiowaves.left.and.right"
+                )
             }
+            .buttonStyle(appState.knownHosts.isEmpty ? .borderedProminent : .bordered)
 
             Button {
                 appState.developmentConnect(mode: mode)
@@ -118,6 +189,8 @@ struct SetupView: View {
             .buttonStyle(.bordered)
         }
     }
+
+    // MARK: - Colors
 
     private var groupedBackgroundColor: Color {
         #if canImport(UIKit)
