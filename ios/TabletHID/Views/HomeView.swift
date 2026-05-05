@@ -9,6 +9,7 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @State private var newProfileName = ""
     @State private var showingNewProfile = false
+    @State private var showingSettings = false
 
     let onSelectMode: (DeviceMode) -> Void
 
@@ -18,7 +19,6 @@ struct HomeView: View {
                 header
                 profilePicker
                 modeGrid
-                appearancePicker
             }
             .padding(24)
             .frame(maxWidth: 900, alignment: .leading)
@@ -27,11 +27,28 @@ struct HomeView: View {
         .background(groupedBackgroundColor)
         .navigationTitle("TabletHID")
         .toolbar {
-            Button {
-                showingNewProfile = true
-            } label: {
-                Label("Add Profile", systemImage: "plus")
+            ToolbarItem {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
             }
+            ToolbarItem {
+                Button {
+                    showingNewProfile = true
+                } label: {
+                    Label("Add Profile", systemImage: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            AppSettingsView()
+                #if os(iOS)
+                .presentationDetents([.medium, .large])
+                #else
+                .frame(minWidth: 360, minHeight: 280)
+                #endif
         }
         .alert("New Profile", isPresented: $showingNewProfile) {
             TextField("Profile name", text: $newProfileName)
@@ -97,22 +114,6 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
             }
-        }
-    }
-
-    private var appearancePicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Appearance")
-                .font(.headline)
-            Picker("Appearance", selection: Binding(
-                get: { appState.appearanceMode },
-                set: { appState.setAppearanceMode($0) }
-            )) {
-                ForEach(AppearanceMode.allCases) { mode in
-                    Text(mode.label).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
         }
     }
 

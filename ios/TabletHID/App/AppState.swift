@@ -9,9 +9,11 @@ final class AppState: ObservableObject {
     @Published var gamepadConfig: GamepadConfig
     @Published var knownHosts: [HIDHost]
     @Published var appearanceMode: AppearanceMode
+    @Published var loggingEnabled: Bool
 
     private let store = ConfigStore()
     private let transport: HIDTransport
+    private var sessionLogger: SessionLogger?
 
     init(transport: HIDTransport = ExperimentalBLEHIDTransport()) {
         self.transport = transport
@@ -23,6 +25,7 @@ final class AppState: ObservableObject {
         self.gamepadConfig = store.loadGamepadConfig(profile: activeProfile)
         self.knownHosts = store.loadKnownHosts()
         self.appearanceMode = store.loadAppearanceMode()
+        self.loggingEnabled = store.loadLoggingEnabled()
         self.transport.onEvent = { [weak self] event in
             Task { @MainActor in
                 self?.handleTransportEvent(event)
@@ -117,6 +120,38 @@ final class AppState: ObservableObject {
         store.saveAppearanceMode(mode)
     }
 
+    func setLoggingEnabled(_ enabled: Bool) {
+        loggingEnabled = enabled
+        store.saveLoggingEnabled(enabled)
+        if enabled {
+            if case .connected(let mode, _) = connectionState { startSession(mode: mode) }
+        } else {
+            endSession()
+        }
+    }
+
+    private func syncLogger() {
+        if loggingEnabled, case .connected(let mode, _) = connectionState {
+            if sessionLogger == nil { startSession(mode: mode) }
+        } else {
+            endSession()
+        }
+    }
+
+    private func startSession(mode: DeviceMode) {
+        endSession()
+        sessionLogger = try? SessionLogger(
+            mode: mode,
+            profileName: activeProfile.name,
+            touchConfig: mode == .touchMouse ? touchMouseConfig : nil
+        )
+    }
+
+    private func endSession() {
+        sessionLogger?.close()
+        sessionLogger = nil
+    }
+
     // MARK: - Config
 
     func updateTouchMouseConfig(_ config: TouchMouseConfig) {
@@ -132,6 +167,7 @@ final class AppState: ObservableObject {
     // MARK: - HID reports
 
     func sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) {
+        sessionLogger?.logMouse(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
         let report = HIDReportDescriptors.buildMouseReport(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
         transport.sendReport(id: HIDReportDescriptors.reportIDMouse, data: report)
     }
@@ -146,6 +182,7 @@ final class AppState: ObservableObject {
         buttons: Int = 0,
         hat: Int = HIDReportDescriptors.hatNone
     ) {
+        sessionLogger?.logGamepad(lx: leftX, ly: leftY, rx: rightX, ry: rightY, lt: leftTrigger, rt: rightTrigger, buttons: buttons, hat: hat)
         let report = HIDReportDescriptors.buildGamepadReport(
             leftX: leftX, leftY: leftY,
             rightX: rightX, rightY: rightY,
@@ -181,5 +218,6 @@ final class AppState: ObservableObject {
         case .error(let message):
             connectionState = .error(message)
         }
+        syncLogger()
     }
 }

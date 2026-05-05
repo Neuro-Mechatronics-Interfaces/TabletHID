@@ -56,9 +56,16 @@ struct TouchMouseSettingsView: View {
                 Text("Momentary").tag(ClickBehavior.momentary)
                 Text("Latching").tag(ClickBehavior.latching)
             }
-            SliderRow(title: "Offset X", value: button.dynamicOffsetX, range: -1...1)
-            SliderRow(title: "Offset Y", value: button.dynamicOffsetY, range: -1...1)
-            SliderRow(title: "Radius", value: button.dynamicRadius, range: 0.03...0.2)
+            if button.zoneType.wrappedValue == .staticZone {
+                SliderRow(title: "Left", value: button.staticLeft, range: 0...1)
+                SliderRow(title: "Top", value: button.staticTop, range: 0...1)
+                SliderRow(title: "Right", value: button.staticRight, range: 0...1)
+                SliderRow(title: "Bottom", value: button.staticBottom, range: 0...1)
+            } else {
+                SliderRow(title: "Offset X", value: button.dynamicOffsetX, range: -1...1)
+                SliderRow(title: "Offset Y", value: button.dynamicOffsetY, range: -1...1)
+                SliderRow(title: "Radius", value: button.dynamicRadius, range: 0.03...0.2)
+            }
         }
     }
 }

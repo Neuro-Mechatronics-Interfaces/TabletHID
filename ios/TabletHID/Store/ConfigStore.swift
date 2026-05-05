@@ -115,6 +115,14 @@ struct ConfigStore {
         defaults.set(mode.rawValue, forKey: "appearance_mode")
     }
 
+    func loadLoggingEnabled() -> Bool {
+        defaults.bool(forKey: "logging_enabled")
+    }
+
+    func saveLoggingEnabled(_ enabled: Bool) {
+        defaults.set(enabled, forKey: "logging_enabled")
+    }
+
     private func touchKey(_ profile: Profile) -> String {
         "touch_mouse_config_\(profile.key)"
     }

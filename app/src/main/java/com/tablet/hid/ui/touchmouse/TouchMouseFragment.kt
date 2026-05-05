@@ -375,12 +375,22 @@ class TouchMouseFragment : Fragment() {
         when (event.actionMasked) {
 
             MotionEvent.ACTION_DOWN -> {
-                // Trackpad-style: record start position but don't send a delta.
-                mousePrimaryId = event.getPointerId(0)
-                mouseLastX = event.x; mouseLastY = event.y
+                val pid = event.getPointerId(0)
+                val x = event.x; val y = event.y
+                val zone = when {
+                    overlay.hitTestLeft(x, y)  -> BTN_LEFT
+                    overlay.hitTestRight(x, y) -> BTN_RIGHT
+                    else -> 0
+                }
+                pointerZone[pid] = zone
                 mouseAccumDx = 0f; mouseAccumDy = 0f
-                pointerZone[mousePrimaryId] = 0
-                overlay.updatePrimaryPointer(event.x, event.y)
+                if (zone != 0) {
+                    onZoneDown(zone, pid, config)
+                } else {
+                    mousePrimaryId = pid
+                    mouseLastX = x; mouseLastY = y
+                    overlay.updatePrimaryPointer(x, y)
+                }
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
@@ -394,7 +404,15 @@ class TouchMouseFragment : Fragment() {
                     else -> 0
                 }
                 pointerZone[pid] = zone
-                if (zone != 0) onZoneDown(zone, pid, config)
+                if (zone != 0) {
+                    onZoneDown(zone, pid, config)
+                } else if (mousePrimaryId == -1) {
+                    // First touch was a zone press; promote this non-zone touch to movement pointer.
+                    mousePrimaryId = pid
+                    mouseLastX = x; mouseLastY = y
+                    mouseAccumDx = 0f; mouseAccumDy = 0f
+                    overlay.updatePrimaryPointer(x, y)
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {

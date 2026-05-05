@@ -78,6 +78,8 @@ final class TouchMouseSurfaceView: UIView {
 
     private var primaryTouch: UITouch?
     private var lastPoint = CGPoint.zero
+    private var accumDx = 0.0
+    private var accumDy = 0.0
     private var primaryPoint: CGPoint?
     private var rightClickTouch: UITouch?
     private var zoneTouches: [UITouch: Int] = [:]
@@ -115,13 +117,20 @@ final class TouchMouseSurfaceView: UIView {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = primaryTouch, touches.contains(touch) else { return }
-        let point = touch.location(in: self)
         let scale = config.mode == .touch ? 1.5 : Double(config.sensitivity) * 0.3
-        let dx = Int((point.x - lastPoint.x) * scale).clamped(to: -32768...32767)
-        let dy = Int((point.y - lastPoint.y) * scale).clamped(to: -32768...32767)
-        lastPoint = point
-        primaryPoint = point
-        sendReport?(currentButtonBits(), dx, dy, 0)
+        let bits = currentButtonBits()
+        for t in event?.coalescedTouches(for: touch) ?? [touch] {
+            let point = t.location(in: self)
+            let rawDx = (point.x - lastPoint.x) * scale + accumDx
+            let rawDy = (point.y - lastPoint.y) * scale + accumDy
+            let dx = Int(rawDx).clamped(to: -32768...32767)
+            let dy = Int(rawDy).clamped(to: -32768...32767)
+            accumDx = rawDx - Double(dx)
+            accumDy = rawDy - Double(dy)
+            lastPoint = point
+            if dx != 0 || dy != 0 { sendReport?(bits, dx, dy, 0) }
+        }
+        primaryPoint = touch.location(in: self)
         setNeedsDisplay()
     }
 
@@ -143,6 +152,7 @@ final class TouchMouseSurfaceView: UIView {
         primaryTouch = touch
         lastPoint = point
         primaryPoint = point
+        accumDx = 0; accumDy = 0
 
         let now = touch.timestamp
         if now - lastTapTime < 0.32 {
@@ -158,15 +168,19 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     private func beginMouseMode(_ touch: UITouch, at point: CGPoint, event: UIEvent) {
-        if primaryTouch == nil {
+        let zone = hitTestZone(point)
+        if zone != 0 {
+            zoneTouches[touch] = zone
+            zoneDown(zone, touch: touch)
+        } else if primaryTouch == nil {
             primaryTouch = touch
             lastPoint = point
             primaryPoint = point
-            return
+            accumDx = 0; accumDy = 0
+            zoneTouches[touch] = 0
+        } else {
+            zoneTouches[touch] = 0
         }
-        let zone = hitTestZone(point)
-        zoneTouches[touch] = zone
-        if zone != 0 { zoneDown(zone, touch: touch) }
     }
 
     private func endTouches(_ touches: Set<UITouch>) {
@@ -174,6 +188,7 @@ final class TouchMouseSurfaceView: UIView {
             if touch == primaryTouch {
                 primaryTouch = nil
                 primaryPoint = nil
+                accumDx = 0; accumDy = 0
             }
             if touch == rightClickTouch {
                 rightClickTouch = nil
