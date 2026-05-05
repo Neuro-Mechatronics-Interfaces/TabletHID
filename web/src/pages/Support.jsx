@@ -8,6 +8,14 @@ import imgMouseConfig      from '../../img/Mouse Config - Android.png';
 import imgMouseStatic      from '../../img/Mouse Config Static - Android.png';
 import imgGamepadConnect   from '../../img/Gamepad Connect - Android.png';
 import imgGamepadReconnect from '../../img/Gamepad Reconnect - Android.png';
+import imgGamepadLandscape from '../../img/Gamepad Layout Landscape - Android.png';
+
+import imgTabletLanding      from '../../img/Landing Permissions - Android Tablet.png';
+import imgTabletMousePairing from '../../img/Touch Mouse Pairing - Android Tablet.png';
+import imgTabletMouseDynamic from '../../img/Touch Mouse Dynamic - Android Tablet.png';
+import imgTabletMouseConfig  from '../../img/Touch Mouse Configuration - Android Tablet.png';
+import imgTabletMouseStatic  from '../../img/Touch Mouse Static - Android Tablet.png';
+import imgTabletGamepad      from '../../img/Touch Gamepad - Android Tablet.png';
 import imgIosHomeIpad      from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.02.43.png';
 import imgIosGamepadIpad   from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.03.10.png';
 import imgIosSettingsIpad  from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.03.58.png';
@@ -248,7 +256,7 @@ function AndroidWalkthrough() {
       <div className="walkthrough-block">
         <div className="walkthrough-block-label">Getting started</div>
 
-        <Step tag="Home screen" title="Choose a mode" imgs={[imgLanding]}>
+        <Step tag="Home screen" title="Choose a mode" imgs={[imgLanding, imgTabletLanding]} compact>
           The home screen presents two HID peripheral types. <b>Touch Mouse</b> turns
           the screen into a relative-movement trackpad with configurable click zones.
           <b> Gamepad</b> presents an Xbox-style virtual controller with a fully
@@ -260,7 +268,7 @@ function AndroidWalkthrough() {
           extra bindings. Tap <b>+</b> to create and name a custom profile.
         </Step>
 
-        <Step tag="First pair" title="Connect to a new host" imgs={[imgMousePairing]} reverse>
+        <Step tag="First pair" title="Connect to a new host" imgs={[imgMousePairing, imgTabletMousePairing]} compact reverse>
           From the Setup screen, tap <b>Make Discoverable (new pair)</b>. The tablet
           advertises itself over Classic Bluetooth for up to 120 seconds. Switch the
           toggle at the top between <b>Windows</b> and <b>macOS</b> — the numbered
@@ -298,7 +306,7 @@ function AndroidWalkthrough() {
         <Step
           tag="Touch area"
           title="Moving the cursor and clicking"
-          imgs={[imgMouseDynamic1, imgMouseDynamic2]}
+          imgs={[imgMouseDynamic2, imgTabletMouseDynamic]}
           compact
           reverse
         >
@@ -309,13 +317,14 @@ function AndroidWalkthrough() {
           <br /><br />
           In <b>Dynamic</b> zone mode (shown here) the buttons float near wherever
           you place your thumb, so you can reach them from any position on screen.
-          The right screenshot shows the <b>L button highlighted in cyan</b> while
+          The left screenshot shows the <b>L button highlighted in cyan</b> while
           it is being pressed, giving clear visual feedback for each click. In
           <b> Latching</b> mode the button stays pressed until you tap it again,
-          useful for drag operations.
+          useful for drag operations. On a tablet the wider canvas gives more room
+          to spread click zones comfortably apart.
         </Step>
 
-        <Step tag="Settings" title="Adjusting sensitivity and button behaviour" imgs={[imgMouseConfig]}>
+        <Step tag="Settings" title="Adjusting sensitivity and button behaviour" imgs={[imgMouseConfig, imgTabletMouseConfig]} compact>
           Tap the <b>gear icon</b> in the top-right corner to open <b>Touch Mouse
           Settings</b>. The <b>Mode</b> toggle switches between <b>Touch</b>{' '}
           (relative movement, like a trackpad) and <b>Mouse</b> (absolute positioning
@@ -328,7 +337,7 @@ function AndroidWalkthrough() {
           <b>Latching</b> (toggles on/off) click behaviour.
         </Step>
 
-        <Step tag="Zone editing" title="Defining static click zones" imgs={[imgMouseStatic]} reverse>
+        <Step tag="Zone editing" title="Defining static click zones" imgs={[imgMouseStatic, imgTabletMouseStatic]} compact reverse>
           With <b>Static</b> zone type selected, tap <b>Set Zone (drag on screen)</b>{' '}
           to enter zone-editing mode. A banner at the top confirms you are drawing.
           <br /><br />
@@ -337,6 +346,28 @@ function AndroidWalkthrough() {
           the current saved position. Lift your finger to confirm. The click button
           will be anchored to that region whenever you are in Touch Mouse mode.
           Tap <b>Cancel</b> to discard the change.
+        </Step>
+      </div>
+
+      {/* ── Gamepad ── */}
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Gamepad</div>
+
+        <Step
+          tag="Gamepad"
+          title="Use the virtual controller"
+          imgs={[imgGamepadLandscape, imgTabletGamepad]}
+          compact
+        >
+          Gamepad mode presents a full Xbox-style layout in landscape orientation:
+          two analog sticks, LT/RT analog triggers, LB/RB shoulder buttons, an ABXY
+          face cluster, D-pad, Back, and Start.
+          <br /><br />
+          Tap <b>Edit Layout</b> in the settings sheet to drag any control to a new
+          position or pinch to resize it independently on each axis. Layouts are saved
+          per profile, so each use case keeps its own arrangement. On a tablet the
+          wider screen gives each control more breathing room and makes it easier to
+          reach both sticks without moving your thumbs far from rest.
         </Step>
       </div>
     </>

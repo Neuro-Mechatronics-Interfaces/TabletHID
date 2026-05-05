@@ -66,11 +66,11 @@ export default function Home() {
           <a href="https://github.com/Neuro-Mechatronics-Interfaces/TabletHID" className="btn btn-outline" target="_blank" rel="noreferrer">View on GitHub</a>
         </div>
         <div className="platform-badges">
-          <a href="#" className="badge">
+          <a href="https://apps.apple.com/app/tablethid/id6766346670" className="badge">
             <AppleLogo />
             App Store — iOS
           </a>
-          <a href="#" className="badge">
+          <a href="https://play.google.com/apps/internaltest/4701190471374740652" className="badge">
             <AndroidLogo />
             Google Play — Android
           </a>

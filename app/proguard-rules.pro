@@ -1,21 +1,19 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Preserve line numbers in stack traces uploaded to Play Console.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep Bluetooth HID profile classes (accessed via reflection by the framework).
+-keep class android.bluetooth.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep data/model classes used with JSON serialisation (SharedPreferences Codable-style).
+-keep class com.tablet.hid.model.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep ViewModel subclasses (instantiated by ViewModelProvider reflection).
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+
+# Navigation Safe Args generated classes.
+-keep class com.tablet.hid.**Args { *; }
+-keep class com.tablet.hid.**Directions { *; }
+
+# Material bottom sheet / dialog fragment (referenced by name in some paths).
+-keep class com.google.android.material.bottomsheet.** { *; }
