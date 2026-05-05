@@ -33,6 +33,7 @@ import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.ZoneType
+import kotlin.math.sqrt
 import kotlinx.coroutines.launch
 
 class TouchMouseFragment : Fragment() {
@@ -45,6 +46,14 @@ class TouchMouseFragment : Fragment() {
     // ── Zone-edit state ──────────────────────────────────────────────────────
     private enum class EditMode { NONE, LEFT_ZONE, RIGHT_ZONE }
     private var editMode = EditMode.NONE
+
+    // ── Calibration state ────────────────────────────────────────────────────
+    private enum class CalibrationPhase { NONE, WAITING_PRIMARY, WAITING_LEFT, WAITING_RIGHT }
+    private var calibrationPhase = CalibrationPhase.NONE
+    private var calPrimaryX = 0f
+    private var calPrimaryY = 0f
+    private var calLeftX = 0f
+    private var calLeftY = 0f
 
     // ── Touch-mode state (TOUCH profile) ────────────────────────────────────
     private var touchPrimaryId = -1
@@ -161,6 +170,7 @@ class TouchMouseFragment : Fragment() {
 
         binding.btnSettings.setOnClickListener { showConfigSheet() }
         binding.btnCancelEdit.setOnClickListener { cancelZoneEdit() }
+        binding.btnCancelCalibration.setOnClickListener { cancelCalibration() }
 
         binding.touchZoneOverlay.setOnTouchListener { _, event -> handleTouch(event) }
 
@@ -180,6 +190,7 @@ class TouchMouseFragment : Fragment() {
     private fun showConfigSheet() {
         val sheet = TouchMouseConfigSheet().apply {
             onZoneEditRequested = { isLeft -> startZoneEdit(isLeft) }
+            onCalibrationRequested = { startCalibration() }
         }
         sheet.show(childFragmentManager, "tmConfig")
     }
@@ -193,6 +204,98 @@ class TouchMouseFragment : Fragment() {
         binding.touchZoneOverlay.editingLeft = isLeft
         binding.touchZoneOverlay.editDragStart = null
         binding.touchZoneOverlay.editDragEnd = null
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Dynamic zone auto-calibration
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun startCalibration() {
+        calibrationPhase = CalibrationPhase.WAITING_PRIMARY
+        binding.calibrationOverlay.isVisible = true
+        binding.labelCalibrationHint.setText(R.string.calibrate_hint_primary)
+    }
+
+    private fun cancelCalibration() {
+        calibrationPhase = CalibrationPhase.NONE
+        calPrimaryX = 0f; calPrimaryY = 0f
+        calLeftX = 0f; calLeftY = 0f
+        binding.calibrationOverlay.isVisible = false
+    }
+
+    private fun handleCalibrationTouch(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                if (calibrationPhase == CalibrationPhase.WAITING_PRIMARY) {
+                    calPrimaryX = event.x; calPrimaryY = event.y
+                    calibrationPhase = CalibrationPhase.WAITING_LEFT
+                    binding.labelCalibrationHint.setText(R.string.calibrate_hint_left)
+                }
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                val idx = event.actionIndex
+                val x = event.getX(idx); val y = event.getY(idx)
+                when (calibrationPhase) {
+                    CalibrationPhase.WAITING_LEFT -> {
+                        calLeftX = x; calLeftY = y
+                        calibrationPhase = CalibrationPhase.WAITING_RIGHT
+                        binding.labelCalibrationHint.setText(R.string.calibrate_hint_right)
+                    }
+                    CalibrationPhase.WAITING_RIGHT -> completeCalibration(x, y)
+                    else -> {}
+                }
+            }
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_POINTER_UP,
+            MotionEvent.ACTION_CANCEL -> {
+                // Any finger lifting before completion resets to step 1.
+                if (calibrationPhase == CalibrationPhase.WAITING_LEFT ||
+                    calibrationPhase == CalibrationPhase.WAITING_RIGHT) {
+                    calibrationPhase = CalibrationPhase.WAITING_PRIMARY
+                    calPrimaryX = 0f; calPrimaryY = 0f
+                    calLeftX = 0f; calLeftY = 0f
+                    binding.labelCalibrationHint.setText(R.string.calibrate_hint_primary)
+                }
+            }
+        }
+        return true
+    }
+
+    private fun completeCalibration(rightX: Float, rightY: Float) {
+        val overlay = binding.touchZoneOverlay
+        val minDim = minOf(overlay.width, overlay.height).toFloat()
+        if (minDim <= 0f) { cancelCalibration(); return }
+
+        fun derive(clickX: Float, clickY: Float): Triple<Float, Float, Float> {
+            val ox = ((clickX - calPrimaryX) / minDim).coerceIn(-1f, 1f)
+            val oy = ((clickY - calPrimaryY) / minDim).coerceIn(-1f, 1f)
+            val dx = clickX - calPrimaryX; val dy = clickY - calPrimaryY
+            val radius = (sqrt((dx * dx + dy * dy).toDouble()).toFloat() * 0.45f / minDim)
+                .coerceIn(0.04f, 0.15f)
+            return Triple(ox, oy, radius)
+        }
+
+        val (lox, loy, lr) = derive(calLeftX, calLeftY)
+        val (rox, roy, rr) = derive(rightX, rightY)
+
+        val prev = viewModel.touchMouseConfig.value
+        viewModel.updateTouchMouseConfig(prev.copy(
+            leftButton = prev.leftButton.copy(
+                enabled = true,
+                zoneType = com.tablet.hid.model.ZoneType.DYNAMIC,
+                dynamicOffsetX = lox,
+                dynamicOffsetY = loy,
+                dynamicRadius = lr
+            ),
+            rightButton = prev.rightButton.copy(
+                enabled = true,
+                zoneType = com.tablet.hid.model.ZoneType.DYNAMIC,
+                dynamicOffsetX = rox,
+                dynamicOffsetY = roy,
+                dynamicRadius = rr
+            )
+        ))
+        cancelCalibration()
     }
 
     private fun cancelZoneEdit() {
@@ -236,6 +339,7 @@ class TouchMouseFragment : Fragment() {
     // ────────────────────────────────────────────────────────────────────────
 
     private fun handleTouch(event: MotionEvent): Boolean {
+        if (calibrationPhase != CalibrationPhase.NONE) return handleCalibrationTouch(event)
         if (editMode != EditMode.NONE) return handleZoneEditTouch(event)
 
         return when (viewModel.touchMouseConfig.value.mode) {

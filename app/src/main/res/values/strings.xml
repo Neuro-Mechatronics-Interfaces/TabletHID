@@ -111,4 +111,10 @@
     <string name="exit_mode_message">Leaving this screen will disconnect from the host. You can reconnect from the Setup screen without re-pairing.</string>
     <string name="exit_mode_confirm">Exit</string>
     <string name="exit_mode_stay">Stay</string>
+
+    <!-- Dynamic zone calibration -->
+    <string name="config_auto_calibrate">Auto-calibrate Dynamic Zones</string>
+    <string name="calibrate_hint_primary">Step 1 of 3 — Place your pointer finger anywhere on the screen</string>
+    <string name="calibrate_hint_left">Step 2 of 3 — Keep pointer finger down, then place your left-click finger where it feels comfortable</string>
+    <string name="calibrate_hint_right">Step 3 of 3 — Keep both fingers down, then place your right-click finger where it feels comfortable</string>
 </resources>

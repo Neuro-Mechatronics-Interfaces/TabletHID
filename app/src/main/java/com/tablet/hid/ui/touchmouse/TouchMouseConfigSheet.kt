@@ -25,6 +25,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
 
     // Fragment sets this to handle zone-edit requests
     var onZoneEditRequested: ((isLeft: Boolean) -> Unit)? = null
+    var onCalibrationRequested: (() -> Unit)? = null
 
     // True while we are programmatically initialising controls (avoids feedback loops)
     private var initialising = false
@@ -163,6 +164,11 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.btnSetRightZone.setOnClickListener {
             dismiss()
             onZoneEditRequested?.invoke(false)
+        }
+
+        binding.btnAutoCalibrate.setOnClickListener {
+            dismiss()
+            onCalibrationRequested?.invoke()
         }
 
         val rightSliderListener = Slider.OnChangeListener { _, _, _ ->

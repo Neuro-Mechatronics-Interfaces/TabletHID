@@ -4,10 +4,12 @@ struct TouchMouseSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: TouchMouseConfig
     let onSave: (TouchMouseConfig) -> Void
+    let onCalibrateRequested: (() -> Void)?
 
-    init(config: TouchMouseConfig, onSave: @escaping (TouchMouseConfig) -> Void) {
+    init(config: TouchMouseConfig, onSave: @escaping (TouchMouseConfig) -> Void, onCalibrateRequested: (() -> Void)? = nil) {
         _draft = State(initialValue: config)
         self.onSave = onSave
+        self.onCalibrateRequested = onCalibrateRequested
     }
 
     var body: some View {
@@ -20,6 +22,22 @@ struct TouchMouseSettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     Stepper("Sensitivity \(draft.sensitivity)", value: $draft.sensitivity, in: 1...10)
+                }
+
+                if draft.mode == .mouse, let calibrate = onCalibrateRequested {
+                    Section {
+                        Button {
+                            calibrate()
+                            dismiss()
+                        } label: {
+                            Label("Auto-calibrate Dynamic Zones", systemImage: "hand.raised.fingers.spread")
+                        }
+                        Text("Place three fingers in sequence to set comfortable click positions automatically. Sets both buttons to Dynamic mode.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } header: {
+                        Text("Calibration")
+                    }
                 }
 
                 Section("Left Button") {

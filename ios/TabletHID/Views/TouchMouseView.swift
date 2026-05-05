@@ -5,9 +5,14 @@ import UIKit
 import AppKit
 #endif
 
+enum CalibrationPhase: Equatable {
+    case none, waitingPrimary, waitingLeft, waitingRight
+}
+
 struct TouchMouseView: View {
     @EnvironmentObject private var appState: AppState
     @State private var showingSettings = false
+    @State private var calibrationPhase: CalibrationPhase = .none
     let onExit: () -> Void
 
     var body: some View {
@@ -16,6 +21,15 @@ struct TouchMouseView: View {
                 appState.sendMouseReport(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
             }
             .ignoresSafeArea()
+
+            #if canImport(UIKit)
+            if calibrationPhase != .none {
+                CalibrationSurface(phase: $calibrationPhase) { primary, left, right, size in
+                    applyCalibration(primary: primary, left: left, right: right, size: size)
+                }
+                .ignoresSafeArea()
+            }
+            #endif
 
             HStack(spacing: 10) {
                 Button(action: onExit) {
@@ -38,12 +52,39 @@ struct TouchMouseView: View {
                 .buttonStyle(.borderedProminent)
             }
             .padding()
+
+            if calibrationPhase != .none {
+                VStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        Text(calibrationInstruction)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .font(.body.weight(.medium))
+                        Button("Cancel Calibration") {
+                            calibrationPhase = .none
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
+                    .padding(20)
+                    .background(Color.black.opacity(0.78))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 48)
+                }
+            }
         }
         .navigationBarBackButtonHidden()
         .sheet(isPresented: $showingSettings) {
-            TouchMouseSettingsView(config: appState.touchMouseConfig) { config in
-                appState.updateTouchMouseConfig(config)
-            }
+            TouchMouseSettingsView(
+                config: appState.touchMouseConfig,
+                onSave: { config in appState.updateTouchMouseConfig(config) },
+                onCalibrateRequested: {
+                    showingSettings = false
+                    calibrationPhase = .waitingPrimary
+                }
+            )
             #if os(iOS)
             .presentationDetents([.medium, .large])
             #else
@@ -51,6 +92,49 @@ struct TouchMouseView: View {
             #endif
         }
     }
+
+    private var calibrationInstruction: String {
+        switch calibrationPhase {
+        case .none: return ""
+        case .waitingPrimary: return "Step 1 of 3\nPlace your pointer finger anywhere on the screen"
+        case .waitingLeft:    return "Step 2 of 3\nKeep pointer finger down — now place your left-click finger where it feels comfortable"
+        case .waitingRight:   return "Step 3 of 3\nKeep both fingers down — now place your right-click finger where it feels comfortable"
+        }
+    }
+
+    #if canImport(UIKit)
+    private func applyCalibration(primary: CGPoint, left: CGPoint, right: CGPoint, size: CGSize) {
+        let minDim = min(size.width, size.height)
+        guard minDim > 0 else { return }
+
+        func derive(_ point: CGPoint) -> (ox: Double, oy: Double, r: Double) {
+            let dx = point.x - primary.x
+            let dy = point.y - primary.y
+            let ox = max(-1, min(1, Double(dx / minDim)))
+            let oy = max(-1, min(1, Double(dy / minDim)))
+            let dist = sqrt(Double(dx * dx + dy * dy))
+            let r = max(0.04, min(0.15, dist * 0.45 / Double(minDim)))
+            return (ox, oy, r)
+        }
+
+        let l = derive(left)
+        let r = derive(right)
+
+        var config = appState.touchMouseConfig
+        config.leftButton.enabled = true
+        config.leftButton.zoneType = .dynamic
+        config.leftButton.dynamicOffsetX = l.ox
+        config.leftButton.dynamicOffsetY = l.oy
+        config.leftButton.dynamicRadius = l.r
+        config.rightButton.enabled = true
+        config.rightButton.zoneType = .dynamic
+        config.rightButton.dynamicOffsetX = r.ox
+        config.rightButton.dynamicOffsetY = r.oy
+        config.rightButton.dynamicRadius = r.r
+        appState.updateTouchMouseConfig(config)
+        calibrationPhase = .none
+    }
+    #endif
 }
 
 #if canImport(UIKit)
@@ -324,6 +408,125 @@ final class TouchMouseSurfaceView: UIView {
         label.draw(at: origin, withAttributes: attributes)
     }
 }
+
+// MARK: - Calibration surface (UIKit)
+
+final class CalibrationSurfaceView: UIView {
+    var onPhaseChanged: ((CalibrationPhase) -> Void)?
+    var onComplete: ((CGPoint, CGPoint, CGPoint, CGSize) -> Void)?
+
+    private var calPhase: CalibrationPhase = .waitingPrimary
+    private var primaryTouch: UITouch?
+    private var leftTouch: UITouch?
+    private var primaryPoint = CGPoint.zero
+    private var leftPoint = CGPoint.zero
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isMultipleTouchEnabled = true
+        backgroundColor = .clear
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func reset() {
+        calPhase = .waitingPrimary
+        primaryTouch = nil
+        leftTouch = nil
+        primaryPoint = .zero
+        leftPoint = .zero
+        setNeedsDisplay()
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            switch calPhase {
+            case .waitingPrimary:
+                primaryTouch = touch
+                primaryPoint = touch.location(in: self)
+                calPhase = .waitingLeft
+                setNeedsDisplay()
+                DispatchQueue.main.async { self.onPhaseChanged?(.waitingLeft) }
+            case .waitingLeft:
+                guard touch != primaryTouch else { continue }
+                leftTouch = touch
+                leftPoint = touch.location(in: self)
+                calPhase = .waitingRight
+                setNeedsDisplay()
+                DispatchQueue.main.async { self.onPhaseChanged?(.waitingRight) }
+            case .waitingRight:
+                guard touch != primaryTouch, touch != leftTouch else { continue }
+                let rightPoint = touch.location(in: self)
+                DispatchQueue.main.async {
+                    self.onComplete?(self.primaryPoint, self.leftPoint, rightPoint, self.bounds.size)
+                }
+            case .none: break
+            }
+        }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { handleLift(touches) }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { handleLift(touches) }
+
+    private func handleLift(_ touches: Set<UITouch>) {
+        guard calPhase == .waitingLeft || calPhase == .waitingRight else { return }
+        let liftedKey = (primaryTouch != nil && touches.contains(primaryTouch!))
+                     || (leftTouch != nil && touches.contains(leftTouch!))
+        if liftedKey {
+            reset()
+            DispatchQueue.main.async { self.onPhaseChanged?(.waitingPrimary) }
+        }
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard calPhase != .waitingPrimary else { return }
+        drawDot(at: primaryPoint, color: UIColor.systemYellow)
+        if calPhase == .waitingRight { drawDot(at: leftPoint, color: UIColor.systemBlue) }
+    }
+
+    private func drawDot(at point: CGPoint, color: UIColor) {
+        let r: CGFloat = 24
+        let path = UIBezierPath(ovalIn: CGRect(x: point.x - r, y: point.y - r, width: r * 2, height: r * 2))
+        color.withAlphaComponent(0.85).setFill()
+        path.fill()
+        UIColor.white.withAlphaComponent(0.6).setStroke()
+        path.lineWidth = 2
+        path.stroke()
+    }
+}
+
+struct CalibrationSurface: UIViewRepresentable {
+    @Binding var phase: CalibrationPhase
+    let onComplete: (CGPoint, CGPoint, CGPoint, CGSize) -> Void
+
+    class Coordinator {
+        var phase: Binding<CalibrationPhase>
+        var onComplete: (CGPoint, CGPoint, CGPoint, CGSize) -> Void
+        init(phase: Binding<CalibrationPhase>, onComplete: @escaping (CGPoint, CGPoint, CGPoint, CGSize) -> Void) {
+            self.phase = phase
+            self.onComplete = onComplete
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(phase: $phase, onComplete: onComplete)
+    }
+
+    func makeUIView(context: Context) -> CalibrationSurfaceView {
+        let coordinator = context.coordinator
+        let view = CalibrationSurfaceView()
+        view.onPhaseChanged = { newPhase in coordinator.phase.wrappedValue = newPhase }
+        view.onComplete = { p, l, r, size in coordinator.onComplete(p, l, r, size) }
+        return view
+    }
+
+    func updateUIView(_ uiView: CalibrationSurfaceView, context: Context) {
+        context.coordinator.phase = $phase
+        context.coordinator.onComplete = onComplete
+        if phase == .waitingPrimary { uiView.reset() }
+    }
+}
+
 #elseif canImport(AppKit)
 struct TouchMouseSurface: NSViewRepresentable {
     let config: TouchMouseConfig
