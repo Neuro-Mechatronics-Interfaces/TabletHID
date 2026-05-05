@@ -6,4 +6,16 @@
     </style>
 
     <style name="Theme.TabletHID" parent="Base.Theme.TabletHID" />
+
+    <style name="Theme.TabletHID.HighContrast" parent="Base.Theme.TabletHID">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/high_contrast_accent</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorBackground">@color/white</item>
+        <item name="colorOnBackground">@color/black</item>
+        <item name="colorOutline">@color/black</item>
+    </style>
 </resources>

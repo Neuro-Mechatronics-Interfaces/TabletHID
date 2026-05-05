@@ -18,8 +18,8 @@ This spec tracks the Android implementation in `app/` and the iOS equivalent in 
 | --- | --- | --- |
 | Act as HID peripheral | Implemented with `BluetoothHidDevice` | Experimental BLE HID transport added via expanded `00001812-...` service UUID; needs physical-device validation |
 | Combined mouse + gamepad descriptor | Implemented with Report ID 1 and 2 in one registration | Descriptor/report builders ported and exposed through experimental HID-over-GATT Report characteristics |
-| Discoverable pairing flow | Implemented with 120-second discoverable request | Experimental `CBPeripheralManager` advertising with mode device name |
-| Reconnect bonded host | Implemented by cached Bluetooth address and `BluetoothHidDevice.connect()` | Not available until a supported iOS transport exists |
+| Discoverable pairing flow | Implemented with 120-second discoverable request and configurable Bluetooth name | Experimental `CBPeripheralManager` advertising with configurable local name |
+| Reconnect bonded host | Implemented by cached Bluetooth address and `BluetoothHidDevice.connect()` | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising |
 | Disconnect / unbond | Implemented | Disconnect resets local state only |
 
 Relevant Apple docs currently point app developers toward Core Bluetooth BLE central/peripheral APIs and the MFi program for Classic Bluetooth accessories, not a clearly documented public app API for making an iPhone/iPad advertise as a Bluetooth HID device. The iOS implementation therefore treats BLE HID as experimental:
@@ -96,6 +96,9 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Appearance / dark mode | System / Light / Dark; applied via `AppCompatDelegate` | System / Light / Dark; gear icon on Home opens `AppSettingsView`; drives `preferredColorScheme` |
+| Configurable peripheral name | Settings dialog stores the name; `HidManager` uses it for adapter rename and SDP registration on new pair | `AppSettingsView` stores the name; `ExperimentalBLEHIDTransport` uses it for BLE local-name advertising |
+| Large Text | Settings dialog stores preference; activity context applies enlarged font scale after recreate | `AppSettingsView` stores preference; SwiftUI root applies accessibility dynamic type |
+| High Contrast | Settings dialog stores preference; activity applies high-contrast Material theme after recreate | `AppSettingsView` stores preference; SwiftUI root applies stronger contrast and primary tint |
 | Session logging | Toggle in Settings dialog; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
 | Orientation lock | System / Portrait / Landscape; Settings dialog + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
 | Known host management | Rename / forget host; last 10 hosts stored | Rename / forget host; list stored in `UserDefaults` |

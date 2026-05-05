@@ -64,7 +64,7 @@ struct SetupView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Implementation Note")
                 .font(.headline)
-            Text("Android can register a Bluetooth HID Device profile directly. This iOS build uses an experimental Core Bluetooth HID-over-GATT advertisement with the expanded HID service UUID.")
+            Text("Prepare the transport, then pair from the host Bluetooth screen when \(appState.deviceName) appears. This iOS build uses an experimental Core Bluetooth HID-over-GATT advertisement with the expanded HID service UUID.")
                 .foregroundStyle(.secondary)
         }
     }

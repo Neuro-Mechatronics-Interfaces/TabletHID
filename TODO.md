@@ -58,7 +58,7 @@
 
 ## Phase 2 — Settings & app controls ✅
 
-- [x] Settings dialog — Appearance (system/light/dark) + session logging toggle + orientation lock
+- [x] Settings dialog — configurable Bluetooth name, Appearance (system/light/dark), Large Text, High Contrast, session logging toggle, and orientation lock
 - [x] Session logging — `.config` snapshot + timestamped `.log` of all HID events written to app storage on each connection
 - [x] Orientation lock — System/Portrait/Landscape preference; in-canvas cycle button on both Touch Mouse and Gamepad status bars; applies immediately via `requestedOrientation`
 
@@ -94,7 +94,7 @@
 ### UX & polish
 
 - [ ] **Screen pinning** (`startLockTask()`) — optional advanced lock-in; toggle in Settings
-- [ ] **Settings fragment** — device name, global preferences (basic settings dialog exists; no dedicated fragment yet)
+- [ ] **Settings fragment** — optional dedicated settings screen if the dialog becomes too dense
 - [ ] **Onboarding screen** — shown once on first launch
 - [x] **Orientation lock** — System / Portrait / Landscape, accessible from Settings dialog and in-canvas status bar
 - [ ] **Connection status chip** — persistent across all fragments

@@ -12,6 +12,29 @@ struct TabletHIDApp: App {
             ContentView()
                 .environmentObject(appState)
                 .preferredColorScheme(appState.appearanceMode.colorScheme)
+                .tabletHIDLargeText(appState.largeTextEnabled)
+                .tabletHIDHighContrast(appState.highContrastEnabled)
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func tabletHIDLargeText(_ enabled: Bool) -> some View {
+        if enabled {
+            dynamicTypeSize(.accessibility1)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func tabletHIDHighContrast(_ enabled: Bool) -> some View {
+        if enabled {
+            contrast(1.25)
+                .tint(.primary)
+        } else {
+            self
         }
     }
 }

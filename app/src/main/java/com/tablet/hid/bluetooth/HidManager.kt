@@ -10,6 +10,7 @@ import android.content.Context
 import android.util.Log
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.HidHost
+import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidHostStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,6 @@ class HidManager(private val context: Context) {
 
     companion object {
         private const val TAG = "HidManager"
-        private const val DEVICE_NAME = "TabletHID"
     }
 
     sealed class State {
@@ -40,6 +40,7 @@ class HidManager(private val context: Context) {
     private var hidDevice: BluetoothHidDevice? = null
     private var connectedDevice: BluetoothDevice? = null
     private var activeMode: DeviceMode? = null
+    private var activeDeviceName: String = AppearanceStore.DEFAULT_DEVICE_NAME
 
     // Set when the caller wants to auto-connect to an already-bonded device after registration.
     private var reconnectTarget: BluetoothDevice? = null
@@ -106,18 +107,19 @@ class HidManager(private val context: Context) {
         }
 
         activeMode = mode
+        activeDeviceName = AppearanceStore.getDeviceName(context)
         this.reconnectTarget = reconnectTarget
         _state.value = if (reconnectTarget != null)
             State.Reconnecting(hostDisplayName ?: reconnectTarget.name ?: reconnectTarget.address)
         else
             State.Registering
 
-        // Rename the adapter to "TabletHID" so the host sees a recognisable name
+        // Rename the adapter so the host sees the configured TabletHID name
         // during the pairing dialog rather than the tablet's own Bluetooth name.
         // Only needed for fresh pair; reconnect skips discovery entirely.
         if (reconnectTarget == null) {
             originalAdapterName = adapter.name
-            try { adapter.setName(DEVICE_NAME) } catch (e: Exception) {
+            try { adapter.setName(activeDeviceName) } catch (e: Exception) {
                 Log.w(TAG, "setName failed: ${e.message}")
             }
         }
@@ -141,7 +143,7 @@ class HidManager(private val context: Context) {
         // Always register the combined descriptor so the host maintains a single bond
         // for both mouse (Report ID 1) and gamepad (Report ID 2).
         val sdp = BluetoothHidDeviceAppSdpSettings(
-            DEVICE_NAME, "Tablet HID Peripheral", "TabletHID",
+            activeDeviceName, "Tablet HID Peripheral", activeDeviceName,
             BluetoothHidDevice.SUBCLASS1_MOUSE,
             HidReportDescriptors.COMBINED_REPORT_DESCRIPTOR
         )

@@ -9,6 +9,7 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
     private var peripheralManager: CBPeripheralManager?
     private var activeMode: DeviceMode?
+    private var activeDeviceName = "TabletHID"
     private var reconnectTarget: HIDHost?
     private var subscribedCentrals: [CBCentral] = []
 
@@ -43,8 +44,9 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
 
     // MARK: – HIDTransport
 
-    func initialize(mode: DeviceMode) throws {
+    func initialize(mode: DeviceMode, deviceName: String) throws {
         activeMode = mode
+        activeDeviceName = sanitizeDeviceName(deviceName)
         reconnectTarget = nil
         unavailableReason = ""
         isAvailable = true
@@ -75,8 +77,9 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         }
     }
 
-    func reconnect(mode: DeviceMode, host: HIDHost) throws {
+    func reconnect(mode: DeviceMode, host: HIDHost, deviceName: String) throws {
         activeMode = mode
+        activeDeviceName = sanitizeDeviceName(deviceName)
         reconnectTarget = host
         unavailableReason = ""
         isAvailable = true
@@ -192,21 +195,31 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
         self.gamepadReportCharacteristic   = gamepadReport
 
         peripheralManager.add(service)
-        peripheralManager.startAdvertising([
-            CBAdvertisementDataLocalNameKey:    "TabletHID",
-            CBAdvertisementDataServiceUUIDsKey: [UUIDs.hidService]
-        ])
+        startAdvertising()
     }
 
     private func restartAdvertisingIfNeeded() {
         guard let pm = peripheralManager,
               pm.state == .poweredOn,
-              hidService != nil,
-              !pm.isAdvertising else { return }
-        pm.startAdvertising([
-            CBAdvertisementDataLocalNameKey:    "TabletHID",
+              hidService != nil else { return }
+        if pm.isAdvertising {
+            pm.stopAdvertising()
+        }
+        startAdvertising()
+    }
+
+    private func startAdvertising() {
+        guard let peripheralManager,
+              peripheralManager.state == .poweredOn else { return }
+        peripheralManager.startAdvertising([
+            CBAdvertisementDataLocalNameKey:    activeDeviceName,
             CBAdvertisementDataServiceUUIDsKey: [UUIDs.hidService]
         ])
+    }
+
+    private func sanitizeDeviceName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return String((trimmed.isEmpty ? "TabletHID" : trimmed).prefix(32))
     }
 
     private func inputReportCharacteristic(reportID: UInt8, initialValue: Data) -> CBMutableCharacteristic {

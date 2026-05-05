@@ -71,6 +71,8 @@
 
 - [x] Session logging — `SessionLogger` writes `.config` snapshot + timestamped `.log` of all HID events to `Documents/sessions/` on each connection; toggle in Settings.
 - [x] Appearance / dark mode — gear icon on Home opens `AppSettingsView`; segmented picker (System / Light / Dark) drives `preferredColorScheme`.
+- [x] User-configurable Bluetooth peripheral name — Settings stores the advertised local name and `ExperimentalBLEHIDTransport` uses it for new pairing/reconnect advertising.
+- [x] Accessibility display toggles — Settings adds Large Text and High Contrast options; the SwiftUI root applies dynamic type and stronger rendered contrast.
 - [x] Orientation lock — `OrientationLock` enum (System / Portrait / Landscape); `AppDelegate` + `UIApplicationDelegateAdaptor`; `UIWindowScene.requestGeometryUpdate` (iOS 16+); picker in Settings; cycle button in Touch Mouse and Gamepad canvas bars.
 - [ ] Bring built-in Android XML defaults over to iOS as bundled JSON or plist defaults.
 - [ ] Add profile import/export to aid parity testing.

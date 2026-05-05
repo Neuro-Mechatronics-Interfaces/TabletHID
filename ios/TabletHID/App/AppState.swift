@@ -12,6 +12,9 @@ final class AppState: ObservableObject {
     @Published var gamepadConfig: GamepadConfig
     @Published var knownHosts: [HIDHost]
     @Published var appearanceMode: AppearanceMode
+    @Published var deviceName: String
+    @Published var largeTextEnabled: Bool
+    @Published var highContrastEnabled: Bool
     @Published var loggingEnabled: Bool
     @Published var orientationLock: OrientationLock
 
@@ -29,6 +32,9 @@ final class AppState: ObservableObject {
         self.gamepadConfig = store.loadGamepadConfig(profile: activeProfile)
         self.knownHosts = store.loadKnownHosts()
         self.appearanceMode = store.loadAppearanceMode()
+        self.deviceName = store.loadDeviceName()
+        self.largeTextEnabled = store.loadLargeTextEnabled()
+        self.highContrastEnabled = store.loadHighContrastEnabled()
         self.loggingEnabled = store.loadLoggingEnabled()
         let lock = store.loadOrientationLock()
         self.orientationLock = lock
@@ -85,7 +91,7 @@ final class AppState: ObservableObject {
     func initialize(mode: DeviceMode) {
         connectionState = .registering(mode)
         do {
-            try transport.initialize(mode: mode)
+            try transport.initialize(mode: mode, deviceName: deviceName)
             if !transport.isAvailable {
                 connectionState = .unavailable(transport.unavailableReason)
             }
@@ -97,7 +103,7 @@ final class AppState: ObservableObject {
     func reconnect(mode: DeviceMode, host: HIDHost) {
         connectionState = .reconnecting(mode: mode, hostName: host.label)
         do {
-            try transport.reconnect(mode: mode, host: host)
+            try transport.reconnect(mode: mode, host: host, deviceName: deviceName)
             if !transport.isAvailable {
                 connectionState = .unavailable(transport.unavailableReason)
             }
@@ -127,6 +133,22 @@ final class AppState: ObservableObject {
     func setAppearanceMode(_ mode: AppearanceMode) {
         appearanceMode = mode
         store.saveAppearanceMode(mode)
+    }
+
+    func setDeviceName(_ name: String) {
+        let sanitized = store.sanitizeDeviceName(name)
+        deviceName = sanitized
+        store.saveDeviceName(sanitized)
+    }
+
+    func setLargeTextEnabled(_ enabled: Bool) {
+        largeTextEnabled = enabled
+        store.saveLargeTextEnabled(enabled)
+    }
+
+    func setHighContrastEnabled(_ enabled: Bool) {
+        highContrastEnabled = enabled
+        store.saveHighContrastEnabled(enabled)
     }
 
     func setOrientationLock(_ lock: OrientationLock) {
@@ -221,7 +243,7 @@ final class AppState: ObservableObject {
     private func handleTransportEvent(_ event: HIDTransportEvent) {
         switch event {
         case .waiting(let mode):
-            connectionState = .waitingForConnection(mode)
+            connectionState = .waitingForConnection(mode: mode, deviceName: deviceName)
         case .reconnecting(let mode, let hostName):
             connectionState = .reconnecting(mode: mode, hostName: hostName)
         case .connected(let mode, let host):

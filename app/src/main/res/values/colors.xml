@@ -3,4 +3,6 @@
     <color name="ic_tablethid_background">#FFFFFF</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="high_contrast_accent">#005FCC</color>
+    <color name="high_contrast_accent_dark">#FFD43B</color>
 </resources>

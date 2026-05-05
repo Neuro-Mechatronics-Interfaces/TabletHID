@@ -6,6 +6,11 @@ import androidx.appcompat.app.AppCompatDelegate
 object AppearanceStore {
     private const val PREFS = "tablet_hid_appearance"
     private const val KEY   = "night_mode_index"
+    private const val KEY_DEVICE_NAME = "device_name"
+    private const val KEY_LARGE_TEXT = "large_text"
+    private const val KEY_HIGH_CONTRAST = "high_contrast"
+
+    const val DEFAULT_DEVICE_NAME = "TabletHID"
 
     const val INDEX_SYSTEM = 0
     const val INDEX_LIGHT  = 1
@@ -17,6 +22,40 @@ object AppearanceStore {
     fun set(context: Context, index: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putInt(KEY, index).apply()
+    }
+
+    fun getDeviceName(context: Context): String {
+        val saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_DEVICE_NAME, DEFAULT_DEVICE_NAME)
+        return sanitizeDeviceName(saved)
+    }
+
+    fun setDeviceName(context: Context, name: String) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_DEVICE_NAME, sanitizeDeviceName(name)).apply()
+    }
+
+    fun sanitizeDeviceName(name: String?): String {
+        val trimmed = name.orEmpty().trim()
+        return trimmed.ifBlank { DEFAULT_DEVICE_NAME }.take(32)
+    }
+
+    fun isLargeText(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_LARGE_TEXT, false)
+
+    fun setLargeText(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_LARGE_TEXT, enabled).apply()
+    }
+
+    fun isHighContrast(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_HIGH_CONTRAST, false)
+
+    fun setHighContrast(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_HIGH_CONTRAST, enabled).apply()
     }
 
     fun toNightMode(index: Int): Int = when (index) {

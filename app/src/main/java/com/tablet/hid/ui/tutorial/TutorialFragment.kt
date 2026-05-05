@@ -32,6 +32,7 @@ import com.tablet.hid.bluetooth.HidManager
 import com.tablet.hid.databinding.FragmentTutorialBinding
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.HidHost
+import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidHostStore
 import kotlinx.coroutines.launch
 
@@ -150,7 +151,8 @@ class TutorialFragment : Fragment() {
         }
         pairRows = inflateSteps(
             binding.instructionsList,
-            resources.getStringArray(arrayId).toList()
+            resources.getStringArray(arrayId)
+                .map { it.replace(AppearanceStore.DEFAULT_DEVICE_NAME, peripheralName()) }
         ) { i ->
             when {
                 i == 0 -> {
@@ -314,7 +316,7 @@ class TutorialFragment : Fragment() {
             is HidManager.State.Reconnecting ->
                 getString(R.string.tutorial_status_reconnecting, state.deviceName) to false
             is HidManager.State.WaitingForConnection ->
-                getString(R.string.tutorial_status_waiting, mode.deviceName) to false
+                getString(R.string.tutorial_status_waiting, peripheralName()) to false
             is HidManager.State.Connected ->
                 getString(R.string.tutorial_status_connected,
                     state.device.name ?: state.device.address) to true
@@ -355,6 +357,8 @@ class TutorialFragment : Fragment() {
             }
         }
     }
+
+    private fun peripheralName(): String = AppearanceStore.getDeviceName(requireContext())
 
     // ── Highlight animation ───────────────────────────────────────────────────
 

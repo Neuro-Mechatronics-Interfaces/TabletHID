@@ -2,6 +2,7 @@ import Foundation
 
 struct ConfigStore {
     private let defaults = UserDefaults.standard
+    private static let defaultDeviceName = "TabletHID"
 
     func loadActiveProfile(customProfiles: [Profile]) -> Profile {
         let key = defaults.string(forKey: "active_profile_key") ?? Profile.defaultProfile.key
@@ -113,6 +114,35 @@ struct ConfigStore {
 
     func saveAppearanceMode(_ mode: AppearanceMode) {
         defaults.set(mode.rawValue, forKey: "appearance_mode")
+    }
+
+    func loadDeviceName() -> String {
+        sanitizeDeviceName(defaults.string(forKey: "device_name"))
+    }
+
+    func saveDeviceName(_ name: String) {
+        defaults.set(sanitizeDeviceName(name), forKey: "device_name")
+    }
+
+    func sanitizeDeviceName(_ name: String?) -> String {
+        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return String((trimmed.isEmpty ? Self.defaultDeviceName : trimmed).prefix(32))
+    }
+
+    func loadLargeTextEnabled() -> Bool {
+        defaults.bool(forKey: "large_text_enabled")
+    }
+
+    func saveLargeTextEnabled(_ enabled: Bool) {
+        defaults.set(enabled, forKey: "large_text_enabled")
+    }
+
+    func loadHighContrastEnabled() -> Bool {
+        defaults.bool(forKey: "high_contrast_enabled")
+    }
+
+    func saveHighContrastEnabled(_ enabled: Bool) {
+        defaults.set(enabled, forKey: "high_contrast_enabled")
     }
 
     func loadLoggingEnabled() -> Bool {

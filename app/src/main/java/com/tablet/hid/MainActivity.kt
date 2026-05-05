@@ -3,14 +3,18 @@ package com.tablet.hid
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -62,7 +66,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    override fun attachBaseContext(newBase: Context) {
+        val config = Configuration(newBase.resources.configuration)
+        if (AppearanceStore.isLargeText(newBase)) {
+            config.fontScale = (config.fontScale * 1.18f).coerceAtLeast(1.18f)
+        }
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (AppearanceStore.isHighContrast(this)) {
+            setTheme(R.style.Theme_TabletHID_HighContrast)
+        }
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -101,14 +116,44 @@ class MainActivity : AppCompatActivity() {
         val dp16 = (16 * dp).toInt()
 
         var selectedAppearance = AppearanceStore.get(this)
+        val originalLargeText = AppearanceStore.isLargeText(this)
+        val originalHighContrast = AppearanceStore.isHighContrast(this)
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp16, dp4, dp16, 0)
         }
 
+        // ── Bluetooth ───────────────────────────────────────────────────────────
+        root.addView(sectionLabel("Bluetooth", dp16, dp8))
+
+        val deviceNameEdit = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or
+                InputType.TYPE_TEXT_FLAG_CAP_WORDS or
+                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+            hint = AppearanceStore.DEFAULT_DEVICE_NAME
+            setSingleLine(true)
+            maxEms = 32
+            setText(AppearanceStore.getDeviceName(this@MainActivity))
+        }
+        root.addView(deviceNameEdit)
+
+        root.addView(hintText(
+            "Hosts will see this name when pairing. Changes apply the next time you prepare a new Bluetooth connection.",
+            dp4, dp16
+        ))
+
+        root.addView(MaterialDivider(this).apply {
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp8; lp.bottomMargin = dp4
+            layoutParams = lp
+        })
+
         // ── Appearance ─────────────────────────────────────────────────────────
-        root.addView(sectionLabel("Appearance", dp16, dp8))
+        root.addView(sectionLabel("Appearance", dp8, dp8))
 
         val radioGroup = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
         listOf("System default", "Light", "Dark").forEachIndexed { i, label ->
@@ -118,6 +163,18 @@ class MainActivity : AppCompatActivity() {
         }
         radioGroup.setOnCheckedChangeListener { _, id -> selectedAppearance = id }
         root.addView(radioGroup)
+
+        val largeTextCheck = CheckBox(this).apply {
+            text = "Large Text"
+            isChecked = originalLargeText
+        }
+        root.addView(largeTextCheck)
+
+        val highContrastCheck = CheckBox(this).apply {
+            text = "High Contrast"
+            isChecked = originalHighContrast
+        }
+        root.addView(highContrastCheck)
 
         // ── Divider ────────────────────────────────────────────────────────────
         root.addView(MaterialDivider(this).apply {
@@ -177,13 +234,22 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Settings")
             .setView(ScrollView(this).apply { addView(root) })
             .setPositiveButton("Apply") { _, _ ->
+                AppearanceStore.setDeviceName(this, deviceNameEdit.text.toString())
                 AppearanceStore.set(this, selectedAppearance)
                 AppCompatDelegate.setDefaultNightMode(AppearanceStore.toNightMode(selectedAppearance))
+                AppearanceStore.setLargeText(this, largeTextCheck.isChecked)
+                AppearanceStore.setHighContrast(this, highContrastCheck.isChecked)
                 val enabled = loggingCheck.isChecked
                 LoggingStore.setEnabled(this, enabled)
                 viewModel.setLoggingEnabled(enabled)
                 OrientationStore.set(this, selectedOrientation)
                 requestedOrientation = OrientationStore.toActivityOrientation(selectedOrientation)
+                if (
+                    largeTextCheck.isChecked != originalLargeText ||
+                    highContrastCheck.isChecked != originalHighContrast
+                ) {
+                    recreate()
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()

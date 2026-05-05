@@ -55,7 +55,7 @@ enum HIDConnectionState: Equatable {
     case idle
     case registering(DeviceMode)
     case reconnecting(mode: DeviceMode, hostName: String)
-    case waitingForConnection(DeviceMode)
+    case waitingForConnection(mode: DeviceMode, deviceName: String)
     case connected(mode: DeviceMode, host: HIDHost)
     case unavailable(String)
     case error(String)
@@ -65,7 +65,7 @@ enum HIDConnectionState: Equatable {
         case .idle: "Idle"
         case .registering: "Preparing HID profile"
         case .reconnecting(_, let hostName): "Reconnecting to \(hostName)"
-        case .waitingForConnection(let mode): "Waiting for \(mode.deviceName)"
+        case .waitingForConnection(_, let deviceName): "Waiting for \(deviceName)"
         case .connected(_, let host): "Connected to \(host.displayName)"
         case .unavailable: "Transport unavailable"
         case .error: "Error"
