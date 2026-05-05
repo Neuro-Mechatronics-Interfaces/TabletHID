@@ -8,6 +8,14 @@ import imgMouseConfig      from '../../img/Mouse Config - Android.png';
 import imgMouseStatic      from '../../img/Mouse Config Static - Android.png';
 import imgGamepadConnect   from '../../img/Gamepad Connect - Android.png';
 import imgGamepadReconnect from '../../img/Gamepad Reconnect - Android.png';
+import imgIosHomeIpad      from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.02.43.png';
+import imgIosGamepadIpad   from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.03.10.png';
+import imgIosSettingsIpad  from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.03.58.png';
+import imgIosTouchIpad     from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-04 at 18.04.43.png';
+import imgIosSetupPhone    from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.56.49.png';
+import imgIosMousePhone    from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.56.52.png';
+import imgIosGamepadPhone  from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.57.01.png';
+import imgIosHomePhone     from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.58.36.png';
 
 const FAQS = {
   common: [
@@ -80,6 +88,80 @@ function Step({ tag, title, imgs, compact, reverse, children }) {
         <div className="step-desc">{children}</div>
       </div>
     </div>
+  );
+}
+
+function IosWalkthrough() {
+  return (
+    <>
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Getting started</div>
+
+        <Step tag="Home screen" title="Choose a mode and profile" imgs={[imgIosHomeIpad, imgIosHomePhone]} compact>
+          The iOS home screen mirrors the Android flow: choose <b>Touch Mouse</b> for
+          a trackpad-style cursor surface or <b>Gamepad</b> for an Xbox-style virtual
+          controller. The selected profile controls which layout and bindings are
+          loaded before you enter a mode.
+          <br /><br />
+          <b>Default</b> includes the full control set. <b>Access Basic</b> and{' '}
+          <b>Access Advanced</b> provide simplified or expanded accessibility layouts,
+          and the <b>+</b> button lets you create a custom profile for a specific host
+          or use case.
+        </Step>
+
+        <Step tag="Transport" title="Prepare the Bluetooth connection" imgs={[imgIosSetupPhone]} reverse>
+          Open either mode and tap <b>Prepare Transport</b>. iOS uses Core Bluetooth
+          peripheral mode, so the app prepares the HID-over-GATT advertisement before
+          you enter the control surface.
+          <br /><br />
+          When the status changes to <b>Connected to Development Preview</b>, tap{' '}
+          <b>Enter Touch Mouse</b> or enter the gamepad mode. If the host does not
+          discover the device, confirm Bluetooth permission for TabletHID in iOS
+          Settings, then return to this screen and prepare the transport again.
+        </Step>
+      </div>
+
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Controls</div>
+
+        <Step
+          tag="Touch Mouse"
+          title="Move the cursor and click"
+          imgs={[imgIosMousePhone, imgIosTouchIpad]}
+          compact
+        >
+          The Touch Mouse surface sends relative mouse movement to the connected
+          host. Drag across the open area to move the cursor, then use the on-screen{' '}
+          <b>L</b> and <b>R</b> controls for left and right click.
+          <br /><br />
+          On iPad, the same controls expand across the larger canvas, making it easier
+          to place click targets where your hands naturally rest.
+        </Step>
+
+        <Step
+          tag="Gamepad"
+          title="Use the virtual controller"
+          imgs={[imgIosGamepadIpad, imgIosGamepadPhone]}
+          compact
+          reverse
+        >
+          Gamepad mode exposes analog sticks, triggers, shoulder buttons, face buttons,
+          D-pad directions, Back, and Start. Profile selection changes which controls
+          are visible, so you can keep the layout dense for full control or simpler
+          for accessibility-focused play.
+          <br /><br />
+          The status pill at the top confirms the active Bluetooth connection while
+          the surface is sending input to the host.
+        </Step>
+
+        <Step tag="Settings" title="Tune the Touch Mouse layout" imgs={[imgIosSettingsIpad]}>
+          Tap the <b>gear icon</b> from Touch Mouse to adjust sensitivity and button
+          behavior. The settings sheet lets you enable each button, switch between
+          static and dynamic zones, choose momentary or latching clicks, and tune
+          offsets and radius for comfortable placement.
+        </Step>
+      </div>
+    </>
   );
 }
 
@@ -202,6 +284,7 @@ export default function Support() {
         <Link to="/support/android" className={`tab${tab === 'android' ? ' active' : ''}`}>Android</Link>
       </div>
 
+      {tab === 'ios' && <IosWalkthrough />}
       {tab === 'android' && <AndroidWalkthrough />}
 
       <div className="support-section">
