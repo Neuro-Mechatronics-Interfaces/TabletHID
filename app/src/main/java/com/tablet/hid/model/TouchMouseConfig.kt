@@ -27,7 +27,7 @@ data class TouchMouseConfig(
         dynamicOffsetX = -0.15f   // left of primary pointer in dynamic mode
     ),
     val rightButton: ButtonZoneConfig = ButtonZoneConfig(
-        staticLeft = 0.75f, staticTop = 0.75f, staticRight = 1f, staticBottom = 1f
-        // dynamicOffsetX = +0.15f (default) — right of primary pointer
+        staticLeft = 0.75f, staticTop = 0.75f, staticRight = 1f, staticBottom = 1f,
+        dynamicOffsetX = +0.15f // (default) — right of primary pointer
     )
 )

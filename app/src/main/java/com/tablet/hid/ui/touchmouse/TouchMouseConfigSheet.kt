@@ -64,6 +64,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
     }
 
     private fun applyButtonConfig(btn: com.tablet.hid.model.ButtonZoneConfig, isLeft: Boolean) {
+        fun Float.snapToStep(step: Float) = (kotlin.math.round(this / step) * step)
         if (isLeft) {
             binding.switchLeft.isChecked = btn.enabled
             binding.configLeft.isVisible = btn.enabled
@@ -74,9 +75,9 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 if (btn.behavior == ClickBehavior.MOMENTARY) R.id.btnLeftMomentary else R.id.btnLeftLatching
             )
             setLeftZoneTypeVisibility(btn.zoneType)
-            binding.sliderLeftOffsetX.value = btn.dynamicOffsetX.coerceIn(-1f, 1f)
-            binding.sliderLeftOffsetY.value = btn.dynamicOffsetY.coerceIn(-1f, 1f)
-            binding.sliderLeftRadius.value = btn.dynamicRadius.coerceIn(0.03f, 0.20f)
+            binding.sliderLeftOffsetX.value = btn.dynamicOffsetX.snapToStep(0.05f).coerceIn(-1f, 1f)
+            binding.sliderLeftOffsetY.value = btn.dynamicOffsetY.snapToStep(0.05f).coerceIn(-1f, 1f)
+            binding.sliderLeftRadius.value  = btn.dynamicRadius.snapToStep(0.01f).coerceIn(0.03f, 0.20f)
             updateLeftDynamicLabels()
         } else {
             binding.switchRight.isChecked = btn.enabled
@@ -88,9 +89,9 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 if (btn.behavior == ClickBehavior.MOMENTARY) R.id.btnRightMomentary else R.id.btnRightLatching
             )
             setRightZoneTypeVisibility(btn.zoneType)
-            binding.sliderRightOffsetX.value = btn.dynamicOffsetX.coerceIn(-1f, 1f)
-            binding.sliderRightOffsetY.value = btn.dynamicOffsetY.coerceIn(-1f, 1f)
-            binding.sliderRightRadius.value = btn.dynamicRadius.coerceIn(0.03f, 0.20f)
+            binding.sliderRightOffsetX.value = btn.dynamicOffsetX.snapToStep(0.05f).coerceIn(-1f, 1f)
+            binding.sliderRightOffsetY.value = btn.dynamicOffsetY.snapToStep(0.05f).coerceIn(-1f, 1f)
+            binding.sliderRightRadius.value  = btn.dynamicRadius.snapToStep(0.01f).coerceIn(0.03f, 0.20f)
             updateRightDynamicLabels()
         }
     }

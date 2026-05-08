@@ -23,7 +23,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
-import com.tablet.hid.bluetooth.HidManager
+import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.bluetooth.HidReportDescriptors
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_A
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_B
@@ -164,7 +164,7 @@ class GamepadFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    val connected = state is HidManager.State.Connected
+                    val connected = state is BleHidManager.State.Connected
                     binding.ledStatus.backgroundTintList = ColorStateList.valueOf(
                         if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
                     )

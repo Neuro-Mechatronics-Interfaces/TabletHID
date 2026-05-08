@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.tablet.hid.bluetooth.HidManager
+import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.bluetooth.HidReportDescriptors
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.GamepadConfig
@@ -17,15 +17,18 @@ import com.tablet.hid.util.LoggingStore
 import com.tablet.hid.util.ProfileStore
 import com.tablet.hid.util.SessionLogger
 import com.tablet.hid.util.TouchMouseConfigStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class HidViewModel(app: Application) : AndroidViewModel(app) {
 
-    val hidManager = HidManager(app)
-    val state: StateFlow<HidManager.State> = hidManager.state
+    val hidManager = BleHidManager(app)
+    val state: StateFlow<BleHidManager.State> = hidManager.state
 
     // ── Session logging ──────────────────────────────────────────────────────────
 
@@ -34,12 +37,59 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
 
     private var sessionLogger: SessionLogger? = null
 
+    // ── Mouse rate controller: 50 Hz fixed-rate with EMA smoothing ─────────────────
+    // Touch events accumulate raw float displacement into mouseTargetDx/Dy.
+    // A fixed 50 Hz coroutine applies a light EMA toward the target, then sends
+    // one HID report per tick with the discretised delta. Sub-pixel fractions
+    // carry over in mouseCarryX/Y so no movement is lost to truncation.
+    //
+    // Button state changes are sent immediately (separate path) so clicks are
+    // never delayed by the 20 ms timer window.
+
+    private val mouseLock        = Any()
+    private var mouseButtonState = 0    // guarded by mouseLock
+    private var mouseTargetDx    = 0f  // guarded by mouseLock
+    private var mouseTargetDy    = 0f  // guarded by mouseLock
+
+    // Owned exclusively by the timer coroutine — no locking needed:
+    private var mouseEmaDx  = 0f
+    private var mouseEmaDy  = 0f
+    private var mouseCarryX = 0f
+    private var mouseCarryY = 0f
+
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                delay(20L) // 50 Hz
+                val buttons: Int; val targetDx: Float; val targetDy: Float
+                synchronized(mouseLock) {
+                    buttons  = mouseButtonState
+                    targetDx = mouseTargetDx
+                    targetDy = mouseTargetDy
+                }
+                mouseEmaDx = 0.8f * targetDx + 0.2f * mouseEmaDx
+                mouseEmaDy = 0.8f * targetDy + 0.2f * mouseEmaDy
+                val rawX = mouseEmaDx + mouseCarryX
+                val rawY = mouseEmaDy + mouseCarryY
+                val sendDx = rawX.toInt()
+                val sendDy = rawY.toInt()
+                mouseCarryX = rawX - sendDx
+                mouseCarryY = rawY - sendDy
+                if (sendDx != 0 || sendDy != 0) {
+                    synchronized(mouseLock) {
+                        mouseTargetDx -= sendDx
+                        mouseTargetDy -= sendDy
+                    }
+                    sessionLogger?.logMouse(buttons, sendDx, sendDy, 0)
+                    hidManager.sendMouseReport(buttons, sendDx, sendDy)
+                }
+            }
+        }
         viewModelScope.launch {
             state.collect { s ->
-                if (s is HidManager.State.Connected && _loggingEnabled.value) {
+                if (s is BleHidManager.State.Connected && _loggingEnabled.value) {
                     startSession(s.mode)
-                } else if (s !is HidManager.State.Connected) {
+                } else if (s !is BleHidManager.State.Connected) {
                     endSession()
                 }
             }
@@ -51,7 +101,7 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         _loggingEnabled.value = enabled
         if (enabled) {
             val s = state.value
-            if (s is HidManager.State.Connected) startSession(s.mode)
+            if (s is BleHidManager.State.Connected) startSession(s.mode)
         } else {
             endSession()
         }
@@ -146,15 +196,23 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
 
     fun reconnect(mode: DeviceMode, host: HidHost) {
         hidManager.reconnect(mode, host)
-        // Refresh list so the UI sees any btName updates after connecting.
         refreshHosts()
     }
 
     fun disconnectAndUnbond() = hidManager.disconnectAndUnbond()
 
-    fun sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) {
-        sessionLogger?.logMouse(buttons, dx, dy, wheel)
-        hidManager.sendMouseReport(buttons, dx, dy, wheel)
+    fun sendMouseReport(buttons: Int, dx: Float = 0f, dy: Float = 0f, wheel: Int = 0) {
+        val buttonsChanged: Boolean
+        synchronized(mouseLock) {
+            buttonsChanged   = buttons != mouseButtonState
+            mouseButtonState = buttons
+            mouseTargetDx   += dx
+            mouseTargetDy   += dy
+        }
+        // Button changes and scroll events bypass the timer for immediate delivery.
+        if (buttonsChanged || wheel != 0) {
+            hidManager.sendMouseReport(buttons, 0, 0, wheel)
+        }
     }
 
     fun sendGamepadReport(

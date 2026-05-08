@@ -2,8 +2,7 @@ package com.tablet.hid.ui.tutorial
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothManager
-import android.content.Intent
+
 import android.os.Bundle
 import android.text.Html
 import android.text.InputType
@@ -28,7 +27,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
-import com.tablet.hid.bluetooth.HidManager
+import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.FragmentTutorialBinding
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.HidHost
@@ -108,8 +107,7 @@ class TutorialFragment : Fragment() {
 
         binding.btnMakeDiscoverable.setOnClickListener {
             activateColumn(ActiveColumn.PAIR)
-            viewModel.initialize(mode)
-            requestDiscoverable()
+            startPairFlow(mode)
         }
 
         binding.btnEnterMode.setOnClickListener { navigateToMode(mode) }
@@ -119,7 +117,7 @@ class TutorialFragment : Fragment() {
                 viewModel.state.collect { state ->
                     updateUi(state, mode)
                     // Refresh the host list in case a connection updated btName.
-                    if (state is HidManager.State.Connected) {
+                    if (state is BleHidManager.State.Connected) {
                         bondedHosts = findBondedHosts()
                         buildDeviceChips(mode)
                     }
@@ -157,8 +155,7 @@ class TutorialFragment : Fragment() {
             when {
                 i == 0 -> {
                     activateColumn(ActiveColumn.PAIR)
-                    viewModel.initialize(mode)
-                    requestDiscoverable()
+                    startPairFlow(mode)
                 }
                 i == pairRows.size - 1 -> if (binding.btnEnterMode.isEnabled) navigateToMode(mode)
             }
@@ -307,34 +304,34 @@ class TutorialFragment : Fragment() {
 
     // ── State → UI ───────────────────────────────────────────────────────────
 
-    private fun updateUi(state: HidManager.State, mode: DeviceMode) {
+    private fun updateUi(state: BleHidManager.State, mode: DeviceMode) {
         val (statusText, enterEnabled) = when (state) {
-            is HidManager.State.Idle ->
+            is BleHidManager.State.Idle ->
                 getString(R.string.tutorial_status_idle) to false
-            is HidManager.State.Registering ->
+            is BleHidManager.State.Registering ->
                 getString(R.string.tutorial_status_registering) to false
-            is HidManager.State.Reconnecting ->
+            is BleHidManager.State.Reconnecting ->
                 getString(R.string.tutorial_status_reconnecting, state.deviceName) to false
-            is HidManager.State.WaitingForConnection ->
+            is BleHidManager.State.WaitingForConnection ->
                 getString(R.string.tutorial_status_waiting, peripheralName()) to false
-            is HidManager.State.Connected ->
+            is BleHidManager.State.Connected ->
                 getString(R.string.tutorial_status_connected,
                     state.device.name ?: state.device.address) to true
-            is HidManager.State.Error ->
+            is BleHidManager.State.Error ->
                 getString(R.string.tutorial_status_error, state.message) to false
         }
         binding.chipStatus.text = statusText
         binding.btnEnterMode.isEnabled = enterEnabled
 
         val newPairStep = when (state) {
-            is HidManager.State.Idle, is HidManager.State.Error -> 0
-            is HidManager.State.Registering                      -> 1
-            is HidManager.State.WaitingForConnection             -> 2
-            is HidManager.State.Connected -> (pairRows.size - 1).coerceAtLeast(0)
-            is HidManager.State.Reconnecting                     -> currentPairStep
+            is BleHidManager.State.Idle, is BleHidManager.State.Error -> 0
+            is BleHidManager.State.Registering                      -> 1
+            is BleHidManager.State.WaitingForConnection             -> 2
+            is BleHidManager.State.Connected -> (pairRows.size - 1).coerceAtLeast(0)
+            is BleHidManager.State.Reconnecting                     -> currentPairStep
         }
         val newReconnectStep = when (state) {
-            is HidManager.State.Connected -> (reconnectRows.size - 1).coerceAtLeast(0)
+            is BleHidManager.State.Connected -> (reconnectRows.size - 1).coerceAtLeast(0)
             else                           -> 0
         }
 
@@ -417,29 +414,14 @@ class TutorialFragment : Fragment() {
         }
     }
 
-    /**
-     * Return all cached hosts whose MAC address is still present in the system's
-     * Bluetooth bonded-devices list, sorted most-recently-seen first.
-     */
-    @SuppressLint("MissingPermission")
-    private fun findBondedHosts(): List<HidHost> {
-        val adapter = requireContext().getSystemService(BluetoothManager::class.java)?.adapter
-            ?: return emptyList()
-        val bondedAddresses = try {
-            adapter.bondedDevices?.mapTo(mutableSetOf()) { it.address } ?: emptySet()
-        } catch (_: SecurityException) {
-            emptySet()
-        }
-        return HidHostStore.getAll(requireContext())
-            .filter { it.address in bondedAddresses }
-    }
+    /** Return all previously connected hosts, sorted most-recently-seen first. */
+    private fun findBondedHosts(): List<HidHost> =
+        HidHostStore.getAll(requireContext())
 
-    private fun requestDiscoverable() {
-        @Suppress("DEPRECATION")
-        val intent = Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-            putExtra(android.bluetooth.BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
+    private fun startPairFlow(mode: DeviceMode) {
+        if (viewModel.state.value !is BleHidManager.State.WaitingForConnection) {
+            viewModel.initialize(mode)
         }
-        startActivity(intent)
     }
 
     override fun onDestroyView() {
