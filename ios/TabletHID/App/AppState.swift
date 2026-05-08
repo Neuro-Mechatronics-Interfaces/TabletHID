@@ -201,8 +201,9 @@ final class AppState: ObservableObject {
     // MARK: - Config
 
     func updateTouchMouseConfig(_ config: TouchMouseConfig) {
-        touchMouseConfig = config
-        store.saveTouchMouseConfig(config, profile: activeProfile)
+        let normalized = config.normalizedForStorage()
+        touchMouseConfig = normalized
+        store.saveTouchMouseConfig(normalized, profile: activeProfile)
     }
 
     func updateGamepadConfig(_ config: GamepadConfig) {
@@ -212,9 +213,15 @@ final class AppState: ObservableObject {
 
     // MARK: - HID reports
 
-    func sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) {
-        sessionLogger?.logMouse(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
-        let report = HIDReportDescriptors.buildMouseReport(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
+    func sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, horizontalWheel: Int = 0) {
+        sessionLogger?.logMouse(buttons: buttons, dx: dx, dy: dy, wheel: wheel, horizontalWheel: horizontalWheel)
+        let report = HIDReportDescriptors.buildMouseReport(
+            buttons: buttons,
+            dx: dx,
+            dy: dy,
+            wheel: wheel,
+            horizontalWheel: horizontalWheel
+        )
         transport.sendReport(id: HIDReportDescriptors.reportIDMouse, data: report)
     }
 

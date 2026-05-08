@@ -3,8 +3,14 @@ import XCTest
 
 final class HIDReportDescriptorsTests: XCTestCase {
     func testMouseReportLayout() {
-        let report = HIDReportDescriptors.buildMouseReport(buttons: 0b101, dx: 300, dy: -2, wheel: -1)
-        XCTAssertEqual(Array(report), [0x05, 0x2C, 0x01, 0xFE, 0xFF, 0xFF])
+        let report = HIDReportDescriptors.buildMouseReport(
+            buttons: 0b101,
+            dx: 300,
+            dy: -2,
+            wheel: -1,
+            horizontalWheel: 2
+        )
+        XCTAssertEqual(Array(report), [0x05, 0x2C, 0x01, 0xFE, 0xFF, 0xFF, 0x02])
     }
 
     func testGamepadReportLayout() {

@@ -13,6 +13,8 @@ enum HIDReportDescriptors {
         0x16, 0x00, 0x80, 0x26, 0xFF, 0x7F, 0x75, 0x10,
         0x95, 0x02, 0x81, 0x06, 0x09, 0x38, 0x15, 0x81,
         0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+        0x05, 0x0C, 0x0A, 0x38, 0x02, 0x15, 0x81, 0x25,
+        0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
         0xC0, 0xC0
     ]
 
@@ -37,12 +39,13 @@ enum HIDReportDescriptors {
         mouseReportDescriptor + gamepadReportDescriptor
     }
 
-    static func buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) -> Data {
-        var report = Data(count: 6)
+    static func buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, horizontalWheel: Int = 0) -> Data {
+        var report = Data(count: 7)
         report[0] = UInt8(buttons & 0x07)
         putInt16LE(clampedInt16(dx), into: &report, at: 1)
         putInt16LE(clampedInt16(dy), into: &report, at: 3)
         report[5] = UInt8(bitPattern: Int8(clamping: wheel))
+        report[6] = UInt8(bitPattern: Int8(clamping: horizontalWheel))
         return report
     }
 

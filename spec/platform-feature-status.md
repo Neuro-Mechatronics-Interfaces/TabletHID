@@ -68,7 +68,7 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Dynamic zone auto-calibrate (3-finger placement flow) | Implemented | Implemented |
 | Zone editing (rubber-band drag to set static zone) | Implemented | Not yet implemented |
 | Persist config | Implemented | Implemented |
-| Two-finger scroll | TODO | TODO |
+| Three-finger scroll | Implemented with vertical wheel, horizontal AC Pan, enable toggle, and invert toggle | Implemented with vertical wheel, horizontal AC Pan, enable toggle, and invert toggle |
 | Middle click | TODO | TODO |
 | Momentum / fling | TODO | TODO |
 

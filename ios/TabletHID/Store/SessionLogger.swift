@@ -34,11 +34,11 @@ final class SessionLogger {
         }
     }
 
-    func logMouse(buttons: Int, dx: Int, dy: Int, wheel: Int) {
+    func logMouse(buttons: Int, dx: Int, dy: Int, wheel: Int, horizontalWheel: Int) {
         guard !closed else { return }
         let ts = now()
         queue.async { [weak self] in
-            self?.writeLine("\(ts) MOUSE buttons=\(buttons) dx=\(dx) dy=\(dy) wheel=\(wheel)")
+            self?.writeLine("\(ts) MOUSE buttons=\(buttons) dx=\(dx) dy=\(dy) wheel=\(wheel) hwheel=\(horizontalWheel)")
         }
     }
 
@@ -101,6 +101,8 @@ final class SessionLogger {
                 "[touch_mouse]",
                 "input_mode = \(t.mode.rawValue.uppercased())",
                 "sensitivity = \(t.sensitivity)",
+                "scroll_enabled = \(t.scrollEnabled)",
+                "invert_scroll = \(t.invertScroll)",
                 ""
             ]
             lines += buttonZoneLines("left_button", b: t.leftButton)

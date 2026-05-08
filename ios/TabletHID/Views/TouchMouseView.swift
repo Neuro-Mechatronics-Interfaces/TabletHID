@@ -17,8 +17,14 @@ struct TouchMouseView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            TouchMouseSurface(config: appState.touchMouseConfig) { buttons, dx, dy, wheel in
-                appState.sendMouseReport(buttons: buttons, dx: dx, dy: dy, wheel: wheel)
+            TouchMouseSurface(config: appState.touchMouseConfig) { buttons, dx, dy, wheel, horizontalWheel in
+                appState.sendMouseReport(
+                    buttons: buttons,
+                    dx: dx,
+                    dy: dy,
+                    wheel: wheel,
+                    horizontalWheel: horizontalWheel
+                )
             }
             .ignoresSafeArea()
 
@@ -132,14 +138,14 @@ struct TouchMouseView: View {
         var config = appState.touchMouseConfig
         config.leftButton.enabled = true
         config.leftButton.zoneType = .dynamic
-        config.leftButton.dynamicOffsetX = l.ox
-        config.leftButton.dynamicOffsetY = l.oy
-        config.leftButton.dynamicRadius = l.r
+        config.leftButton.dynamicOffsetX = l.ox.snapped(to: 0.05).clamped(to: -1...1)
+        config.leftButton.dynamicOffsetY = l.oy.snapped(to: 0.05).clamped(to: -1...1)
+        config.leftButton.dynamicRadius = l.r.snapped(to: 0.01).clamped(to: 0.03...0.2)
         config.rightButton.enabled = true
         config.rightButton.zoneType = .dynamic
-        config.rightButton.dynamicOffsetX = r.ox
-        config.rightButton.dynamicOffsetY = r.oy
-        config.rightButton.dynamicRadius = r.r
+        config.rightButton.dynamicOffsetX = r.ox.snapped(to: 0.05).clamped(to: -1...1)
+        config.rightButton.dynamicOffsetY = r.oy.snapped(to: 0.05).clamped(to: -1...1)
+        config.rightButton.dynamicRadius = r.r.snapped(to: 0.01).clamped(to: 0.03...0.2)
         appState.updateTouchMouseConfig(config)
         calibrationPhase = .none
     }
@@ -149,7 +155,7 @@ struct TouchMouseView: View {
 #if canImport(UIKit)
 struct TouchMouseSurface: UIViewRepresentable {
     let config: TouchMouseConfig
-    let sendReport: (Int, Int, Int, Int) -> Void
+    let sendReport: (Int, Int, Int, Int, Int) -> Void
 
     func makeUIView(context: Context) -> TouchMouseSurfaceView {
         let view = TouchMouseSurfaceView()
@@ -167,7 +173,7 @@ struct TouchMouseSurface: UIViewRepresentable {
 
 final class TouchMouseSurfaceView: UIView {
     var config = TouchMouseConfig() { didSet { setNeedsDisplay() } }
-    var sendReport: ((Int, Int, Int, Int) -> Void)?
+    var sendReport: ((Int, Int, Int, Int, Int) -> Void)?
 
     private var primaryTouch: UITouch?
     private var lastPoint = CGPoint.zero
@@ -181,10 +187,15 @@ final class TouchMouseSurfaceView: UIView {
     private var leftLatched = false
     private var rightLatched = false
     private var lastTapTime: TimeInterval = 0
+    private var threeFingerScrolling = false
+    private var scrollCarryV = 0.0
+    private var scrollCarryH = 0.0
+    private var scrollLastPoint = CGPoint.zero
 
     private let leftBit = 1
     private let rightBit = 2
     private let rightZoneFraction = 0.82
+    private let scrollPixelsPerTick = 50.0
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -197,6 +208,10 @@ final class TouchMouseSurfaceView: UIView {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let event else { return }
+        if shouldStartThreeFingerScroll(event) {
+            startThreeFingerScroll(event)
+            return
+        }
         for touch in touches {
             let point = touch.location(in: self)
             if config.mode == .touch {
@@ -209,6 +224,10 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if threeFingerScrolling {
+            if let event { handleScrollMove(event) }
+            return
+        }
         guard let touch = primaryTouch, touches.contains(touch) else { return }
         let scale = config.mode == .touch ? 1.5 : Double(config.sensitivity) * 0.3
         let bits = currentButtonBits()
@@ -221,7 +240,7 @@ final class TouchMouseSurfaceView: UIView {
             accumDx = rawDx - Double(dx)
             accumDy = rawDy - Double(dy)
             lastPoint = point
-            if dx != 0 || dy != 0 { sendReport?(bits, dx, dy, 0) }
+            if dx != 0 || dy != 0 { sendReport?(bits, dx, dy, 0, 0) }
         }
         primaryPoint = touch.location(in: self)
         setNeedsDisplay()
@@ -239,7 +258,7 @@ final class TouchMouseSurfaceView: UIView {
         let threshold = bounds.height * rightZoneFraction
         if point.y >= threshold {
             rightClickTouch = touch
-            sendReport?(rightBit, 0, 0, 0)
+            sendReport?(rightBit, 0, 0, 0, 0)
             return
         }
         primaryTouch = touch
@@ -250,12 +269,12 @@ final class TouchMouseSurfaceView: UIView {
         let now = touch.timestamp
         if now - lastTapTime < 0.32 {
             let button = rightClickTouch == nil ? leftBit : rightBit
-            sendReport?(button, 0, 0, 0)
-            sendReport?(0, 0, 0, 0)
-            sendReport?(button, 0, 0, 0)
-            sendReport?(0, 0, 0, 0)
+            sendReport?(button, 0, 0, 0, 0)
+            sendReport?(0, 0, 0, 0, 0)
+            sendReport?(button, 0, 0, 0, 0)
+            sendReport?(0, 0, 0, 0, 0)
         } else {
-            sendReport?(rightClickTouch == nil ? leftBit : rightBit, 0, 0, 0)
+            sendReport?(rightClickTouch == nil ? leftBit : rightBit, 0, 0, 0, 0)
         }
         lastTapTime = now
     }
@@ -277,6 +296,10 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     private func endTouches(_ touches: Set<UITouch>) {
+        if threeFingerScrolling {
+            stopThreeFingerScroll()
+            return
+        }
         for touch in touches {
             if touch == primaryTouch {
                 primaryTouch = nil
@@ -291,7 +314,7 @@ final class TouchMouseSurfaceView: UIView {
             leftPointers.remove(touch)
             rightPointers.remove(touch)
         }
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
         setNeedsDisplay()
     }
 
@@ -309,7 +332,7 @@ final class TouchMouseSurfaceView: UIView {
                 rightPointers.insert(touch)
             }
         }
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
     }
 
     private func zoneUp(_ zone: Int, touch: UITouch) {
@@ -318,7 +341,69 @@ final class TouchMouseSurfaceView: UIView {
         } else {
             rightPointers.remove(touch)
         }
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
+    }
+
+    private func shouldStartThreeFingerScroll(_ event: UIEvent) -> Bool {
+        guard config.scrollEnabled,
+              event.allTouches?.filter({ $0.phase != .ended && $0.phase != .cancelled }).count == 3 else {
+            return false
+        }
+        return !threeFingerScrolling
+    }
+
+    private func startThreeFingerScroll(_ event: UIEvent) {
+        threeFingerScrolling = true
+        scrollCarryV = 0
+        scrollCarryH = 0
+        scrollLastPoint = scrollCentroid(event) ?? .zero
+        primaryTouch = nil
+        rightClickTouch = nil
+        zoneTouches.removeAll()
+        leftPointers.removeAll()
+        rightPointers.removeAll()
+        primaryPoint = nil
+        accumDx = 0
+        accumDy = 0
+        sendReport?(0, 0, 0, 0, 0)
+        setNeedsDisplay()
+    }
+
+    private func stopThreeFingerScroll() {
+        threeFingerScrolling = false
+        scrollCarryV = 0
+        scrollCarryH = 0
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
+        setNeedsDisplay()
+    }
+
+    private func handleScrollMove(_ event: UIEvent) {
+        guard let point = scrollCentroid(event) else { return }
+        let invert = config.invertScroll
+        let vSign = invert ? 1.0 : -1.0
+        let hSign = invert ? -1.0 : 1.0
+        scrollCarryV += vSign * Double(point.y - scrollLastPoint.y) / scrollPixelsPerTick
+        scrollCarryH += hSign * Double(point.x - scrollLastPoint.x) / scrollPixelsPerTick
+        scrollLastPoint = point
+
+        let vTicks = Int(scrollCarryV).clamped(to: -127...127)
+        let hTicks = Int(scrollCarryH).clamped(to: -127...127)
+        if vTicks != 0 { scrollCarryV -= Double(vTicks) }
+        if hTicks != 0 { scrollCarryH -= Double(hTicks) }
+        if vTicks != 0 || hTicks != 0 {
+            sendReport?(0, 0, 0, vTicks, hTicks)
+        }
+    }
+
+    private func scrollCentroid(_ event: UIEvent) -> CGPoint? {
+        let touches = event.allTouches?.filter { $0.phase != .ended && $0.phase != .cancelled } ?? []
+        guard touches.count >= 3 else { return nil }
+        let firstThree = touches.prefix(3)
+        let sum = firstThree.reduce(CGPoint.zero) { partial, touch in
+            let point = touch.location(in: self)
+            return CGPoint(x: partial.x + point.x, y: partial.y + point.y)
+        }
+        return CGPoint(x: sum.x / 3, y: sum.y / 3)
     }
 
     private func currentButtonBits() -> Int {
@@ -539,7 +624,7 @@ struct CalibrationSurface: UIViewRepresentable {
 #elseif canImport(AppKit)
 struct TouchMouseSurface: NSViewRepresentable {
     let config: TouchMouseConfig
-    let sendReport: (Int, Int, Int, Int) -> Void
+    let sendReport: (Int, Int, Int, Int, Int) -> Void
 
     func makeNSView(context: Context) -> TouchMouseSurfaceView {
         let view = TouchMouseSurfaceView()
@@ -556,7 +641,7 @@ struct TouchMouseSurface: NSViewRepresentable {
 
 final class TouchMouseSurfaceView: NSView {
     var config = TouchMouseConfig() { didSet { needsDisplay = true } }
-    var sendReport: ((Int, Int, Int, Int) -> Void)?
+    var sendReport: ((Int, Int, Int, Int, Int) -> Void)?
 
     private var lastPoint = CGPoint.zero
     private var primaryDown = false
@@ -599,32 +684,33 @@ final class TouchMouseSurfaceView: NSView {
         let dx = Int((point.x - lastPoint.x) * scale).clamped(to: -32768...32767)
         let dy = Int((point.y - lastPoint.y) * scale).clamped(to: -32768...32767)
         lastPoint = point
-        sendReport?(currentButtonBits(), dx, dy, 0)
+        sendReport?(currentButtonBits(), dx, dy, 0, 0)
         needsDisplay = true
     }
 
     override func mouseUp(with event: NSEvent) {
         primaryDown = false
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
         needsDisplay = true
     }
 
     override func rightMouseDown(with event: NSEvent) {
         rightDown = true
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
         needsDisplay = true
     }
 
     override func rightMouseUp(with event: NSEvent) {
         rightDown = false
-        sendReport?(currentButtonBits(), 0, 0, 0)
+        sendReport?(currentButtonBits(), 0, 0, 0, 0)
         needsDisplay = true
     }
 
     override func scrollWheel(with event: NSEvent) {
         let wheel = Int(event.scrollingDeltaY).clamped(to: -127...127)
-        if wheel != 0 {
-            sendReport?(currentButtonBits(), 0, 0, wheel)
+        let horizontalWheel = Int(event.scrollingDeltaX).clamped(to: -127...127)
+        if wheel != 0 || horizontalWheel != 0 {
+            sendReport?(currentButtonBits(), 0, 0, wheel, horizontalWheel)
         }
     }
 
@@ -632,7 +718,7 @@ final class TouchMouseSurfaceView: NSView {
         let threshold = bounds.height * rightZoneFraction
         if point.y >= threshold {
             rightDown = true
-            sendReport?(rightBit, 0, 0, 0)
+            sendReport?(rightBit, 0, 0, 0, 0)
             return
         }
 
@@ -640,12 +726,12 @@ final class TouchMouseSurfaceView: NSView {
         lastPoint = point
 
         if timestamp - lastTapTime < 0.32 {
-            sendReport?(leftBit, 0, 0, 0)
-            sendReport?(0, 0, 0, 0)
-            sendReport?(leftBit, 0, 0, 0)
-            sendReport?(0, 0, 0, 0)
+            sendReport?(leftBit, 0, 0, 0, 0)
+            sendReport?(0, 0, 0, 0, 0)
+            sendReport?(leftBit, 0, 0, 0, 0)
+            sendReport?(0, 0, 0, 0, 0)
         } else {
-            sendReport?(leftBit, 0, 0, 0)
+            sendReport?(leftBit, 0, 0, 0, 0)
         }
         lastTapTime = timestamp
     }
@@ -658,14 +744,14 @@ final class TouchMouseSurfaceView: NSView {
             } else {
                 primaryDown = true
             }
-            sendReport?(currentButtonBits(), 0, 0, 0)
+            sendReport?(currentButtonBits(), 0, 0, 0, 0)
         } else if zone == rightBit {
             if config.rightButton.behavior == .latching {
                 rightLatched.toggle()
             } else {
                 rightDown = true
             }
-            sendReport?(currentButtonBits(), 0, 0, 0)
+            sendReport?(currentButtonBits(), 0, 0, 0, 0)
         } else {
             primaryDown = true
             lastPoint = point

@@ -40,6 +40,13 @@ struct TouchMouseSettingsView: View {
                     }
                 }
 
+                Section("Three-Finger Scroll") {
+                    Toggle("Enable", isOn: $draft.scrollEnabled)
+                    if draft.scrollEnabled {
+                        Toggle("Invert direction", isOn: $draft.invertScroll)
+                    }
+                }
+
                 Section("Left Button") {
                     buttonEditor(button: $draft.leftButton)
                 }
@@ -75,14 +82,14 @@ struct TouchMouseSettingsView: View {
                 Text("Latching").tag(ClickBehavior.latching)
             }
             if button.zoneType.wrappedValue == .staticZone {
-                SliderRow(title: "Left", value: button.staticLeft, range: 0...1)
-                SliderRow(title: "Top", value: button.staticTop, range: 0...1)
-                SliderRow(title: "Right", value: button.staticRight, range: 0...1)
-                SliderRow(title: "Bottom", value: button.staticBottom, range: 0...1)
+                SliderRow(title: "Left", value: button.staticLeft, range: 0...1, step: 0.01)
+                SliderRow(title: "Top", value: button.staticTop, range: 0...1, step: 0.01)
+                SliderRow(title: "Right", value: button.staticRight, range: 0...1, step: 0.01)
+                SliderRow(title: "Bottom", value: button.staticBottom, range: 0...1, step: 0.01)
             } else {
-                SliderRow(title: "Offset X", value: button.dynamicOffsetX, range: -1...1)
-                SliderRow(title: "Offset Y", value: button.dynamicOffsetY, range: -1...1)
-                SliderRow(title: "Radius", value: button.dynamicRadius, range: 0.03...0.2)
+                SliderRow(title: "Offset X", value: button.dynamicOffsetX, range: -1...1, step: 0.05)
+                SliderRow(title: "Offset Y", value: button.dynamicOffsetY, range: -1...1, step: 0.05)
+                SliderRow(title: "Radius", value: button.dynamicRadius, range: 0.03...0.2, step: 0.01)
             }
         }
     }
@@ -92,6 +99,7 @@ struct SliderRow: View {
     let title: String
     @Binding var value: Double
     let range: ClosedRange<Double>
+    let step: Double
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -101,7 +109,10 @@ struct SliderRow: View {
                 Text(value, format: .number.precision(.fractionLength(2)))
                     .foregroundStyle(.secondary)
             }
-            Slider(value: $value, in: range)
+            Slider(value: Binding(
+                get: { value.clamped(to: range).snapped(to: step) },
+                set: { value = $0.clamped(to: range).snapped(to: step) }
+            ), in: range, step: step)
         }
     }
 }

@@ -47,8 +47,8 @@
 - [x] Process coalesced touches (`event?.coalescedTouches`) and accumulate sub-pixel deltas for smooth movement.
 - [x] Add settings sheet for mode, sensitivity, dynamic zone offset/radius, and button behavior.
 - [x] Add dynamic zone auto-calibrate — 3-step finger placement flow (`CalibrationSurface` UIViewRepresentable + Coordinator) derives offset + radius for L/R buttons.
+- [x] Add three-finger scroll with vertical wheel and horizontal AC Pan, plus enable/invert settings.
 - [ ] Add static zone edit flow matching Android's rubber-band editor.
-- [ ] Add two-finger scroll.
 - [ ] Add middle click gesture.
 - [ ] Add haptic feedback.
 

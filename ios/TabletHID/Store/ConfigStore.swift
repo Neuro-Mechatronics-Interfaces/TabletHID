@@ -31,11 +31,12 @@ struct ConfigStore {
     }
 
     func loadTouchMouseConfig(profile: Profile) -> TouchMouseConfig {
-        load(TouchMouseConfig.self, key: touchKey(profile)) ?? TouchMouseConfig.defaultForProfile(profile)
+        (load(TouchMouseConfig.self, key: touchKey(profile)) ?? TouchMouseConfig.defaultForProfile(profile))
+            .normalizedForStorage()
     }
 
     func saveTouchMouseConfig(_ config: TouchMouseConfig, profile: Profile) {
-        save(config, key: touchKey(profile))
+        save(config.normalizedForStorage(), key: touchKey(profile))
     }
 
     func loadGamepadConfig(profile: Profile) -> GamepadConfig {
