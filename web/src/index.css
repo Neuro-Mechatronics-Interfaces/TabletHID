@@ -137,6 +137,19 @@ body {
 .badge:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
 .badge svg { flex-shrink: 0; }
 
+/* Grouped Android badges (opt-in + download) */
+.badge-group { display: flex; flex-direction: column; gap: 8px; }
+.badge.badge-primary {
+  background: var(--primary); border-color: var(--primary);
+  color: #fff;
+}
+.badge.badge-primary:hover { background: var(--primary-dk); border-color: var(--primary-dk); color: #fff; }
+.badge.badge-muted { opacity: .65; }
+.badge.badge-locked {
+  opacity: .45; cursor: default; pointer-events: none;
+  border-style: dashed;
+}
+
 /* ── Feature cards ── */
 .features { background: var(--bg-muted); border-bottom: 1px solid var(--border); }
 .section-label {

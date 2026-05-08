@@ -22,6 +22,8 @@ data class ButtonZoneConfig(
 data class TouchMouseConfig(
     val mode: TouchMode = TouchMode.TOUCH,
     val sensitivity: Int = 5,
+    val scrollEnabled: Boolean = true,
+    val invertScroll: Boolean = false,
     val leftButton: ButtonZoneConfig = ButtonZoneConfig(
         staticLeft = 0f, staticTop = 0.75f, staticRight = 0.25f, staticBottom = 1f,
         dynamicOffsetX = -0.15f   // left of primary pointer in dynamic mode

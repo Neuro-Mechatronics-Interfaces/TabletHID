@@ -11,7 +11,7 @@ object HidReportDescriptors {
 
     /**
      * Standard relative-mouse descriptor.
-     * Report ID 1 | 6 bytes: [buttons(1)] [X lo][X hi] [Y lo][Y hi] [wheel]
+     * Report ID 1 | 7 bytes: [buttons(1)] [X lo][X hi] [Y lo][Y hi] [vwheel] [hwheel/AC Pan]
      */
     val MOUSE_REPORT_DESCRIPTOR: ByteArray = byteArrayOf(
         0x05.b, 0x01,        // Usage Page (Generic Desktop)
@@ -42,13 +42,21 @@ object HidReportDescriptors {
         0x75.b, 0x10,        //     Report Size (16)
         0x95.b, 0x02,        //     Report Count (2)
         0x81.b, 0x06,        //     Input (Data, Variable, Relative)
-        // --- Scroll wheel (signed 8-bit relative) ---
+        // --- Vertical scroll wheel (signed 8-bit relative) ---
         0x09.b, 0x38,        //     Usage (Wheel)
         0x15.b, 0x81.b,      //     Logical Minimum (-127)
         0x25.b, 0x7F,        //     Logical Maximum (127)
         0x75.b, 0x08,        //     Report Size (8)
         0x95.b, 0x01,        //     Report Count (1)
         0x81.b, 0x06,        //     Input (Data, Variable, Relative)
+        // --- Horizontal scroll / AC Pan (signed 8-bit relative) ---
+        0x05.b, 0x0C,           //     Usage Page (Consumer)
+        0x0A.b, 0x38.b, 0x02.b, //     Usage (AC Pan, 0x0238)
+        0x15.b, 0x81.b,         //     Logical Minimum (-127)
+        0x25.b, 0x7F,           //     Logical Maximum (127)
+        0x75.b, 0x08,           //     Report Size (8)
+        0x95.b, 0x01,           //     Report Count (1)
+        0x81.b, 0x06,           //     Input (Data, Variable, Relative)
         0xC0.b,              //   End Collection
         0xC0.b               // End Collection
     )
@@ -136,15 +144,16 @@ object HidReportDescriptors {
     // Report builders
     // -------------------------------------------------------------------------
 
-    /** Build a 6-byte mouse report. dx/dy are signed 16-bit (-32768..32767). */
-    fun buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0): ByteArray =
-        ByteArray(6).also { r ->
+    /** Build a 7-byte mouse report. dx/dy are signed 16-bit (-32768..32767). */
+    fun buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, hwheel: Int = 0): ByteArray =
+        ByteArray(7).also { r ->
             r[0] = (buttons and 0x07).toByte()
             r[1] = (dx and 0xFF).toByte()
             r[2] = ((dx shr 8) and 0xFF).toByte()
             r[3] = (dy and 0xFF).toByte()
             r[4] = ((dy shr 8) and 0xFF).toByte()
             r[5] = wheel.toByte()
+            r[6] = hwheel.toByte()
         }
 
     /**

@@ -76,17 +76,26 @@ class TouchMouseFragment : Fragment() {
     private var leftLatched = false
     private var rightLatched = false
 
+    // ── Three-finger scroll state ────────────────────────────────────────────
+    private var threeFingerScrolling = false
+    private var scrollCarryV = 0f
+    private var scrollCarryH = 0f
+    private var scrollLastX = 0f
+    private var scrollLastY = 0f
+
     companion object {
         private const val BTN_LEFT = 1
         private const val BTN_RIGHT = 2
         private const val TOUCH_SENSITIVITY = 1.5f
         private const val RIGHT_CLICK_ZONE_FRAC = 0.82f
+        private const val SCROLL_PIXELS_PER_TICK = 50f
     }
 
     // GestureDetector used only in Touch mode for double-tap → double-click.
     private val touchGesture by lazy {
         GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
+                if (threeFingerScrolling) return false
                 val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
                 repeat(2) {
                     viewModel.sendMouseReport(buttons = btn)
@@ -432,25 +441,37 @@ class TouchMouseFragment : Fragment() {
                     touchRightClickActive = true
                     binding.touchZoneOverlay.rightActive = true
                 }
+                if (event.pointerCount == 3 && !threeFingerScrolling &&
+                        viewModel.touchMouseConfig.value.scrollEnabled) {
+                    threeFingerScrolling = true
+                    scrollCarryV = 0f; scrollCarryH = 0f
+                    scrollLastX = event.getX(0); scrollLastY = event.getY(0)
+                    touchPrimaryId = -1
+                    viewModel.sendMouseReport(buttons = 0)
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
-                val idx = event.findPointerIndex(touchPrimaryId)
-                if (idx >= 0) {
-                    val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
-                    var totalDx = 0f; var totalDy = 0f
-                    for (h in 0 until event.historySize) {
-                        val hx = event.getHistoricalX(idx, h)
-                        val hy = event.getHistoricalY(idx, h)
-                        totalDx += (hx - touchLastX) * TOUCH_SENSITIVITY
-                        totalDy += (hy - touchLastY) * TOUCH_SENSITIVITY
-                        touchLastX = hx; touchLastY = hy
+                if (threeFingerScrolling) {
+                    handleScrollMove(event)
+                } else {
+                    val idx = event.findPointerIndex(touchPrimaryId)
+                    if (idx >= 0) {
+                        val btn = if (touchRightClickActive) BTN_RIGHT else BTN_LEFT
+                        var totalDx = 0f; var totalDy = 0f
+                        for (h in 0 until event.historySize) {
+                            val hx = event.getHistoricalX(idx, h)
+                            val hy = event.getHistoricalY(idx, h)
+                            totalDx += (hx - touchLastX) * TOUCH_SENSITIVITY
+                            totalDy += (hy - touchLastY) * TOUCH_SENSITIVITY
+                            touchLastX = hx; touchLastY = hy
+                        }
+                        val cx = event.getX(idx); val cy = event.getY(idx)
+                        totalDx += (cx - touchLastX) * TOUCH_SENSITIVITY
+                        totalDy += (cy - touchLastY) * TOUCH_SENSITIVITY
+                        touchLastX = cx; touchLastY = cy
+                        viewModel.sendMouseReport(buttons = btn, dx = totalDx, dy = totalDy)
                     }
-                    val cx = event.getX(idx); val cy = event.getY(idx)
-                    totalDx += (cx - touchLastX) * TOUCH_SENSITIVITY
-                    totalDy += (cy - touchLastY) * TOUCH_SENSITIVITY
-                    touchLastX = cx; touchLastY = cy
-                    viewModel.sendMouseReport(buttons = btn, dx = totalDx, dy = totalDy)
                 }
             }
 
@@ -471,6 +492,8 @@ class TouchMouseFragment : Fragment() {
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                threeFingerScrolling = false
+                scrollCarryV = 0f; scrollCarryH = 0f
                 touchPrimaryId = -1
                 touchRightClickActive = false
                 binding.touchZoneOverlay.rightActive = false
@@ -528,27 +551,37 @@ class TouchMouseFragment : Fragment() {
                     mouseLastX = x; mouseLastY = y
                     overlay.updatePrimaryPointer(x, y)
                 }
+                if (event.pointerCount == 3 && !threeFingerScrolling &&
+                        viewModel.touchMouseConfig.value.scrollEnabled) {
+                    threeFingerScrolling = true
+                    scrollCarryV = 0f; scrollCarryH = 0f
+                    scrollLastX = event.getX(0); scrollLastY = event.getY(0)
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
-                val idx = event.findPointerIndex(mousePrimaryId)
-                if (idx >= 0) {
-                    val scale = config.sensitivity * 0.3f
-                    val bits = currentButtonBits(config)
-                    var totalDx = 0f; var totalDy = 0f
-                    for (h in 0 until event.historySize) {
-                        val hx = event.getHistoricalX(idx, h)
-                        val hy = event.getHistoricalY(idx, h)
-                        totalDx += (hx - mouseLastX) * scale
-                        totalDy += (hy - mouseLastY) * scale
-                        mouseLastX = hx; mouseLastY = hy
+                if (threeFingerScrolling) {
+                    handleScrollMove(event)
+                } else {
+                    val idx = event.findPointerIndex(mousePrimaryId)
+                    if (idx >= 0) {
+                        val scale = config.sensitivity * 0.3f
+                        val bits = currentButtonBits(config)
+                        var totalDx = 0f; var totalDy = 0f
+                        for (h in 0 until event.historySize) {
+                            val hx = event.getHistoricalX(idx, h)
+                            val hy = event.getHistoricalY(idx, h)
+                            totalDx += (hx - mouseLastX) * scale
+                            totalDy += (hy - mouseLastY) * scale
+                            mouseLastX = hx; mouseLastY = hy
+                        }
+                        val x = event.getX(idx); val y = event.getY(idx)
+                        totalDx += (x - mouseLastX) * scale
+                        totalDy += (y - mouseLastY) * scale
+                        mouseLastX = x; mouseLastY = y
+                        overlay.updatePrimaryPointer(x, y)
+                        viewModel.sendMouseReport(buttons = bits, dx = totalDx, dy = totalDy)
                     }
-                    val x = event.getX(idx); val y = event.getY(idx)
-                    totalDx += (x - mouseLastX) * scale
-                    totalDy += (y - mouseLastY) * scale
-                    mouseLastX = x; mouseLastY = y
-                    overlay.updatePrimaryPointer(x, y)
-                    viewModel.sendMouseReport(buttons = bits, dx = totalDx, dy = totalDy)
                 }
             }
 
@@ -564,6 +597,8 @@ class TouchMouseFragment : Fragment() {
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 // Release everything. Momentary buttons are released; latching remains.
+                threeFingerScrolling = false
+                scrollCarryV = 0f; scrollCarryH = 0f
                 pointerZone.clear()
                 mousePrimaryId = -1
                 overlay.clearPrimaryPointer()
@@ -583,6 +618,38 @@ class TouchMouseFragment : Fragment() {
             }
         }
         return true
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Three-finger scroll: accumulate Y delta → send wheel ticks
+    //   Default: drag UP → scroll UP (positive wheel).
+    //   Inverted: drag DOWN → scroll UP (natural/trackpad feel).
+    // ────────────────────────────────────────────────────────────────────────
+
+    private fun handleScrollMove(event: MotionEvent) {
+        val invert = viewModel.touchMouseConfig.value.invertScroll
+        // Vertical: finger up → positive (scroll up). Inverted: finger down → positive (natural).
+        val vSign = if (invert) 1f else -1f
+        // Horizontal: finger right → positive (pan right). Inverted: mirrors vertical flip.
+        val hSign = if (invert) -1f else 1f
+        for (h in 0 until event.historySize) {
+            val hx = event.getHistoricalX(0, h)
+            val hy = event.getHistoricalY(0, h)
+            scrollCarryV += vSign * (hy - scrollLastY) / SCROLL_PIXELS_PER_TICK
+            scrollCarryH += hSign * (hx - scrollLastX) / SCROLL_PIXELS_PER_TICK
+            scrollLastX = hx; scrollLastY = hy
+        }
+        val cx = event.getX(0); val cy = event.getY(0)
+        scrollCarryV += vSign * (cy - scrollLastY) / SCROLL_PIXELS_PER_TICK
+        scrollCarryH += hSign * (cx - scrollLastX) / SCROLL_PIXELS_PER_TICK
+        scrollLastX = cx; scrollLastY = cy
+        val vTicks = scrollCarryV.toInt()
+        val hTicks = scrollCarryH.toInt()
+        if (vTicks != 0) scrollCarryV -= vTicks
+        if (hTicks != 0) scrollCarryH -= hTicks
+        if (vTicks != 0 || hTicks != 0) {
+            viewModel.sendMouseReport(buttons = 0, wheel = vTicks, hwheel = hTicks)
+        }
     }
 
     // ────────────────────────────────────────────────────────────────────────

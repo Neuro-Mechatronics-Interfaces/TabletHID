@@ -56,6 +56,9 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.groupMouseSettings.isVisible = cfg.mode == TouchMode.MOUSE
         binding.sliderSensitivity.value = cfg.sensitivity.toFloat()
         binding.labelSensValue.text = cfg.sensitivity.toString()
+        binding.switchScrollEnabled.isChecked = cfg.scrollEnabled
+        binding.groupScrollOptions.isVisible = cfg.scrollEnabled
+        binding.switchInvertScroll.isChecked = cfg.invertScroll
 
         applyButtonConfig(cfg.leftButton, isLeft = true)
         applyButtonConfig(cfg.rightButton, isLeft = false)
@@ -101,6 +104,15 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
     // ─────────────────────────────────────────────────────────────────────────
 
     private fun setupListeners() {
+        binding.switchScrollEnabled.setOnCheckedChangeListener { _, checked ->
+            binding.groupScrollOptions.isVisible = checked
+            if (!initialising) pushConfig()
+        }
+
+        binding.switchInvertScroll.setOnCheckedChangeListener { _, _ ->
+            if (!initialising) pushConfig()
+        }
+
         // Mode toggle
         binding.toggleMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked || initialising) return@addOnButtonCheckedListener
@@ -232,6 +244,8 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         val newConfig = TouchMouseConfig(
             mode = mode,
             sensitivity = binding.sliderSensitivity.value.toInt(),
+            scrollEnabled = binding.switchScrollEnabled.isChecked,
+            invertScroll  = binding.switchInvertScroll.isChecked,
             leftButton = prev.leftButton.copy(
                 enabled = binding.switchLeft.isChecked,
                 zoneType = leftZoneType,

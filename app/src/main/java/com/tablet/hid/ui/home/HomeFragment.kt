@@ -22,6 +22,7 @@ import com.tablet.hid.R
 import com.tablet.hid.databinding.FragmentHomeBinding
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.Profile
+import com.tablet.hid.util.AppearanceStore
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -43,6 +44,12 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if (savedInstanceState == null &&
+            !AppearanceStore.hasCompletedOnboarding(requireContext())) {
+            findNavController().navigate(R.id.onboardingFragment)
+            return
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

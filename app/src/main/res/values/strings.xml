@@ -119,7 +119,29 @@
     <string name="orientation_landscape">Landscape</string>
     <string name="orientation_lock_hint">Locks screen rotation when using Touch Mouse or Gamepad canvas views.</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_back">Back</string>
+
+    <string name="onboarding_p1_title">Welcome to TabletHID</string>
+    <string name="onboarding_p1_body">Turn your Android tablet into a wireless Bluetooth mouse or gamepad — no cables, no adapters, just your screen.</string>
+
+    <string name="onboarding_p2_title">Pair with Your Computer</string>
+    <string name="onboarding_p2_body">Open the Setup screen and tap <b>Make Discoverable</b>. Then add a new Bluetooth device on your computer and select <b>TabletHID</b> from the list. No PIN required.</string>
+
+    <string name="onboarding_p3_title">Touch Mouse Mode</string>
+    <string name="onboarding_p3_body">Drag one finger to move the pointer. Tap configured zones to click. Use three fingers to scroll. Tap the gear icon to customise sensitivity, click zones, and scroll direction.</string>
+
+    <string name="onboarding_p4_title">Name Your Device</string>
+    <string name="onboarding_p4_body">Choose the Bluetooth name your computer will see when pairing. You can change it later in Settings.</string>
+    <string name="onboarding_p4_hint">Device name (e.g. TabletHID - Max)</string>
+
     <!-- Dynamic zone calibration -->
+    <string name="config_scroll_section">Three-Finger Scroll</string>
+    <string name="config_scroll_enabled">Enable</string>
+    <string name="config_invert_scroll">Invert direction (natural scroll)</string>
     <string name="config_auto_calibrate">Auto-calibrate Dynamic Zones</string>
     <string name="calibrate_hint_primary">Step 1 of 3 — Place your pointer finger anywhere on the screen</string>
     <string name="calibrate_hint_left">Step 2 of 3 — Keep pointer finger down, then place your left-click finger where it feels comfortable</string>

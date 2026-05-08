@@ -19,6 +19,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.HidHost
+import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidHostStore
 import com.tablet.hid.util.HidPrefs
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,8 +32,6 @@ class BleHidManager(private val context: Context) {
 
     companion object {
         private const val TAG = "BleHidManager"
-        private const val DEVICE_NAME = "TabletHID"
-
         private val UUID_DIS         = UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB")
         private val UUID_HID         = UUID.fromString("00001812-0000-1000-8000-00805F9B34FB")
         private val UUID_MANUF_NAME  = UUID.fromString("00002A29-0000-1000-8000-00805F9B34FB")
@@ -86,7 +85,7 @@ class BleHidManager(private val context: Context) {
         else
             State.Registering
 
-        try { adapter.setName(DEVICE_NAME) } catch (e: Exception) {
+        try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (e: Exception) {
             Log.w(TAG, "setName: ${e.message}")
         }
         startGattServer()
@@ -100,7 +99,7 @@ class BleHidManager(private val context: Context) {
         }
         activeMode = mode
         _state.value = State.Reconnecting(host.displayName)
-        try { adapter.setName(DEVICE_NAME) } catch (_: Exception) {}
+        try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (_: Exception) {}
         startGattServer()
     }
 
@@ -138,10 +137,10 @@ class BleHidManager(private val context: Context) {
     // Report sending
     // -------------------------------------------------------------------------
 
-    fun sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0) {
+    fun sendMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, hwheel: Int = 0) {
         val device = connectedDevice ?: return
         val char = mouseReportChar ?: return
-        val report = HidReportDescriptors.buildMouseReport(buttons, dx, dy, wheel)
+        val report = HidReportDescriptors.buildMouseReport(buttons, dx, dy, wheel, hwheel)
         notify(device, char, report)
     }
 

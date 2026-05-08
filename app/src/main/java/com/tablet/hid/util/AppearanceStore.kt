@@ -9,6 +9,7 @@ object AppearanceStore {
     private const val KEY_DEVICE_NAME = "device_name"
     private const val KEY_LARGE_TEXT = "large_text"
     private const val KEY_HIGH_CONTRAST = "high_contrast"
+    private const val KEY_ONBOARDING_DONE = "onboarding_done"
 
     const val DEFAULT_DEVICE_NAME = "TabletHID"
 
@@ -56,6 +57,15 @@ object AppearanceStore {
     fun setHighContrast(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean(KEY_HIGH_CONTRAST, enabled).apply()
+    }
+
+    fun hasCompletedOnboarding(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_ONBOARDING_DONE, false)
+
+    fun setOnboardingComplete(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
     }
 
     fun toNightMode(index: Int): Int = when (index) {

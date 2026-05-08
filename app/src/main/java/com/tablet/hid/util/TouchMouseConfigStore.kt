@@ -19,6 +19,8 @@ object TouchMouseConfigStore {
             putBoolean("__saved", true)
             putString("mode", config.mode.name)
             putInt("sensitivity", config.sensitivity)
+            putBoolean("scroll_enabled", config.scrollEnabled)
+            putBoolean("invert_scroll", config.invertScroll)
             saveButton(this, "l", config.leftButton)
             saveButton(this, "r", config.rightButton)
             apply()
@@ -33,10 +35,12 @@ object TouchMouseConfigStore {
         }
         val defaults = TouchMouseConfig()
         return TouchMouseConfig(
-            mode        = enumValueOrDefault(prefs.getString("mode", null), defaults.mode),
-            sensitivity = prefs.getInt("sensitivity", defaults.sensitivity),
-            leftButton  = loadButton(prefs, "l", defaults.leftButton),
-            rightButton = loadButton(prefs, "r", defaults.rightButton),
+            mode         = enumValueOrDefault(prefs.getString("mode", null), defaults.mode),
+            sensitivity  = prefs.getInt("sensitivity", defaults.sensitivity),
+            scrollEnabled = prefs.getBoolean("scroll_enabled", defaults.scrollEnabled),
+            invertScroll  = prefs.getBoolean("invert_scroll", defaults.invertScroll),
+            leftButton   = loadButton(prefs, "l", defaults.leftButton),
+            rightButton  = loadButton(prefs, "r", defaults.rightButton),
         )
     }
 
@@ -77,10 +81,11 @@ object TouchMouseConfigStore {
             val p = context.getSharedPreferences(tmpPrefsName, Context.MODE_PRIVATE)
             val defaults = TouchMouseConfig()
             TouchMouseConfig(
-                mode        = enumValueOrDefault(p.getString("mode", null), defaults.mode),
-                sensitivity = p.getInt("sensitivity", defaults.sensitivity),
-                leftButton  = loadButton(p, "l", defaults.leftButton),
-                rightButton = loadButton(p, "r", defaults.rightButton),
+                mode         = enumValueOrDefault(p.getString("mode", null), defaults.mode),
+                sensitivity  = p.getInt("sensitivity", defaults.sensitivity),
+                invertScroll = p.getBoolean("invert_scroll", defaults.invertScroll),
+                leftButton   = loadButton(p, "l", defaults.leftButton),
+                rightButton  = loadButton(p, "r", defaults.rightButton),
             )
         } catch (_: Exception) { null }
     }

@@ -20,8 +20,8 @@ android {
         applicationId = "com.tablet.hid"
         minSdk = 29
         targetSdk = 35
-        versionCode = 30
-        versionName = "1.4.0"
+        versionCode = 33
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

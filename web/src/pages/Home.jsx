@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function IconMouse() {
@@ -51,7 +52,20 @@ function AndroidLogo() {
   );
 }
 
+const PLAY_OPT_IN_KEY = 'play_tester_optin';
+const PLAY_TESTING_URL = 'https://play.google.com/apps/testing/com.tablet.hid';
+const PLAY_STORE_URL   = 'https://play.google.com/store/apps/details?id=com.tablet.hid';
+
 export default function Home() {
+  const [hasOptedIn, setHasOptedIn] = useState(
+    () => localStorage.getItem(PLAY_OPT_IN_KEY) === 'true'
+  );
+
+  function handleJoinBeta() {
+    localStorage.setItem(PLAY_OPT_IN_KEY, 'true');
+    setHasOptedIn(true);
+  }
+
   return (
     <>
       <section className="hero">
@@ -70,10 +84,36 @@ export default function Home() {
             <AppleLogo />
             App Store — iOS
           </a>
-          <a href="https://play.google.com/store/apps/details?id=com.tablet.hid" className="badge">
-            <AndroidLogo />
-            Google Play — Android
-          </a>
+
+          {/* Android: two-step opt-in flow */}
+          <div className="badge-group">
+            <a
+              href={PLAY_TESTING_URL}
+              className={`badge${hasOptedIn ? ' badge-muted' : ''}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={handleJoinBeta}
+            >
+              <AndroidLogo />
+              {hasOptedIn ? 'Joined Beta ✓' : 'Join Android Beta'}
+            </a>
+            {hasOptedIn ? (
+              <a
+                href={PLAY_STORE_URL}
+                className="badge badge-primary"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <AndroidLogo />
+                Download on Google Play
+              </a>
+            ) : (
+              <span className="badge badge-locked" aria-label="Join the beta above to unlock">
+                <AndroidLogo />
+                Google Play — join beta first
+              </span>
+            )}
+          </div>
         </div>
       </section>
 

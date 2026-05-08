@@ -201,7 +201,7 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
 
     fun disconnectAndUnbond() = hidManager.disconnectAndUnbond()
 
-    fun sendMouseReport(buttons: Int, dx: Float = 0f, dy: Float = 0f, wheel: Int = 0) {
+    fun sendMouseReport(buttons: Int, dx: Float = 0f, dy: Float = 0f, wheel: Int = 0, hwheel: Int = 0) {
         val buttonsChanged: Boolean
         synchronized(mouseLock) {
             buttonsChanged   = buttons != mouseButtonState
@@ -210,8 +210,8 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
             mouseTargetDy   += dy
         }
         // Button changes and scroll events bypass the timer for immediate delivery.
-        if (buttonsChanged || wheel != 0) {
-            hidManager.sendMouseReport(buttons, 0, 0, wheel)
+        if (buttonsChanged || wheel != 0 || hwheel != 0) {
+            hidManager.sendMouseReport(buttons, 0, 0, wheel, hwheel)
         }
     }
 

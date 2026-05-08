@@ -245,7 +245,7 @@ class HidManager(private val context: Context) {
 
         override fun onGetReport(device: BluetoothDevice, type: Byte, id: Byte, bufferSize: Int) {
             val size = when (id) {
-                HidReportDescriptors.REPORT_ID_MOUSE   -> 6
+                HidReportDescriptors.REPORT_ID_MOUSE   -> 7
                 HidReportDescriptors.REPORT_ID_GAMEPAD -> 13
                 else -> 1
             }
