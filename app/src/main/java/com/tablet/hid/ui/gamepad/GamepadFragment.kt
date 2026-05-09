@@ -9,6 +9,7 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import com.google.android.material.button.MaterialButton
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -47,6 +48,7 @@ import androidx.core.content.ContextCompat
 import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
+import com.tablet.hid.model.JoystickSide
 import com.tablet.hid.model.TriggerDragAxis
 import com.tablet.hid.util.OrientationStore
 import kotlinx.coroutines.Job
@@ -160,6 +162,7 @@ class GamepadFragment : Fragment() {
 
         binding.btnSettings.setOnClickListener { showConfigSheet() }
         binding.btnEditDone.setOnClickListener { exitEditMode() }
+        binding.btnSingleJoystickSide.setOnClickListener { toggleSingleJoystickOutputSide() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -210,7 +213,12 @@ class GamepadFragment : Fragment() {
         binding.leftJoystick.applyLayout(cfg.leftJoystick.offsetX, cfg.leftJoystick.offsetY, cfg.leftJoystick.scaleX, cfg.leftJoystick.scaleY)
         binding.leftJoystick.applyEnabled(cfg.leftJoystick.enabled)
         binding.rightJoystick.applyLayout(cfg.rightJoystick.offsetX, cfg.rightJoystick.offsetY, cfg.rightJoystick.scaleX, cfg.rightJoystick.scaleY)
-        binding.rightJoystick.applyEnabled(cfg.rightJoystick.enabled)
+        binding.rightJoystick.applyEnabled(!cfg.singleJoystickMode && cfg.rightJoystick.enabled)
+        binding.btnSingleJoystickSide.visibility =
+            if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled && cfg.leftJoystick.enabled) View.VISIBLE else View.GONE
+        binding.btnSingleJoystickSide.text =
+            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) "L" else "R"
+        renderMacroButtons(cfg)
 
         binding.leftJoystick.deadzone  = cfg.leftJoystick.deadzone
         binding.leftJoystick.gain      = cfg.leftJoystick.gain
@@ -218,7 +226,7 @@ class GamepadFragment : Fragment() {
         binding.rightJoystick.gain     = cfg.rightJoystick.gain
 
         if (!cfg.leftJoystick.enabled && (leftX != 0 || leftY != 0)) { leftX = 0; leftY = 0; sendReport() }
-        if (!cfg.rightJoystick.enabled && (rightX != 0 || rightY != 0)) { rightX = 0; rightY = 0; sendReport() }
+        if ((cfg.singleJoystickMode || !cfg.rightJoystick.enabled) && (rightX != 0 || rightY != 0)) { rightX = 0; rightY = 0; sendReport() }
     }
 
     // ── Config sheet ─────────────────────────────────────────────────────────
@@ -297,8 +305,8 @@ class GamepadFragment : Fragment() {
                 override fun onScale(d: ScaleGestureDetector): Boolean {
                     val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
                     val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceIn(0.3f, 4.0f)
-                    view.scaleY = (view.scaleY * fy).coerceIn(0.3f, 4.0f)
+                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.3f)
+                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.3f)
                     lastSpanX = d.currentSpanX.coerceAtLeast(1f)
                     lastSpanY = d.currentSpanY.coerceAtLeast(1f)
                     return true
@@ -355,8 +363,8 @@ class GamepadFragment : Fragment() {
                 override fun onScale(d: ScaleGestureDetector): Boolean {
                     val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
                     val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceIn(0.4f, 3.0f)
-                    view.scaleY = (view.scaleY * fy).coerceIn(0.4f, 3.0f)
+                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.4f)
+                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.4f)
                     lastSpanX = d.currentSpanX.coerceAtLeast(1f)
                     lastSpanY = d.currentSpanY.coerceAtLeast(1f)
                     return true
@@ -402,7 +410,42 @@ class GamepadFragment : Fragment() {
         binding.btnBack, binding.btnStart,
         binding.dpadUp, binding.dpadDown, binding.dpadLeft, binding.dpadRight,
         binding.leftJoystick, binding.rightJoystick,
+        binding.btnSingleJoystickSide,
     )
+
+    private fun renderMacroButtons(cfg: GamepadConfig) {
+        binding.macroButtonRow.removeAllViews()
+        binding.macroScroll.visibility = if (cfg.macroButtons.isNotEmpty()) View.VISIBLE else View.GONE
+        cfg.macroButtons.forEach { macro ->
+            val button = MaterialButton(requireContext()).apply {
+                text = macro.label
+                minHeight = resources.getDimensionPixelSize(R.dimen.macro_button_height)
+                minWidth = 0
+                setPadding(18, 0, 18, 0)
+                setOnTouchListener { _, event ->
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN -> {
+                            viewModel.sendKeyboardReport(macro.modifiers, macro.keyUsages)
+                            true
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            viewModel.sendKeyboardReport()
+                            true
+                        }
+                        else -> false
+                    }
+                }
+            }
+            val margin = (8 * resources.displayMetrics.density).toInt()
+            binding.macroButtonRow.addView(
+                button,
+                ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ).apply { marginEnd = margin },
+            )
+        }
+    }
 
     // ── Joysticks ─────────────────────────────────────────────────────────────
 
@@ -413,6 +456,14 @@ class GamepadFragment : Fragment() {
         binding.rightJoystick.listener = JoystickView.JoystickListener { nx, ny ->
             rightX = (nx * 32767).toInt(); rightY = (ny * 32767).toInt(); sendReport()
         }
+    }
+
+    private fun toggleSingleJoystickOutputSide() {
+        val cfg = viewModel.gamepadConfig.value
+        if (!cfg.singleJoystickMode) return
+        val next = if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) JoystickSide.RIGHT else JoystickSide.LEFT
+        viewModel.updateGamepadConfig(cfg.copy(singleJoystickOutputSide = next))
+        sendReport()
     }
 
     // ── Face / shoulder / trigger buttons ────────────────────────────────────
@@ -600,15 +651,75 @@ class GamepadFragment : Fragment() {
         var bits = 0
         momentaryBits.forEach { bits = bits or (1 shl it) }
         latchedBits.forEach   { bits = bits or (1 shl it) }
+        val cfg = viewModel.gamepadConfig.value
+        bits = bits and enabledButtonMask(cfg)
+
+        val reportHat = enabledHat(cfg)
+        val reportLeftX: Int
+        val reportLeftY: Int
+        val reportRightX: Int
+        val reportRightY: Int
+        if (cfg.singleJoystickMode) {
+            val activeX = if (cfg.leftJoystick.enabled) leftX else 0
+            val activeY = if (cfg.leftJoystick.enabled) leftY else 0
+            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) {
+                reportLeftX = activeX
+                reportLeftY = activeY
+                reportRightX = 0
+                reportRightY = 0
+            } else {
+                reportLeftX = 0
+                reportLeftY = 0
+                reportRightX = activeX
+                reportRightY = activeY
+            }
+        } else {
+            reportLeftX = if (cfg.leftJoystick.enabled) leftX else 0
+            reportLeftY = if (cfg.leftJoystick.enabled) leftY else 0
+            reportRightX = if (cfg.rightJoystick.enabled) rightX else 0
+            reportRightY = if (cfg.rightJoystick.enabled) rightY else 0
+        }
         viewModel.sendGamepadReport(
-            leftX = leftX, leftY = leftY,
-            rightX = rightX, rightY = rightY,
-            leftTrigger = leftTrigger, rightTrigger = rightTrigger,
-            buttons = bits, hat = hat
+            leftX = reportLeftX, leftY = reportLeftY,
+            rightX = reportRightX, rightY = reportRightY,
+            leftTrigger = if (cfg.btnLt.enabled) leftTrigger else 0,
+            rightTrigger = if (cfg.btnRt.enabled) rightTrigger else 0,
+            buttons = bits, hat = reportHat
         )
     }
 
     // ── Orientation lock ─────────────────────────────────────────────────────
+
+    private fun enabledButtonMask(cfg: GamepadConfig): Int {
+        var mask = 0
+        if (cfg.btnA.enabled) mask = mask or (1 shl BTN_A)
+        if (cfg.btnB.enabled) mask = mask or (1 shl BTN_B)
+        if (cfg.btnX.enabled) mask = mask or (1 shl BTN_X)
+        if (cfg.btnY.enabled) mask = mask or (1 shl BTN_Y)
+        if (cfg.btnLb.enabled) mask = mask or (1 shl BTN_LB)
+        if (cfg.btnRb.enabled) mask = mask or (1 shl BTN_RB)
+        if (cfg.btnBack.enabled) mask = mask or (1 shl BTN_BACK)
+        if (cfg.btnStart.enabled) mask = mask or (1 shl BTN_START)
+        return mask
+    }
+
+    private fun enabledHat(cfg: GamepadConfig): Int {
+        val up = dUp && cfg.dpadUp.enabled
+        val down = dDown && cfg.dpadDown.enabled
+        val left = dLeft && cfg.dpadLeft.enabled
+        val right = dRight && cfg.dpadRight.enabled
+        return when {
+            up && right -> HAT_NE
+            down && right -> HAT_SE
+            down && left -> HAT_SW
+            up && left -> HAT_NW
+            up -> HAT_N
+            right -> HAT_E
+            down -> HAT_S
+            left -> HAT_W
+            else -> HAT_NONE
+        }
+    }
 
     private fun cycleOrientationLock() {
         val next = (OrientationStore.get(requireContext()) + 1) % 3

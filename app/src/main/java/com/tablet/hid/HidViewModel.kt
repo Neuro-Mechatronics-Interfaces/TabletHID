@@ -226,6 +226,10 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         hidManager.sendGamepadReport(leftX, leftY, rightX, rightY, leftTrigger, rightTrigger, buttons, hat)
     }
 
+    fun sendKeyboardReport(modifiers: Int = 0, keyUsages: Iterable<Int> = emptyList()) {
+        hidManager.sendKeyboardReport(modifiers, keyUsages)
+    }
+
     fun disconnect() = hidManager.disconnect()
 
     override fun onCleared() {

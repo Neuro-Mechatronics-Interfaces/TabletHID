@@ -12,6 +12,8 @@ import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.databinding.SheetTouchMouseConfigBinding
 import com.tablet.hid.model.ClickBehavior
+import com.tablet.hid.model.KeyboardMacroPresets
+import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.ZoneType
@@ -25,6 +27,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
 
     // Fragment sets this to handle zone-edit requests
     var onZoneEditRequested: ((isLeft: Boolean) -> Unit)? = null
+    var onSubRegionEditRequested: ((isLeft: Boolean, keyboardModifiers: Int) -> Unit)? = null
     var onCalibrationRequested: (() -> Unit)? = null
 
     // True while we are programmatically initialising controls (avoids feedback loops)
@@ -59,6 +62,15 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.switchScrollEnabled.isChecked = cfg.scrollEnabled
         binding.groupScrollOptions.isVisible = cfg.scrollEnabled
         binding.switchInvertScroll.isChecked = cfg.invertScroll
+        binding.toggleMacroDefaults.check(
+            if (cfg.macroHostDefaults == MacroHostDefaults.MAC) R.id.btnMacroMac else R.id.btnMacroWindows
+        )
+        binding.switchSharedDynamic.isChecked = cfg.sharedDynamicZone
+        binding.groupSharedDynamic.isVisible = cfg.sharedDynamicZone
+        binding.sliderSharedOffsetX.value = cfg.sharedDynamicOffsetX.snapToStep(0.05f).coerceIn(-1f, 1f)
+        binding.sliderSharedOffsetY.value = cfg.sharedDynamicOffsetY.snapToStep(0.05f).coerceIn(-1f, 1f)
+        binding.sliderSharedRadius.value = cfg.sharedDynamicRadius.snapToStep(0.01f).coerceIn(0.03f, 0.20f)
+        updateSharedDynamicLabels()
 
         applyButtonConfig(cfg.leftButton, isLeft = true)
         applyButtonConfig(cfg.rightButton, isLeft = false)
@@ -67,7 +79,6 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
     }
 
     private fun applyButtonConfig(btn: com.tablet.hid.model.ButtonZoneConfig, isLeft: Boolean) {
-        fun Float.snapToStep(step: Float) = (kotlin.math.round(this / step) * step)
         if (isLeft) {
             binding.switchLeft.isChecked = btn.enabled
             binding.configLeft.isVisible = btn.enabled
@@ -112,6 +123,44 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.switchInvertScroll.setOnCheckedChangeListener { _, _ ->
             if (!initialising) pushConfig()
         }
+
+        binding.toggleMacroDefaults.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked || initialising) return@addOnButtonCheckedListener
+            val host = if (checkedId == R.id.btnMacroMac) MacroHostDefaults.MAC else MacroHostDefaults.WINDOWS
+            val prev = viewModel.touchMouseConfig.value
+            viewModel.updateTouchMouseConfig(prev.copy(macroHostDefaults = host))
+        }
+
+        binding.btnAddMacroDefaults.setOnClickListener {
+            val prev = viewModel.touchMouseConfig.value
+            val host = if (binding.toggleMacroDefaults.checkedButtonId == R.id.btnMacroMac) {
+                MacroHostDefaults.MAC
+            } else {
+                MacroHostDefaults.WINDOWS
+            }
+            val merged = (prev.macroButtons + KeyboardMacroPresets.defaultsFor(host)).distinctBy {
+                "${it.modifiers}:${it.keyUsages.joinToString(",")}"
+            }
+            viewModel.updateTouchMouseConfig(prev.copy(macroHostDefaults = host, macroButtons = merged))
+        }
+
+        binding.btnClearMacros.setOnClickListener {
+            val prev = viewModel.touchMouseConfig.value
+            viewModel.updateTouchMouseConfig(prev.copy(macroButtons = emptyList()))
+        }
+
+        binding.switchSharedDynamic.setOnCheckedChangeListener { _, checked ->
+            binding.groupSharedDynamic.isVisible = checked
+            refreshDynamicGroupVisibility()
+            if (!initialising) pushConfig()
+        }
+
+        val sharedSliderListener = Slider.OnChangeListener { _, _, _ ->
+            if (!initialising) { updateSharedDynamicLabels(); pushConfig() }
+        }
+        binding.sliderSharedOffsetX.addOnChangeListener(sharedSliderListener)
+        binding.sliderSharedOffsetY.addOnChangeListener(sharedSliderListener)
+        binding.sliderSharedRadius.addOnChangeListener(sharedSliderListener)
 
         // Mode toggle
         binding.toggleMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
@@ -184,6 +233,30 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
             onCalibrationRequested?.invoke()
         }
 
+        binding.btnAddLeftSubRegion.setOnClickListener {
+            dismiss()
+            onSubRegionEditRequested?.invoke(true, 0)
+        }
+        binding.btnAddRightSubRegion.setOnClickListener {
+            dismiss()
+            onSubRegionEditRequested?.invoke(false, 0)
+        }
+        binding.btnAddLeftCtrlSubRegion.setOnClickListener {
+            dismiss()
+            onSubRegionEditRequested?.invoke(true, KeyboardMacroPresets.MOD_LEFT_CONTROL)
+        }
+        binding.btnAddRightCtrlSubRegion.setOnClickListener {
+            dismiss()
+            onSubRegionEditRequested?.invoke(false, KeyboardMacroPresets.MOD_LEFT_CONTROL)
+        }
+        binding.btnClearSubRegions.setOnClickListener {
+            val prev = viewModel.touchMouseConfig.value
+            viewModel.updateTouchMouseConfig(prev.copy(
+                leftButton = prev.leftButton.copy(subRegions = emptyList()),
+                rightButton = prev.rightButton.copy(subRegions = emptyList()),
+            ))
+        }
+
         val rightSliderListener = Slider.OnChangeListener { _, _, _ ->
             if (!initialising) { updateRightDynamicLabels(); pushConfig() }
         }
@@ -196,14 +269,31 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
+    private fun Float.snapToStep(step: Float) = (kotlin.math.round(this / step) * step)
+
     private fun setLeftZoneTypeVisibility(type: ZoneType) {
         binding.btnSetLeftZone.isVisible = type == ZoneType.STATIC
-        binding.groupDynamicLeft.isVisible = type == ZoneType.DYNAMIC
+        binding.groupDynamicLeft.isVisible = type == ZoneType.DYNAMIC && !binding.switchSharedDynamic.isChecked
     }
 
     private fun setRightZoneTypeVisibility(type: ZoneType) {
         binding.btnSetRightZone.isVisible = type == ZoneType.STATIC
-        binding.groupDynamicRight.isVisible = type == ZoneType.DYNAMIC
+        binding.groupDynamicRight.isVisible = type == ZoneType.DYNAMIC && !binding.switchSharedDynamic.isChecked
+    }
+
+    private fun refreshDynamicGroupVisibility() {
+        val leftType = if (binding.toggleLeftZone.checkedButtonId == R.id.btnLeftStatic)
+            ZoneType.STATIC else ZoneType.DYNAMIC
+        val rightType = if (binding.toggleRightZone.checkedButtonId == R.id.btnRightStatic)
+            ZoneType.STATIC else ZoneType.DYNAMIC
+        setLeftZoneTypeVisibility(leftType)
+        setRightZoneTypeVisibility(rightType)
+    }
+
+    private fun updateSharedDynamicLabels() {
+        binding.labelSharedOffsetX.text = formatOffset(binding.sliderSharedOffsetX.value)
+        binding.labelSharedOffsetY.text = formatOffset(binding.sliderSharedOffsetY.value)
+        binding.labelSharedRadius.text = "%.2f".format(binding.sliderSharedRadius.value)
     }
 
     private fun updateLeftDynamicLabels() {
@@ -246,6 +336,10 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
             sensitivity = binding.sliderSensitivity.value.toInt(),
             scrollEnabled = binding.switchScrollEnabled.isChecked,
             invertScroll  = binding.switchInvertScroll.isChecked,
+            sharedDynamicZone = binding.switchSharedDynamic.isChecked,
+            sharedDynamicOffsetX = binding.sliderSharedOffsetX.value,
+            sharedDynamicOffsetY = binding.sliderSharedOffsetY.value,
+            sharedDynamicRadius = binding.sliderSharedRadius.value,
             leftButton = prev.leftButton.copy(
                 enabled = binding.switchLeft.isChecked,
                 zoneType = leftZoneType,
@@ -261,7 +355,13 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 dynamicOffsetX = binding.sliderRightOffsetX.value,
                 dynamicOffsetY = binding.sliderRightOffsetY.value,
                 dynamicRadius = binding.sliderRightRadius.value
-            )
+            ),
+            macroHostDefaults = if (binding.toggleMacroDefaults.checkedButtonId == R.id.btnMacroMac) {
+                MacroHostDefaults.MAC
+            } else {
+                MacroHostDefaults.WINDOWS
+            },
+            macroButtons = prev.macroButtons,
         )
         viewModel.updateTouchMouseConfig(newConfig)
     }

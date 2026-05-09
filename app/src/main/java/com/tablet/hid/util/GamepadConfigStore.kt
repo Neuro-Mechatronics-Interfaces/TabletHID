@@ -7,6 +7,9 @@ import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
+import com.tablet.hid.model.JoystickSide
+import com.tablet.hid.model.KeyboardMacroButtonConfig
+import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.Profile
 import com.tablet.hid.model.TriggerDragAxis
 
@@ -34,6 +37,11 @@ object GamepadConfigStore {
         btn(p, "dright", config.dpadRight)
         joy(p, "left",   config.leftJoystick)
         joy(p, "right",  config.rightJoystick)
+        p.putBoolean("single_joystick_mode", config.singleJoystickMode)
+        p.putBoolean("single_joystick_side_toggle_enabled", config.singleJoystickSideToggleEnabled)
+        p.putString("single_joystick_output_side", config.singleJoystickOutputSide.name)
+        p.putString("macro_host_defaults", config.macroHostDefaults.name)
+        macros(p, config.macroButtons)
         p.apply()
     }
 
@@ -62,6 +70,11 @@ object GamepadConfigStore {
             dpadRight = btn(p, "dright"),
             leftJoystick  = joy(p, "left"),
             rightJoystick = joy(p, "right"),
+            singleJoystickMode = p.getBoolean("single_joystick_mode", false),
+            singleJoystickSideToggleEnabled = p.getBoolean("single_joystick_side_toggle_enabled", false),
+            singleJoystickOutputSide = joystickSide(p.getString("single_joystick_output_side", null)),
+            macroHostDefaults = macroHostDefaults(p.getString("macro_host_defaults", null)),
+            macroButtons = macros(p),
         )
     }
 
@@ -135,6 +148,11 @@ object GamepadConfigStore {
                 dpadLeft  = btn(p, "dleft"), dpadRight = btn(p, "dright"),
                 leftJoystick  = joy(p, "left"),
                 rightJoystick = joy(p, "right"),
+                singleJoystickMode = p.getBoolean("single_joystick_mode", false),
+                singleJoystickSideToggleEnabled = p.getBoolean("single_joystick_side_toggle_enabled", false),
+                singleJoystickOutputSide = joystickSide(p.getString("single_joystick_output_side", null)),
+                macroHostDefaults = macroHostDefaults(p.getString("macro_host_defaults", null)),
+                macroButtons = macros(p),
             )
         } catch (_: Exception) { null }
     }
@@ -191,4 +209,36 @@ object GamepadConfigStore {
         scaleX   = p.getFloat("${k}_scx",  p.getFloat("${k}_sc", 1f)),
         scaleY   = p.getFloat("${k}_scy",  p.getFloat("${k}_sc", 1f)),
     )
+
+    private fun joystickSide(value: String?): JoystickSide =
+        runCatching { JoystickSide.valueOf(value ?: "") }.getOrDefault(JoystickSide.LEFT)
+
+    private fun macroHostDefaults(value: String?): MacroHostDefaults =
+        runCatching { MacroHostDefaults.valueOf(value ?: "") }.getOrDefault(MacroHostDefaults.WINDOWS)
+
+    private fun macros(p: SharedPreferences.Editor, macros: List<KeyboardMacroButtonConfig>) {
+        p.putInt("macro_count", macros.size)
+        macros.forEachIndexed { index, macro ->
+            val k = "macro_$index"
+            p.putString("${k}_label", macro.label)
+            p.putInt("${k}_modifiers", macro.modifiers)
+            p.putString("${k}_keys", macro.keyUsages.joinToString(","))
+        }
+    }
+
+    private fun macros(p: SharedPreferences): List<KeyboardMacroButtonConfig> {
+        val count = p.getInt("macro_count", 0)
+        if (count <= 0) return emptyList()
+        return List(count) { index ->
+            val k = "macro_$index"
+            KeyboardMacroButtonConfig(
+                label = p.getString("${k}_label", "") ?: "",
+                modifiers = p.getInt("${k}_modifiers", 0),
+                keyUsages = p.getString("${k}_keys", null)
+                    ?.split(',')
+                    ?.mapNotNull { it.toIntOrNull() }
+                    ?: emptyList(),
+            )
+        }.filter { it.label.isNotBlank() && it.keyUsages.isNotEmpty() }
+    }
 }

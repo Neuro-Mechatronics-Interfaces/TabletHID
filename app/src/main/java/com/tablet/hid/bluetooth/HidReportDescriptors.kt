@@ -5,6 +5,7 @@ object HidReportDescriptors {
 
     const val REPORT_ID_MOUSE: Byte = 0x01
     const val REPORT_ID_GAMEPAD: Byte = 0x02
+    const val REPORT_ID_KEYBOARD: Byte = 0x03
 
     // Convenience so descriptor literals stay readable without repeated .toByte() noise.
     private val Int.b get() = toByte()
@@ -137,8 +138,46 @@ object HidReportDescriptors {
      * The host enumerates both a mouse device (Report ID 1) and a gamepad device (Report ID 2)
      * from this single Bluetooth pairing.
      */
+    /**
+     * Standard keyboard input descriptor.
+     * Report ID 3 | 8 bytes: [modifiers] [reserved] [key usage 1] ... [key usage 6]
+     */
+    val KEYBOARD_REPORT_DESCRIPTOR: ByteArray = byteArrayOf(
+        0x05.b, 0x01,        // Usage Page (Generic Desktop)
+        0x09.b, 0x06,        // Usage (Keyboard)
+        0xA1.b, 0x01,        // Collection (Application)
+        0x85.b, 0x03,        //   Report ID (3)
+        // --- Modifier keys (Left Ctrl through Right GUI) ---
+        0x05.b, 0x07,        //   Usage Page (Keyboard/Keypad)
+        0x19.b, 0xE0.b,      //   Usage Minimum (Keyboard LeftControl)
+        0x29.b, 0xE7.b,      //   Usage Maximum (Keyboard Right GUI)
+        0x15.b, 0x00,        //   Logical Minimum (0)
+        0x25.b, 0x01,        //   Logical Maximum (1)
+        0x75.b, 0x01,        //   Report Size (1)
+        0x95.b, 0x08,        //   Report Count (8)
+        0x81.b, 0x02,        //   Input (Data, Variable, Absolute)
+        // --- Reserved byte ---
+        0x75.b, 0x08,        //   Report Size (8)
+        0x95.b, 0x01,        //   Report Count (1)
+        0x81.b, 0x03,        //   Input (Constant, Variable, Absolute)
+        // --- Up to six simultaneous key usages ---
+        0x05.b, 0x07,        //   Usage Page (Keyboard/Keypad)
+        0x19.b, 0x00,        //   Usage Minimum (Reserved/no event)
+        0x29.b, 0xFF.b,      //   Usage Maximum (255)
+        0x15.b, 0x00,        //   Logical Minimum (0)
+        0x26.b, 0xFF.b, 0x00.b, // Logical Maximum (255)
+        0x75.b, 0x08,        //   Report Size (8)
+        0x95.b, 0x06,        //   Report Count (6)
+        0x81.b, 0x00,        //   Input (Data, Array, Absolute)
+        0xC0.b               // End Collection
+    )
+
+    /**
+     * Combined mouse + gamepad + keyboard descriptor in one Bluetooth pairing.
+     * Report IDs stay stable: 1 = mouse, 2 = gamepad, 3 = keyboard.
+     */
     val COMBINED_REPORT_DESCRIPTOR: ByteArray =
-        MOUSE_REPORT_DESCRIPTOR + GAMEPAD_REPORT_DESCRIPTOR
+        MOUSE_REPORT_DESCRIPTOR + GAMEPAD_REPORT_DESCRIPTOR + KEYBOARD_REPORT_DESCRIPTOR
 
     // -------------------------------------------------------------------------
     // Report builders
@@ -182,6 +221,18 @@ object HidReportDescriptors {
         r[11] = ((buttons shr 8) and 0x03).toByte()   // bits 8-9 of 10-bit field
         r[12] = (hat and 0x0F).toByte()               // lower nibble; upper nibble = 0 padding
     }
+
+    /**
+     * Build an 8-byte keyboard input report.
+     * modifiers uses the standard E0-E7 bit field; keyUsages are Keyboard/Keypad page usages.
+     */
+    fun buildKeyboardReport(modifiers: Int, keyUsages: Iterable<Int>): ByteArray =
+        ByteArray(8).also { r ->
+            r[0] = (modifiers and 0xFF).toByte()
+            keyUsages.take(6).forEachIndexed { index, usage ->
+                r[index + 2] = (usage and 0xFF).toByte()
+            }
+        }
 
     // Button bit indices for buildGamepadReport(buttons = …)
     const val BTN_A     = 0

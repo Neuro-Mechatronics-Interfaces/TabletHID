@@ -18,6 +18,9 @@ import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
+import com.tablet.hid.model.JoystickSide
+import com.tablet.hid.model.KeyboardMacroPresets
+import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.TriggerDragAxis
 import com.tablet.hid.databinding.SheetGamepadConfigBinding
 import java.io.File
@@ -85,6 +88,47 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
             b.groupRightJoystick.isVisible = on
             val c = viewModel.gamepadConfig.value
             viewModel.updateGamepadConfig(c.copy(rightJoystick = c.rightJoystick.copy(enabled = on)))
+        }
+        b.switchSingleJoystickMode.setOnCheckedChangeListener { _, on ->
+            if (initialising) return@setOnCheckedChangeListener
+            val c = viewModel.gamepadConfig.value
+            viewModel.updateGamepadConfig(c.copy(singleJoystickMode = on))
+            applyConfig(viewModel.gamepadConfig.value)
+        }
+        b.switchSingleJoystickSideToggle.setOnCheckedChangeListener { _, on ->
+            if (initialising) return@setOnCheckedChangeListener
+            val c = viewModel.gamepadConfig.value
+            viewModel.updateGamepadConfig(c.copy(singleJoystickSideToggleEnabled = on))
+            applyConfig(viewModel.gamepadConfig.value)
+        }
+        b.toggleSingleJoystickOutputSide.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (initialising || !isChecked) return@addOnButtonCheckedListener
+            val c = viewModel.gamepadConfig.value
+            val side = if (checkedId == R.id.btnSingleOutputLeft) JoystickSide.LEFT else JoystickSide.RIGHT
+            viewModel.updateGamepadConfig(c.copy(singleJoystickOutputSide = side))
+        }
+
+        b.toggleMacroDefaults.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (initialising || !isChecked) return@addOnButtonCheckedListener
+            val c = viewModel.gamepadConfig.value
+            val host = if (checkedId == R.id.btnMacroMac) MacroHostDefaults.MAC else MacroHostDefaults.WINDOWS
+            viewModel.updateGamepadConfig(c.copy(macroHostDefaults = host))
+        }
+        b.btnAddMacroDefaults.setOnClickListener {
+            val c = viewModel.gamepadConfig.value
+            val host = if (b.toggleMacroDefaults.checkedButtonId == R.id.btnMacroMac) {
+                MacroHostDefaults.MAC
+            } else {
+                MacroHostDefaults.WINDOWS
+            }
+            val merged = (c.macroButtons + KeyboardMacroPresets.defaultsFor(host)).distinctBy {
+                "${it.modifiers}:${it.keyUsages.joinToString(",")}"
+            }
+            viewModel.updateGamepadConfig(c.copy(macroHostDefaults = host, macroButtons = merged))
+        }
+        b.btnClearMacros.setOnClickListener {
+            val c = viewModel.gamepadConfig.value
+            viewModel.updateGamepadConfig(c.copy(macroButtons = emptyList()))
         }
 
         // ── Behavior toggle ──────────────────────────────────────────────
@@ -199,10 +243,26 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
     private fun applyConfig(cfg: GamepadConfig) {
         initialising = true
         applyButtonUi(buttonConfig(cfg, selectedIndex))
+        b.switchSingleJoystickMode.isChecked = cfg.singleJoystickMode
+        b.switchSingleJoystickSideToggle.isVisible = cfg.singleJoystickMode
+        b.switchSingleJoystickSideToggle.isChecked = cfg.singleJoystickSideToggleEnabled
+        b.labelSingleJoystickOutputSide.isVisible = cfg.singleJoystickMode
+        b.toggleSingleJoystickOutputSide.isVisible = cfg.singleJoystickMode
+        b.toggleSingleJoystickOutputSide.check(
+            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) {
+                R.id.btnSingleOutputLeft
+            } else {
+                R.id.btnSingleOutputRight
+            }
+        )
+        b.toggleMacroDefaults.check(
+            if (cfg.macroHostDefaults == MacroHostDefaults.MAC) R.id.btnMacroMac else R.id.btnMacroWindows
+        )
         b.switchLeftEnabled.isChecked  = cfg.leftJoystick.enabled
         b.groupLeftJoystick.isVisible  = cfg.leftJoystick.enabled
         b.switchRightEnabled.isChecked = cfg.rightJoystick.enabled
-        b.groupRightJoystick.isVisible = cfg.rightJoystick.enabled
+        b.switchRightEnabled.isVisible = !cfg.singleJoystickMode
+        b.groupRightJoystick.isVisible = !cfg.singleJoystickMode && cfg.rightJoystick.enabled
         b.sliderLeftDeadzone.value  = (cfg.leftJoystick.deadzone  * 100f).coerceIn(0f, 30f)
         b.sliderLeftGain.value      = (cfg.leftJoystick.gain      * 100f).coerceIn(50f, 300f)
         b.sliderRightDeadzone.value = (cfg.rightJoystick.deadzone * 100f).coerceIn(0f, 30f)

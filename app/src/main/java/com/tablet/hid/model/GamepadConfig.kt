@@ -2,6 +2,8 @@ package com.tablet.hid.model
 
 enum class TriggerDragAxis { UP, DOWN, LEFT, RIGHT }
 
+enum class JoystickSide { LEFT, RIGHT }
+
 data class ButtonConfig(
     val enabled: Boolean = true,
     val behavior: ClickBehavior = ClickBehavior.MOMENTARY,
@@ -44,4 +46,9 @@ data class GamepadConfig(
     val dpadRight: ButtonConfig = ButtonConfig(),
     val leftJoystick: JoystickConfig  = JoystickConfig(),
     val rightJoystick: JoystickConfig = JoystickConfig(),
+    val singleJoystickMode: Boolean = false,
+    val singleJoystickSideToggleEnabled: Boolean = false,
+    val singleJoystickOutputSide: JoystickSide = JoystickSide.LEFT,
+    val macroHostDefaults: MacroHostDefaults = MacroHostDefaults.WINDOWS,
+    val macroButtons: List<KeyboardMacroButtonConfig> = emptyList(),
 )

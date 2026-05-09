@@ -130,7 +130,7 @@ export default function Home() {
               <p>Full-screen trackpad with configurable left/right click zones, sensitivity, and drag behaviour.</p>
               <ul>
                 <li>Touch and Mouse input modes</li>
-                <li>Static or dynamic click zones</li>
+                <li>Static, dynamic, or shared follower click zones</li>
                 <li>Momentary and latching clicks</li>
                 <li>Sensitivity 1–10 slider</li>
               </ul>
@@ -142,6 +142,8 @@ export default function Home() {
               <ul>
                 <li>Analog sticks with deadzone control</li>
                 <li>Analog triggers (LT / RT)</li>
+                <li>Single-stick layout with L/R output toggle</li>
+                <li>Windows and Mac keyboard macro buttons</li>
                 <li>Drag to reposition any control</li>
                 <li>Pinch to resize independently</li>
               </ul>

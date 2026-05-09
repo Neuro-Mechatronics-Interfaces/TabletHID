@@ -90,6 +90,7 @@
     <string name="config_offset_x">Offset X</string>
     <string name="config_offset_y">Offset Y</string>
     <string name="config_zone_size">Size</string>
+    <string name="config_shared_dynamic_zone">Use one shared Dynamic zone</string>
     <string name="zone_edit_hint_left">Drag to define the Left (L) click zone — lift to confirm</string>
     <string name="zone_edit_hint_right">Drag to define the Right (R) click zone — lift to confirm</string>
     <string name="cancel">Cancel</string>

@@ -65,6 +65,7 @@ class BleHidManager(private val context: Context) {
     // Built fresh each time startGattServer() is called.
     private var mouseReportChar: BluetoothGattCharacteristic? = null
     private var gamepadReportChar: BluetoothGattCharacteristic? = null
+    private var keyboardReportChar: BluetoothGattCharacteristic? = null
 
     // Sequential service-add queue — Android only allows one addService() in flight.
     private val serviceQueue = ArrayDeque<BluetoothGattService>()
@@ -158,6 +159,13 @@ class BleHidManager(private val context: Context) {
         notify(device, char, report)
     }
 
+    fun sendKeyboardReport(modifiers: Int = 0, keyUsages: Iterable<Int> = emptyList()) {
+        val device = connectedDevice ?: return
+        val char = keyboardReportChar ?: return
+        val report = HidReportDescriptors.buildKeyboardReport(modifiers, keyUsages)
+        notify(device, char, report)
+    }
+
     // -------------------------------------------------------------------------
     // GATT server setup
     // -------------------------------------------------------------------------
@@ -180,6 +188,11 @@ class BleHidManager(private val context: Context) {
             char.addDescriptor(BluetoothGattDescriptor(
                 UUID_REPORT_REF, BluetoothGattDescriptor.PERMISSION_READ
             ).also { it.value = byteArrayOf(HidReportDescriptors.REPORT_ID_GAMEPAD, 0x01) })
+        }
+        keyboardReportChar = buildReportChar().also { char ->
+            char.addDescriptor(BluetoothGattDescriptor(
+                UUID_REPORT_REF, BluetoothGattDescriptor.PERMISSION_READ
+            ).also { it.value = byteArrayOf(HidReportDescriptors.REPORT_ID_KEYBOARD, 0x01) })
         }
 
         serviceQueue.clear()
@@ -251,6 +264,7 @@ class BleHidManager(private val context: Context) {
 
         svc.addCharacteristic(mouseReportChar!!)
         svc.addCharacteristic(gamepadReportChar!!)
+        svc.addCharacteristic(keyboardReportChar!!)
         return svc
     }
 
@@ -429,6 +443,7 @@ class BleHidManager(private val context: Context) {
         gattServer = null
         mouseReportChar = null
         gamepadReportChar = null
+        keyboardReportChar = null
         serviceQueue.clear()
     }
 }

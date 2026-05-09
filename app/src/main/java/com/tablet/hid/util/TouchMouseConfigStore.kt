@@ -4,9 +4,12 @@ import android.content.Context
 import android.util.Xml
 import com.tablet.hid.model.ButtonZoneConfig
 import com.tablet.hid.model.ClickBehavior
+import com.tablet.hid.model.KeyboardMacroButtonConfig
+import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.Profile
 import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
+import com.tablet.hid.model.TouchMouseSubRegionConfig
 import com.tablet.hid.model.ZoneType
 
 object TouchMouseConfigStore {
@@ -21,6 +24,12 @@ object TouchMouseConfigStore {
             putInt("sensitivity", config.sensitivity)
             putBoolean("scroll_enabled", config.scrollEnabled)
             putBoolean("invert_scroll", config.invertScroll)
+            putBoolean("shared_dynamic_zone", config.sharedDynamicZone)
+            putFloat("shared_dynamic_ox", config.sharedDynamicOffsetX)
+            putFloat("shared_dynamic_oy", config.sharedDynamicOffsetY)
+            putFloat("shared_dynamic_radius", config.sharedDynamicRadius)
+            putString("macro_host_defaults", config.macroHostDefaults.name)
+            saveMacros(this, config.macroButtons)
             saveButton(this, "l", config.leftButton)
             saveButton(this, "r", config.rightButton)
             apply()
@@ -39,8 +48,17 @@ object TouchMouseConfigStore {
             sensitivity  = prefs.getInt("sensitivity", defaults.sensitivity),
             scrollEnabled = prefs.getBoolean("scroll_enabled", defaults.scrollEnabled),
             invertScroll  = prefs.getBoolean("invert_scroll", defaults.invertScroll),
+            sharedDynamicZone = prefs.getBoolean("shared_dynamic_zone", defaults.sharedDynamicZone),
+            sharedDynamicOffsetX = prefs.getFloat("shared_dynamic_ox", defaults.sharedDynamicOffsetX),
+            sharedDynamicOffsetY = prefs.getFloat("shared_dynamic_oy", defaults.sharedDynamicOffsetY),
+            sharedDynamicRadius = prefs.getFloat("shared_dynamic_radius", defaults.sharedDynamicRadius),
             leftButton   = loadButton(prefs, "l", defaults.leftButton),
             rightButton  = loadButton(prefs, "r", defaults.rightButton),
+            macroHostDefaults = enumValueOrDefault(
+                prefs.getString("macro_host_defaults", null),
+                defaults.macroHostDefaults,
+            ),
+            macroButtons = loadMacros(prefs, defaults.macroButtons),
         )
     }
 
@@ -83,9 +101,19 @@ object TouchMouseConfigStore {
             TouchMouseConfig(
                 mode         = enumValueOrDefault(p.getString("mode", null), defaults.mode),
                 sensitivity  = p.getInt("sensitivity", defaults.sensitivity),
+                scrollEnabled = p.getBoolean("scroll_enabled", defaults.scrollEnabled),
                 invertScroll = p.getBoolean("invert_scroll", defaults.invertScroll),
+                sharedDynamicZone = p.getBoolean("shared_dynamic_zone", defaults.sharedDynamicZone),
+                sharedDynamicOffsetX = p.getFloat("shared_dynamic_ox", defaults.sharedDynamicOffsetX),
+                sharedDynamicOffsetY = p.getFloat("shared_dynamic_oy", defaults.sharedDynamicOffsetY),
+                sharedDynamicRadius = p.getFloat("shared_dynamic_radius", defaults.sharedDynamicRadius),
                 leftButton   = loadButton(p, "l", defaults.leftButton),
                 rightButton  = loadButton(p, "r", defaults.rightButton),
+                macroHostDefaults = enumValueOrDefault(
+                    p.getString("macro_host_defaults", null),
+                    defaults.macroHostDefaults,
+                ),
+                macroButtons = loadMacros(p, defaults.macroButtons),
             )
         } catch (_: Exception) { null }
     }
@@ -107,6 +135,10 @@ object TouchMouseConfigStore {
         editor.putFloat("${prefix}_d_ox",     btn.dynamicOffsetX)
         editor.putFloat("${prefix}_d_oy",     btn.dynamicOffsetY)
         editor.putFloat("${prefix}_d_radius", btn.dynamicRadius)
+        editor.putInt("${prefix}_subregion_count", btn.subRegions.size)
+        btn.subRegions.forEachIndexed { index, subRegion ->
+            saveSubRegion(editor, "${prefix}_sub_$index", subRegion)
+        }
     }
 
     private fun loadButton(
@@ -114,17 +146,107 @@ object TouchMouseConfigStore {
         prefix: String,
         defaults: ButtonZoneConfig,
     ) = ButtonZoneConfig(
-        enabled        = prefs.getBoolean("${prefix}_enabled",   defaults.enabled),
+        enabled        = prefs.getBoolean("${prefix}_enabled", defaults.enabled),
         zoneType       = enumValueOrDefault(prefs.getString("${prefix}_zone_type", null), defaults.zoneType),
-        behavior       = enumValueOrDefault(prefs.getString("${prefix}_behavior", null),  defaults.behavior),
-        staticLeft     = prefs.getFloat("${prefix}_s_left",   defaults.staticLeft),
-        staticTop      = prefs.getFloat("${prefix}_s_top",    defaults.staticTop),
-        staticRight    = prefs.getFloat("${prefix}_s_right",  defaults.staticRight),
+        behavior       = enumValueOrDefault(prefs.getString("${prefix}_behavior", null), defaults.behavior),
+        staticLeft     = prefs.getFloat("${prefix}_s_left", defaults.staticLeft),
+        staticTop      = prefs.getFloat("${prefix}_s_top", defaults.staticTop),
+        staticRight    = prefs.getFloat("${prefix}_s_right", defaults.staticRight),
         staticBottom   = prefs.getFloat("${prefix}_s_bottom", defaults.staticBottom),
-        dynamicOffsetX = prefs.getFloat("${prefix}_d_ox",     defaults.dynamicOffsetX),
-        dynamicOffsetY = prefs.getFloat("${prefix}_d_oy",     defaults.dynamicOffsetY),
+        dynamicOffsetX = prefs.getFloat("${prefix}_d_ox", defaults.dynamicOffsetX),
+        dynamicOffsetY = prefs.getFloat("${prefix}_d_oy", defaults.dynamicOffsetY),
         dynamicRadius  = prefs.getFloat("${prefix}_d_radius", defaults.dynamicRadius),
+        subRegions     = loadSubRegions(prefs, prefix, defaults.subRegions),
     )
+
+    private fun saveSubRegion(
+        editor: android.content.SharedPreferences.Editor,
+        prefix: String,
+        subRegion: TouchMouseSubRegionConfig,
+    ) {
+        editor.putBoolean("${prefix}_enabled", subRegion.enabled)
+        editor.putString("${prefix}_zone_type", subRegion.zoneType.name)
+        editor.putFloat("${prefix}_s_left", subRegion.staticLeft)
+        editor.putFloat("${prefix}_s_top", subRegion.staticTop)
+        editor.putFloat("${prefix}_s_right", subRegion.staticRight)
+        editor.putFloat("${prefix}_s_bottom", subRegion.staticBottom)
+        editor.putFloat("${prefix}_d_ox", subRegion.dynamicOffsetX)
+        editor.putFloat("${prefix}_d_oy", subRegion.dynamicOffsetY)
+        editor.putFloat("${prefix}_d_radius", subRegion.dynamicRadius)
+        editor.putInt("${prefix}_keyboard_modifiers", subRegion.keyboardModifiers)
+        editor.putString("${prefix}_alternate_mouse_button", subRegion.alternateMouseButton?.name)
+    }
+
+    private fun loadSubRegions(
+        prefs: android.content.SharedPreferences,
+        prefix: String,
+        defaults: List<TouchMouseSubRegionConfig>,
+    ): List<TouchMouseSubRegionConfig> {
+        val count = prefs.getInt("${prefix}_subregion_count", defaults.size)
+        if (count <= 0) return emptyList()
+        return List(count) { index ->
+            val subPrefix = "${prefix}_sub_$index"
+            val default = defaults.getOrNull(index) ?: TouchMouseSubRegionConfig()
+            TouchMouseSubRegionConfig(
+                enabled = prefs.getBoolean("${subPrefix}_enabled", default.enabled),
+                zoneType = enumValueOrDefault(
+                    prefs.getString("${subPrefix}_zone_type", null),
+                    default.zoneType,
+                ),
+                staticLeft = prefs.getFloat("${subPrefix}_s_left", default.staticLeft),
+                staticTop = prefs.getFloat("${subPrefix}_s_top", default.staticTop),
+                staticRight = prefs.getFloat("${subPrefix}_s_right", default.staticRight),
+                staticBottom = prefs.getFloat("${subPrefix}_s_bottom", default.staticBottom),
+                dynamicOffsetX = prefs.getFloat("${subPrefix}_d_ox", default.dynamicOffsetX),
+                dynamicOffsetY = prefs.getFloat("${subPrefix}_d_oy", default.dynamicOffsetY),
+                dynamicRadius = prefs.getFloat("${subPrefix}_d_radius", default.dynamicRadius),
+                keyboardModifiers = prefs.getInt(
+                    "${subPrefix}_keyboard_modifiers",
+                    default.keyboardModifiers,
+                ),
+                alternateMouseButton = nullableEnumValueOrDefault(
+                    prefs.getString("${subPrefix}_alternate_mouse_button", null),
+                    default.alternateMouseButton,
+                ),
+            )
+        }
+    }
+
+    private fun saveMacros(
+        editor: android.content.SharedPreferences.Editor,
+        macros: List<KeyboardMacroButtonConfig>,
+    ) {
+        editor.putInt("macro_count", macros.size)
+        macros.forEachIndexed { index, macro ->
+            val prefix = "macro_$index"
+            editor.putString("${prefix}_label", macro.label)
+            editor.putInt("${prefix}_modifiers", macro.modifiers)
+            editor.putString("${prefix}_keys", macro.keyUsages.joinToString(","))
+        }
+    }
+
+    private fun loadMacros(
+        prefs: android.content.SharedPreferences,
+        defaults: List<KeyboardMacroButtonConfig>,
+    ): List<KeyboardMacroButtonConfig> {
+        val count = prefs.getInt("macro_count", defaults.size)
+        if (count <= 0) return emptyList()
+        return List(count) { index ->
+            val prefix = "macro_$index"
+            val default = defaults.getOrNull(index) ?: KeyboardMacroButtonConfig("", 0, emptyList())
+            KeyboardMacroButtonConfig(
+                label = prefs.getString("${prefix}_label", default.label) ?: default.label,
+                modifiers = prefs.getInt("${prefix}_modifiers", default.modifiers),
+                keyUsages = prefs.getString("${prefix}_keys", null)
+                    ?.split(',')
+                    ?.mapNotNull { it.toIntOrNull() }
+                    ?: default.keyUsages,
+            )
+        }.filter { it.label.isNotBlank() && it.keyUsages.isNotEmpty() }
+    }
+
+    private inline fun <reified T : Enum<T>> nullableEnumValueOrDefault(name: String?, default: T?): T? =
+        if (name != null) runCatching { enumValueOf<T>(name) }.getOrDefault(default) else default
 
     private inline fun <reified T : Enum<T>> enumValueOrDefault(name: String?, default: T): T =
         if (name != null) runCatching { enumValueOf<T>(name) }.getOrDefault(default) else default

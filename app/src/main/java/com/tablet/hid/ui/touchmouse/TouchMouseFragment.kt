@@ -25,14 +25,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.FragmentTouchMouseBinding
 import com.tablet.hid.model.ClickBehavior
+import com.tablet.hid.model.KeyboardMacroPresets
+import com.tablet.hid.model.MouseButton
 import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
+import com.tablet.hid.model.TouchMouseSubRegionConfig
 import com.tablet.hid.model.ZoneType
 import com.tablet.hid.util.OrientationStore
 import kotlin.math.sqrt
@@ -46,8 +50,9 @@ class TouchMouseFragment : Fragment() {
     private val viewModel: HidViewModel by activityViewModels()
 
     // ── Zone-edit state ──────────────────────────────────────────────────────
-    private enum class EditMode { NONE, LEFT_ZONE, RIGHT_ZONE }
+    private enum class EditMode { NONE, LEFT_ZONE, RIGHT_ZONE, LEFT_SUB_REGION, RIGHT_SUB_REGION }
     private var editMode = EditMode.NONE
+    private var pendingSubRegionKeyboardModifiers = 0
 
     // ── Calibration state ────────────────────────────────────────────────────
     private enum class CalibrationPhase { NONE, WAITING_PRIMARY, WAITING_LEFT, WAITING_RIGHT }
@@ -67,11 +72,13 @@ class TouchMouseFragment : Fragment() {
     private var mousePrimaryId = -1
     private var mouseLastX = 0f
     private var mouseLastY = 0f
-    // pointerZone[id] = BTN_LEFT or BTN_RIGHT (zone the pointer is committed to)
+    // pointerZone[id] = mouse button bit mask for every zone matched on pointer down.
     private val pointerZone = mutableMapOf<Int, Int>()
+    private val pointerKeyboardModifiers = mutableMapOf<Int, Int>()
     // Momentary: track which pointers are currently pressing each button
     private val leftPressPointers = mutableSetOf<Int>()
     private val rightPressPointers = mutableSetOf<Int>()
+    private val middlePressPointers = mutableSetOf<Int>()
     // Latching state
     private var leftLatched = false
     private var rightLatched = false
@@ -86,6 +93,7 @@ class TouchMouseFragment : Fragment() {
     companion object {
         private const val BTN_LEFT = 1
         private const val BTN_RIGHT = 2
+        private const val BTN_MIDDLE = 4
         private const val TOUCH_SENSITIVITY = 1.5f
         private const val RIGHT_CLICK_ZONE_FRAC = 0.82f
         private const val SCROLL_PIXELS_PER_TICK = 50f
@@ -203,6 +211,7 @@ class TouchMouseFragment : Fragment() {
     private fun showConfigSheet() {
         val sheet = TouchMouseConfigSheet().apply {
             onZoneEditRequested = { isLeft -> startZoneEdit(isLeft) }
+            onSubRegionEditRequested = { isLeft, modifiers -> startSubRegionEdit(isLeft, modifiers) }
             onCalibrationRequested = { startCalibration() }
         }
         sheet.show(childFragmentManager, "tmConfig")
@@ -232,6 +241,25 @@ class TouchMouseFragment : Fragment() {
         binding.labelZoneEditHint.setText(
             if (isLeft) R.string.zone_edit_hint_left else R.string.zone_edit_hint_right
         )
+        binding.touchZoneOverlay.editingLeft = isLeft
+        binding.touchZoneOverlay.editDragStart = null
+        binding.touchZoneOverlay.editDragEnd = null
+    }
+
+    private fun startSubRegionEdit(isLeft: Boolean, keyboardModifiers: Int) {
+        editMode = if (isLeft) EditMode.LEFT_SUB_REGION else EditMode.RIGHT_SUB_REGION
+        pendingSubRegionKeyboardModifiers = keyboardModifiers
+        binding.zoneEditOverlay.isVisible = true
+        val action = if (keyboardModifiers == KeyboardMacroPresets.MOD_LEFT_CONTROL) {
+            "hold Ctrl"
+        } else {
+            "send middle-click"
+        }
+        binding.labelZoneEditHint.text = if (isLeft) {
+            "Drag a Left-button sub-region. It will $action."
+        } else {
+            "Drag a Right-button sub-region. It will $action."
+        }
         binding.touchZoneOverlay.editingLeft = isLeft
         binding.touchZoneOverlay.editDragStart = null
         binding.touchZoneOverlay.editDragEnd = null
@@ -337,6 +365,7 @@ class TouchMouseFragment : Fragment() {
 
     private fun cancelZoneEdit() {
         editMode = EditMode.NONE
+        pendingSubRegionKeyboardModifiers = 0
         binding.zoneEditOverlay.isVisible = false
         binding.touchZoneOverlay.editingLeft = null
         binding.touchZoneOverlay.editDragStart = null
@@ -357,19 +386,48 @@ class TouchMouseFragment : Fragment() {
         if (right - left < 0.05f || bottom - top < 0.05f) return cancelZoneEdit()
 
         val prev = viewModel.touchMouseConfig.value
-        val isLeft = editMode == EditMode.LEFT_ZONE
-        val newConfig = if (isLeft) {
-            prev.copy(leftButton = prev.leftButton.copy(
+        val newConfig = when (editMode) {
+            EditMode.LEFT_ZONE -> prev.copy(leftButton = prev.leftButton.copy(
                 staticLeft = left, staticTop = top, staticRight = right, staticBottom = bottom
             ))
-        } else {
-            prev.copy(rightButton = prev.rightButton.copy(
+            EditMode.RIGHT_ZONE -> prev.copy(rightButton = prev.rightButton.copy(
                 staticLeft = left, staticTop = top, staticRight = right, staticBottom = bottom
             ))
+            EditMode.LEFT_SUB_REGION -> {
+                val subRegion = newSubRegion(left, top, right, bottom)
+                prev.copy(leftButton = prev.leftButton.copy(
+                    enabled = true,
+                    subRegions = prev.leftButton.subRegions + subRegion,
+                ))
+            }
+            EditMode.RIGHT_SUB_REGION -> {
+                val subRegion = newSubRegion(left, top, right, bottom)
+                prev.copy(rightButton = prev.rightButton.copy(
+                    enabled = true,
+                    subRegions = prev.rightButton.subRegions + subRegion,
+                ))
+            }
+            EditMode.NONE -> prev
         }
         viewModel.updateTouchMouseConfig(newConfig)
         cancelZoneEdit()
     }
+
+    private fun newSubRegion(
+        left: Float,
+        top: Float,
+        right: Float,
+        bottom: Float,
+    ) = TouchMouseSubRegionConfig(
+        enabled = true,
+        zoneType = ZoneType.STATIC,
+        staticLeft = left,
+        staticTop = top,
+        staticRight = right,
+        staticBottom = bottom,
+        keyboardModifiers = pendingSubRegionKeyboardModifiers,
+        alternateMouseButton = if (pendingSubRegionKeyboardModifiers == 0) MouseButton.MIDDLE else null,
+    )
 
     // ────────────────────────────────────────────────────────────────────────
     // Master touch dispatcher
@@ -517,14 +575,13 @@ class TouchMouseFragment : Fragment() {
             MotionEvent.ACTION_DOWN -> {
                 val pid = event.getPointerId(0)
                 val x = event.x; val y = event.y
-                val zone = when {
-                    overlay.hitTestLeft(x, y)  -> BTN_LEFT
-                    overlay.hitTestRight(x, y) -> BTN_RIGHT
-                    else -> 0
-                }
-                pointerZone[pid] = zone
-                if (zone != 0) {
-                    onZoneDown(zone, pid, config)
+                val zones = overlay.hitTestButtonBits(x, y)
+                val modifiers = overlay.hitTestKeyboardModifiers(x, y)
+                pointerZone[pid] = zones
+                pointerKeyboardModifiers[pid] = modifiers
+                updateSubRegionKeyboardModifiers()
+                if (zones != 0) {
+                    onZoneDown(zones, pid, config)
                 } else {
                     mousePrimaryId = pid
                     mouseLastX = x; mouseLastY = y
@@ -537,14 +594,13 @@ class TouchMouseFragment : Fragment() {
                 val pid = event.getPointerId(idx)
                 val x = event.getX(idx); val y = event.getY(idx)
 
-                val zone = when {
-                    overlay.hitTestLeft(x, y)  -> BTN_LEFT
-                    overlay.hitTestRight(x, y) -> BTN_RIGHT
-                    else -> 0
-                }
-                pointerZone[pid] = zone
-                if (zone != 0) {
-                    onZoneDown(zone, pid, config)
+                val zones = overlay.hitTestButtonBits(x, y)
+                val modifiers = overlay.hitTestKeyboardModifiers(x, y)
+                pointerZone[pid] = zones
+                pointerKeyboardModifiers[pid] = modifiers
+                updateSubRegionKeyboardModifiers()
+                if (zones != 0) {
+                    onZoneDown(zones, pid, config)
                 } else if (mousePrimaryId == -1) {
                     // First touch was a zone press; promote this non-zone touch to movement pointer.
                     mousePrimaryId = pid
@@ -587,12 +643,14 @@ class TouchMouseFragment : Fragment() {
 
             MotionEvent.ACTION_POINTER_UP -> {
                 val pid = event.getPointerId(event.actionIndex)
-                val zone = pointerZone.remove(pid) ?: 0
+                val zones = pointerZone.remove(pid) ?: 0
+                pointerKeyboardModifiers.remove(pid)
+                updateSubRegionKeyboardModifiers()
                 if (pid == mousePrimaryId) {
                     mousePrimaryId = -1
                     overlay.clearPrimaryPointer()
                 }
-                if (zone != 0) onZoneUp(zone, pid, config)
+                if (zones != 0) onZoneUp(zones, pid, config)
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -600,6 +658,8 @@ class TouchMouseFragment : Fragment() {
                 threeFingerScrolling = false
                 scrollCarryV = 0f; scrollCarryH = 0f
                 pointerZone.clear()
+                pointerKeyboardModifiers.clear()
+                updateSubRegionKeyboardModifiers()
                 mousePrimaryId = -1
                 overlay.clearPrimaryPointer()
 
@@ -608,6 +668,7 @@ class TouchMouseFragment : Fragment() {
                 val hadRight = rightPressPointers.isNotEmpty()
                 leftPressPointers.clear()
                 rightPressPointers.clear()
+                middlePressPointers.clear()
                 if (hadLeft  && config.leftButton.behavior  == ClickBehavior.MOMENTARY)
                     overlay.leftActive = false
                 if (hadRight && config.rightButton.behavior == ClickBehavior.MOMENTARY)
@@ -656,9 +717,9 @@ class TouchMouseFragment : Fragment() {
     // Zone press / release with momentary vs latching semantics
     // ────────────────────────────────────────────────────────────────────────
 
-    private fun onZoneDown(zone: Int, pointerId: Int, config: TouchMouseConfig) {
+    private fun onZoneDown(zones: Int, pointerId: Int, config: TouchMouseConfig) {
         val overlay = binding.touchZoneOverlay
-        if (zone == BTN_LEFT) {
+        if ((zones and BTN_LEFT) != 0) {
             when (config.leftButton.behavior) {
                 ClickBehavior.MOMENTARY -> {
                     leftPressPointers.add(pointerId)
@@ -669,7 +730,8 @@ class TouchMouseFragment : Fragment() {
                     overlay.leftActive = leftLatched
                 }
             }
-        } else {
+        }
+        if ((zones and BTN_RIGHT) != 0) {
             when (config.rightButton.behavior) {
                 ClickBehavior.MOMENTARY -> {
                     rightPressPointers.add(pointerId)
@@ -681,22 +743,25 @@ class TouchMouseFragment : Fragment() {
                 }
             }
         }
+        if ((zones and BTN_MIDDLE) != 0) middlePressPointers.add(pointerId)
         viewModel.sendMouseReport(buttons = currentButtonBits(config))
     }
 
-    private fun onZoneUp(zone: Int, pointerId: Int, config: TouchMouseConfig) {
+    private fun onZoneUp(zones: Int, pointerId: Int, config: TouchMouseConfig) {
         val overlay = binding.touchZoneOverlay
-        if (zone == BTN_LEFT) {
+        if ((zones and BTN_LEFT) != 0) {
             if (config.leftButton.behavior == ClickBehavior.MOMENTARY) {
                 leftPressPointers.remove(pointerId)
                 overlay.leftActive = leftPressPointers.isNotEmpty()
             }
-        } else {
+        }
+        if ((zones and BTN_RIGHT) != 0) {
             if (config.rightButton.behavior == ClickBehavior.MOMENTARY) {
                 rightPressPointers.remove(pointerId)
                 overlay.rightActive = rightPressPointers.isNotEmpty()
             }
         }
+        if ((zones and BTN_MIDDLE) != 0) middlePressPointers.remove(pointerId)
         viewModel.sendMouseReport(buttons = currentButtonBits(config))
     }
 
@@ -712,7 +777,14 @@ class TouchMouseFragment : Fragment() {
         }
         if (leftDown  && config.leftButton.enabled)  bits = bits or BTN_LEFT
         if (rightDown && config.rightButton.enabled) bits = bits or BTN_RIGHT
+        if (middlePressPointers.isNotEmpty()) bits = bits or BTN_MIDDLE
         return bits
+    }
+
+    private fun updateSubRegionKeyboardModifiers() {
+        var modifiers = 0
+        pointerKeyboardModifiers.values.forEach { modifiers = modifiers or it }
+        viewModel.sendKeyboardReport(modifiers = modifiers)
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -741,10 +813,12 @@ class TouchMouseFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.touchMouseConfig.collect { config ->
                     binding.touchZoneOverlay.config = config
+                    renderMacroButtons(config)
 
                     // Reset latching state when mode or button config changes.
                     if (config.mode == TouchMode.TOUCH) {
                         leftLatched = false; rightLatched = false
+                        middlePressPointers.clear()
                         binding.touchZoneOverlay.leftActive  = false
                         binding.touchZoneOverlay.rightActive = false
                     }
@@ -757,6 +831,40 @@ class TouchMouseFragment : Fragment() {
                     )
                 }
             }
+        }
+    }
+
+    private fun renderMacroButtons(config: TouchMouseConfig) {
+        binding.macroButtonRow.removeAllViews()
+        binding.macroScroll.isVisible = config.macroButtons.isNotEmpty()
+        config.macroButtons.forEach { macro ->
+            val button = MaterialButton(requireContext()).apply {
+                text = macro.label
+                minHeight = resources.getDimensionPixelSize(R.dimen.macro_button_height)
+                minWidth = 0
+                setPadding(18, 0, 18, 0)
+                setOnTouchListener { _, event ->
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_DOWN -> {
+                            viewModel.sendKeyboardReport(macro.modifiers, macro.keyUsages)
+                            true
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            viewModel.sendKeyboardReport()
+                            true
+                        }
+                        else -> false
+                    }
+                }
+            }
+            val margin = (8 * resources.displayMetrics.density).toInt()
+            binding.macroButtonRow.addView(
+                button,
+                ViewGroup.MarginLayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ).apply { marginEnd = margin },
+            )
         }
     }
 }

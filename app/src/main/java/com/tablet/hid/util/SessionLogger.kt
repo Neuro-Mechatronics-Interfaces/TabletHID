@@ -109,6 +109,11 @@ class SessionLogger(
         }
 
         if (gamepad != null) {
+            appendLine("[gamepad_layout]")
+            appendLine("single_joystick_mode = ${gamepad.singleJoystickMode}")
+            appendLine("single_joystick_side_toggle_enabled = ${gamepad.singleJoystickSideToggleEnabled}")
+            appendLine("single_joystick_output_side = ${gamepad.singleJoystickOutputSide}")
+            appendLine()
             appendButton("btn_a",      gamepad.btnA,      trigger = false)
             appendButton("btn_b",      gamepad.btnB,      trigger = false)
             appendButton("btn_x",      gamepad.btnX,      trigger = false)

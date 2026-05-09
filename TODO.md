@@ -1,5 +1,7 @@
 # TODO
 
+Use this root TODO as the product-wide backlog and Android implementation tracker. Keep platform-specific details in that platform's TODO file, currently `ios/TODO.md`, and update `spec/platform-feature-status.md` when a TODO becomes implemented or intentionally deferred.
+
 ## Phase 1 — Initial implementation ✅
 
 - [x] HID descriptor byte arrays (mouse + gamepad, combined single-bond descriptor)
@@ -99,9 +101,24 @@
 - [x] **Orientation lock** — System / Portrait / Landscape, accessible from Settings dialog and in-canvas status bar
 - [ ] **Connection status chip** — persistent across all fragments
 
+### Input customization and HID expansion
+
+- [x] **Single dynamic touch follower** - add a Touch Mouse setting that uses one shared dynamic follower location for whichever mouse button zones are configured as dynamic, instead of separate follower locations per button.
+- [x] **Unlimited gamepad widget sizing** - remove maximum size constraints from all gamepad widgets so users can resize any widget dimension as large as they want.
+- [x] **Single-joystick gamepad layout mode** - add a gamepad configuration toggle that shows only one joystick on the layout.
+- [x] **Runtime joystick output side toggle** - when single-joystick layout mode is enabled, add an optional in-layout toggle button next to the joystick that switches whether the current joystick values map to left-stick or right-stick fields in outgoing HID gamepad reports.
+- [x] **Stable gamepad HID reports under layout toggles** - ensure enabling/disabling buttons or joysticks never changes the HID report descriptor or report byte structure; inactive controls should emit neutral/unpressed values.
+- [x] **Keyboard HID report support** - add a third standard keyboard report collection/descriptor to the combined HID report map so TabletHID can send keyboard key combinations without changing the mouse/gamepad reports.
+- [x] **Keyboard macro buttons on existing layouts** - allow users to add preset macro buttons to Touch Mouse and Gamepad layouts; pressing one sends the configured keyboard combination through the keyboard report.
+- [x] **Keyboard macro defaults by host OS** - pre-populate macro choices with common Windows and Mac defaults, such as Alt+Tab or Cmd+Tab and Ctrl+S or Cmd+S, with an option to choose the target defaults.
+- [ ] **Custom keyboard macro editor** - allow users to create arbitrary keyboard combinations beyond the built-in Windows/Mac preset macro buttons.
+- [x] **Overlapping static mouse zones combine buttons** - when static or dynamic Touch Mouse button regions overlap, touching the overlap sends a mouse report with every overlapping mouse button pressed.
+- [x] **Multiple mouse button sub-regions** - add/edit/clear static Touch Mouse sub-regions from the Android settings sheet.
+- [x] **Mouse sub-region modifiers** - support Android middle-click alternate sub-regions and Ctrl modifier sub-regions through mouse plus keyboard reports.
+
 ### Quality / CI
 
-- [ ] Unit tests for HID report byte construction
+- [x] Unit tests for HID report byte construction
 - [ ] Integration test stubs for `HidManager` state machine
 - [ ] ProGuard/R8 rules for production build
 - [ ] GitHub Actions CI workflow

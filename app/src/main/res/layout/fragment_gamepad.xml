@@ -207,6 +207,23 @@
         android:layout_marginStart="24dp"
         android:layout_marginBottom="24dp" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSingleJoystickSide"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="52dp"
+        android:layout_height="44dp"
+        android:minWidth="0dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:text="L"
+        android:textColor="#FFFFFF"
+        android:visibility="gone"
+        app:strokeColor="#99FFFFFF"
+        app:layout_constraintBottom_toBottomOf="@id/leftJoystick"
+        app:layout_constraintStart_toEndOf="@id/leftJoystick"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp" />
+
     <!-- ── Right joystick ────────────────────────────────────── -->
     <com.tablet.hid.ui.gamepad.JoystickView
         android:id="@+id/rightJoystick"
@@ -266,6 +283,26 @@
         android:layout_marginTop="4dp" />
 
     <!-- Edit mode banner — overlays top of screen, visible only during layout editing -->
+    <HorizontalScrollView
+        android:id="@+id/macroScroll"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="8dp"
+        android:fillViewport="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:id="@+id/macroButtonRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
     <LinearLayout
         android:id="@+id/editModeBanner"
         android:layout_width="0dp"

@@ -1,5 +1,7 @@
 # iOS TODO
 
+Use this platform TODO for iOS-specific implementation, parity, validation, and release work. Keep user-visible feature intent in the root `TODO.md`, and update `spec/platform-feature-status.md` when an iOS TODO becomes implemented or intentionally deferred.
+
 ## Phase 0 - Project Bring-Up
 
 - [x] Create an iOS project under `ios/` that opens in Xcode.
@@ -80,6 +82,20 @@
 - [x] Add app icon asset catalog.
 - [ ] Add device signing notes after a development team is selected in Xcode.
 - [ ] Add CI for iOS build/test once simulator test launch is stable.
+
+## Phase 2 - Input Customization And HID Expansion
+
+- [ ] Add the Touch Mouse setting for one shared dynamic follower location when one or more button zones are configured as dynamic.
+- [ ] Remove maximum size constraints from iOS gamepad widgets once layout editing exists, so any widget dimension can be resized as large as the user wants.
+- [ ] Add single-joystick gamepad layout mode.
+- [ ] In single-joystick mode, add an optional in-layout toggle beside the joystick that maps the live joystick values to either left-stick or right-stick fields in outgoing reports.
+- [ ] Keep the iOS gamepad HID report descriptor and report byte structure stable regardless of which buttons or joysticks are enabled, hidden, or toggled.
+- [ ] Add a standard keyboard report collection/descriptor to the iOS HID-over-GATT report map alongside mouse and gamepad.
+- [ ] Add configurable keyboard macro buttons to Touch Mouse and Gamepad layouts instead of adding a separate keyboard tab.
+- [ ] Pre-populate keyboard macro choices with Windows and Mac target defaults, including Alt+Tab or Cmd+Tab and Ctrl+S or Cmd+S.
+- [ ] Make overlapping static Touch Mouse button zones send all overlapping mouse button presses in the same report.
+- [ ] Allow each Touch Mouse button to define multiple sub-regions.
+- [ ] Allow each Touch Mouse sub-region to add a key modifier or alternate mouse button while pressed.
 
 ## Phase 3 - TestFlight And App Store
 

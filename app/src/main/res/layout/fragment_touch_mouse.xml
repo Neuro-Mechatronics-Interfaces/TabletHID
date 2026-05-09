@@ -93,6 +93,26 @@
         app:layout_constraintTop_toBottomOf="@id/statusBar"
         app:layout_constraintVertical_bias="0.35" />
 
+    <HorizontalScrollView
+        android:id="@+id/macroScroll"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="12dp"
+        android:fillViewport="false"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:id="@+id/macroButtonRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+    </HorizontalScrollView>
+
     <!--
         Zone-edit overlay panel — sits at the top of the surface area.
         Uses wrap_content height so it doesn't cover the whole screen,

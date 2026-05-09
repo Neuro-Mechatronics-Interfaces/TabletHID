@@ -333,7 +333,11 @@ function AndroidWalkthrough() {
           millimetre of finger travel. Below that, each button has its own section:
           enable or disable it with the toggle, choose <b>Static</b> or <b>Dynamic</b>{' '}
           zone type, and set <b>Momentary</b> (held while finger is down) or{' '}
-          <b>Latching</b> (toggles on/off) click behaviour.
+          <b>Latching</b> (toggles on/off) click behaviour. If both buttons should
+          follow one reachable spot, enable the shared dynamic follower so any
+          dynamic button uses the same on-screen location. You can also add preset
+          keyboard macro buttons and static sub-regions for middle-click or Ctrl
+          modifier actions.
         </Step>
 
         <Step tag="Zone editing" title="Defining static click zones" imgs={[imgMouseStatic, imgTabletMouseStatic]} compact reverse>
@@ -366,7 +370,11 @@ function AndroidWalkthrough() {
           position or pinch to resize it independently on each axis. Layouts are saved
           per profile, so each use case keeps its own arrangement. On a tablet the
           wider screen gives each control more breathing room and makes it easier to
-          reach both sticks without moving your thumbs far from rest.
+          reach both sticks without moving your thumbs far from rest. For one-stick
+          layouts, enable single-joystick mode and optionally show the L/R toggle
+          beside the joystick to choose which HID stick the live values drive.
+          The settings sheet can also add Windows or Mac preset keyboard macro
+          buttons to the gamepad surface.
         </Step>
       </div>
     </>

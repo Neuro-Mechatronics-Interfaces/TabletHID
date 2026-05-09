@@ -1,5 +1,6 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="macro_button_height">44dp</dimen>
     <dimen name="onboarding_dot_size">10dp</dimen>
     <dimen name="onboarding_dot_gap">8dp</dimen>
 </resources>

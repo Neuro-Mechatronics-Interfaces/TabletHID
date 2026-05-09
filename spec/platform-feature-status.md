@@ -17,7 +17,7 @@ This spec tracks the Android implementation in `app/` and the iOS equivalent in 
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Act as HID peripheral | Implemented with `BluetoothHidDevice` | Experimental BLE HID transport added via expanded `00001812-...` service UUID; needs physical-device validation |
-| Combined mouse + gamepad descriptor | Implemented with Report ID 1 and 2 in one registration | Descriptor/report builders ported and exposed through experimental HID-over-GATT Report characteristics |
+| Combined mouse + gamepad + keyboard descriptor | Implemented with Report ID 1, 2, and 3 in one registration; BLE path exposes all three Report characteristics | Descriptor/report builders ported and exposed through experimental HID-over-GATT Report characteristics |
 | Discoverable pairing flow | Implemented with 120-second discoverable request and configurable Bluetooth name | Experimental `CBPeripheralManager` advertising with configurable local name |
 | Reconnect bonded host | Implemented by cached Bluetooth address and `BluetoothHidDevice.connect()` | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising |
 | Disconnect / unbond | Implemented | Disconnect resets local state only |
@@ -34,9 +34,11 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Mouse descriptor | Implemented | Ported |
-| Mouse report builder | Implemented, 6 bytes | Ported with unit tests |
+| Mouse report builder | Implemented, 7 bytes including horizontal AC Pan | Ported with unit tests |
 | Gamepad descriptor | Implemented | Ported |
 | Gamepad report builder | Implemented, 13 bytes | Ported with unit tests |
+| Keyboard descriptor | Implemented as standard 8-byte input report on Report ID 3; Android Touch Mouse and Gamepad macro buttons use the existing Report ID 3 path | TODO |
+| Keyboard report builder | Implemented for modifiers plus up to 6 key usages, with JVM unit tests | TODO |
 | Button bit constants | Implemented | Ported |
 | Hat switch diagonal mapping | Implemented | Ported in UI model |
 | Output reports / rumble | Not implemented | Not implemented |
@@ -62,6 +64,8 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Sensitivity | Implemented | Implemented |
 | Static left/right zones | Implemented | Implemented |
 | Dynamic left/right zones | Implemented | Implemented |
+| Shared dynamic follower location | Implemented with config toggle for Android dynamic zones | TODO |
+| Overlapping mouse zones combine buttons | Implemented for static and dynamic Android zones | TODO |
 | Momentary/latching zones | Implemented | Implemented |
 | First-touch zone hit-test (no spurious movement on zone tap) | Implemented | Implemented |
 | Sub-pixel delta accumulation (smooth movement) | Implemented | Implemented (coalesced touches) |
@@ -69,7 +73,9 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Zone editing (rubber-band drag to set static zone) | Implemented | Not yet implemented |
 | Persist config | Implemented | Implemented |
 | Three-finger scroll | Implemented with vertical wheel, horizontal AC Pan, enable toggle, and invert toggle | Implemented with vertical wheel, horizontal AC Pan, enable toggle, and invert toggle |
-| Middle click | TODO | TODO |
+| Multiple button sub-regions | Implemented for static Android sub-regions with add/clear UI under Touch Mouse settings | TODO |
+| Sub-region modifiers / alternate mouse button | Implemented for Android static sub-regions: middle-click alternates and Ctrl modifier sub-regions send keyboard modifier reports | TODO |
+| Middle click | Implemented through Android Touch Mouse middle-click sub-regions | TODO |
 | Momentum / fling | TODO | TODO |
 
 ## Gamepad
@@ -77,6 +83,7 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Two analog sticks | Implemented | Initial SwiftUI joysticks |
+| Single-joystick layout mode | Implemented; one visible joystick can route to left-stick or right-stick report fields with the inactive stick neutral | TODO |
 | A/B/X/Y buttons | Implemented | Initial buttons |
 | LB/RB buttons | Implemented | Initial buttons |
 | LT/RT analog triggers | Implemented via drag travel | Initial press-only trigger values |
@@ -85,9 +92,10 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Momentary/latching buttons | Implemented | Data model ported; UI uses momentary for first pass |
 | Turbo | Implemented | Data model ported; UI not yet wired |
 | Drag-to-reposition controls | Implemented | TODO |
-| Pinch-to-resize controls | Implemented | TODO |
+| Pinch-to-resize controls | Implemented; Android gamepad widgets have no maximum scale cap | TODO |
 | Persist layout | Implemented | Config persistence ported; layout editing TODO |
 | Multiple presets | Built-in plus custom profiles | Built-in plus custom profiles |
+| Keyboard macro buttons | Implemented with Windows/Mac preset sets on Android Touch Mouse and Gamepad layouts; arbitrary custom macro editor not yet implemented | TODO |
 | Visual press feedback | Implemented | Initial press styling |
 | Rumble | TODO | TODO |
 
@@ -108,6 +116,6 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 
 | Feature | Android status | iOS status |
 | --- | --- | --- |
-| Unit tests for report bytes | TODO | Added for iOS report builders |
+| Unit tests for report bytes | Added for Android mouse, gamepad, keyboard builders and combined descriptor presence | Added for iOS report builders |
 | CI | TODO | TODO |
 | App Store readiness | Not applicable yet | Blocked until transport strategy is chosen |
