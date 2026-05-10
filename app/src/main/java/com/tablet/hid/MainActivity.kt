@@ -26,16 +26,24 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.divider.MaterialDivider
+import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.ActivityMainBinding
+import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.util.AppearanceStore
+import com.tablet.hid.util.HidHostStore
+import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.LoggingStore
 import com.tablet.hid.util.OrientationStore
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -93,6 +101,24 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         checkAndRequestPermissions()
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect { state ->
+                    supportActionBar?.subtitle = stateToStatusText(state)
+                }
+            }
+        }
+    }
+
+    private fun stateToStatusText(state: BleHidManager.State): String = when (state) {
+        is BleHidManager.State.Idle                -> ""
+        is BleHidManager.State.Registering         -> "Starting…"
+        is BleHidManager.State.WaitingForConnection -> "Waiting for connection"
+        is BleHidManager.State.Reconnecting        -> "Connecting to ${state.deviceName}"
+        is BleHidManager.State.Connected           ->
+            "Connected · ${state.device.name ?: state.device.address}"
+        is BleHidManager.State.Error               -> "Error: ${state.message}"
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -140,8 +166,14 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(hintText(
             "Hosts will see this name when pairing. Changes apply the next time you prepare a new Bluetooth connection.",
-            dp4, dp16
+            dp4, dp12
         ))
+
+        val autoReconnectCheck = CheckBox(this).apply {
+            setText(R.string.setting_auto_reconnect)
+            isChecked = HidPrefs.isAutoReconnectEnabled(this@MainActivity)
+        }
+        root.addView(autoReconnectCheck)
 
         root.addView(MaterialDivider(this).apply {
             val lp = LinearLayout.LayoutParams(
@@ -226,6 +258,18 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(hintText(
             "Locks screen rotation for Touch Mouse and Gamepad canvas views.",
+            dp4, dp12
+        ))
+
+        val screenPinningCheck = CheckBox(this).apply {
+            setText(R.string.setting_screen_pinning)
+            isChecked = HidPrefs.isScreenPinningEnabled(this@MainActivity)
+        }
+        root.addView(screenPinningCheck)
+
+        root.addView(hintText(
+            "When enabled, entering Gamepad or Touch Mouse mode pins the app to the screen. " +
+            "Long-press Back + Recent to unpin.",
             dp4, dp16
         ))
 
@@ -235,6 +279,7 @@ class MainActivity : AppCompatActivity() {
             .setView(ScrollView(this).apply { addView(root) })
             .setPositiveButton("Apply") { _, _ ->
                 AppearanceStore.setDeviceName(this, deviceNameEdit.text.toString())
+                HidPrefs.setAutoReconnectEnabled(this, autoReconnectCheck.isChecked)
                 AppearanceStore.set(this, selectedAppearance)
                 AppCompatDelegate.setDefaultNightMode(AppearanceStore.toNightMode(selectedAppearance))
                 AppearanceStore.setLargeText(this, largeTextCheck.isChecked)
@@ -244,6 +289,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.setLoggingEnabled(enabled)
                 OrientationStore.set(this, selectedOrientation)
                 requestedOrientation = OrientationStore.toActivityOrientation(selectedOrientation)
+                HidPrefs.setScreenPinningEnabled(this, screenPinningCheck.isChecked)
                 if (
                     largeTextCheck.isChecked != originalLargeText ||
                     highContrastCheck.isChecked != originalHighContrast
@@ -301,6 +347,16 @@ class MainActivity : AppCompatActivity() {
         if (!adapter.isEnabled) {
             @Suppress("DEPRECATION")
             enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            return
         }
+        maybeAutoReconnect()
+    }
+
+    private fun maybeAutoReconnect() {
+        if (!HidPrefs.isAutoReconnectEnabled(this)) return
+        val lastAddress = HidPrefs.getLastDeviceAddress(this) ?: return
+        val knownHosts = HidHostStore.getAll(this)
+        if (knownHosts.none { it.address == lastAddress }) return
+        viewModel.startServiceForMode(this, DeviceMode.TOUCH_MOUSE, lastAddress)
     }
 }

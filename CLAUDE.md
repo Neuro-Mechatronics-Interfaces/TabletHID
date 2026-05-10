@@ -39,6 +39,15 @@ Use this completion checklist before finishing feature work:
 - `README.md`, `TODO.md`, `ios/README.md`, or other project docs are updated if their claims changed.
 - Website docs under `web/` are reviewed using the workflow below.
 
+## Using SUGGESTIONS.md
+
+`SUGGESTIONS.md` is an informal staging area for feature ideas that have not yet been accepted into the backlog. It exists one step before `TODO.md` in the planning pipeline.
+
+- Do **not** implement items from `SUGGESTIONS.md`. They have not been reviewed or prioritised by the user.
+- When you have a new feature idea that is not already captured in `TODO.md` or `ios/TODO.md`, add it to `SUGGESTIONS.md` under the most relevant heading. Keep the description concise and practical: what the feature does, a hint at where it would live in the code, and any obvious constraints.
+- Do not duplicate items that are already in `TODO.md`. If a suggestion is accepted, the user moves it to `TODO.md` and deletes it from `SUGGESTIONS.md`.
+- When asked to propose improvements or brainstorm features, write them to `SUGGESTIONS.md` rather than directly into `TODO.md`.
+
 ## Using TODO Files
 
 Use TODO files as the working backlog, not as the canonical feature-status record. The spec tells you what is currently true; TODO files tell you what still needs doing.

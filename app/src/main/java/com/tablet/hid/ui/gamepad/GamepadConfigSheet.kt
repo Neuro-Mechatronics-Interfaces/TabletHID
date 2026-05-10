@@ -6,10 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.tablet.hid.BuildConfig
 import com.tablet.hid.HidViewModel
@@ -19,9 +21,11 @@ import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
 import com.tablet.hid.model.JoystickSide
+import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.model.KeyboardMacroPresets
 import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.TriggerDragAxis
+import com.tablet.hid.ui.macro.CustomMacroEditorDialog
 import com.tablet.hid.databinding.SheetGamepadConfigBinding
 import java.io.File
 
@@ -129,6 +133,21 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
         b.btnClearMacros.setOnClickListener {
             val c = viewModel.gamepadConfig.value
             viewModel.updateGamepadConfig(c.copy(macroButtons = emptyList()))
+            rebuildMacroList(emptyList())
+        }
+
+        // ── Custom macro editor ──────────────────────────────────────────
+        rebuildMacroList(viewModel.gamepadConfig.value.macroButtons)
+        b.btnAddCustomMacro.setOnClickListener {
+            val dialog = CustomMacroEditorDialog()
+            dialog.onMacroCreated = CustomMacroEditorDialog.OnMacroCreated { macro ->
+                val updated = viewModel.gamepadConfig.value.let {
+                    it.copy(macroButtons = it.macroButtons + macro)
+                }
+                viewModel.updateGamepadConfig(updated)
+                rebuildMacroList(updated.macroButtons)
+            }
+            dialog.show(parentFragmentManager, "custom_macro")
         }
 
         // ── Behavior toggle ──────────────────────────────────────────────
@@ -239,6 +258,40 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private fun rebuildMacroList(macros: List<KeyboardMacroButtonConfig>) {
+        b.macroList.removeAllViews()
+        val dp = resources.displayMetrics.density
+        macros.forEachIndexed { index, macro ->
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+            }
+            val label = TextView(requireContext()).apply {
+                text = macro.label
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val removeBtn = MaterialButton(requireContext(),
+                null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+                text = "×"
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setOnClickListener {
+                    val updated = viewModel.gamepadConfig.value.let {
+                        it.copy(macroButtons = it.macroButtons.toMutableList().also { list -> list.removeAt(index) })
+                    }
+                    viewModel.updateGamepadConfig(updated)
+                    rebuildMacroList(updated.macroButtons)
+                }
+            }
+            row.addView(label)
+            row.addView(removeBtn)
+            b.macroList.addView(row)
+        }
+    }
 
     private fun applyConfig(cfg: GamepadConfig) {
         initialising = true

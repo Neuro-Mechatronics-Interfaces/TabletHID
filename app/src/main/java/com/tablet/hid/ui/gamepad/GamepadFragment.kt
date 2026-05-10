@@ -50,6 +50,7 @@ import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickSide
 import com.tablet.hid.model.TriggerDragAxis
+import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.OrientationStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -110,12 +111,16 @@ class GamepadFragment : Fragment() {
         super.onResume()
         (requireActivity() as? AppCompatActivity)?.supportActionBar?.hide()
         enterImmersiveMode()
+        if (HidPrefs.isScreenPinningEnabled(requireContext())) {
+            activity?.startLockTask()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         exitImmersiveMode()
         (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
+        try { activity?.stopLockTask() } catch (_: Exception) {}
     }
 
     // ── Back-press guard ─────────────────────────────────────────────────────

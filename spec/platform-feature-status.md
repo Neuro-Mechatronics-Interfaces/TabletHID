@@ -21,6 +21,9 @@ This spec tracks the Android implementation in `app/` and the iOS equivalent in 
 | Discoverable pairing flow | Implemented with 120-second discoverable request and configurable Bluetooth name | Experimental `CBPeripheralManager` advertising with configurable local name |
 | Reconnect bonded host | Implemented by cached Bluetooth address and `BluetoothHidDevice.connect()` | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising |
 | Disconnect / unbond | Implemented | Disconnect resets local state only |
+| Foreground service | Implemented; `connectedDevice` foreground service type; connection survives Home press and screen-off | TODO |
+| Persistent notification | Implemented via foreground service; shows connection state text and Disconnect action when connected | TODO |
+| Auto-reconnect on launch | Implemented; opt-in toggle in Settings; reconnects to last paired device using `HidForegroundService` on app open | TODO |
 
 Relevant Apple docs currently point app developers toward Core Bluetooth BLE central/peripheral APIs and the MFi program for Classic Bluetooth accessories, not a clearly documented public app API for making an iPhone/iPad advertise as a Bluetooth HID device. The iOS implementation therefore treats BLE HID as experimental:
 
@@ -95,7 +98,7 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Pinch-to-resize controls | Implemented; Android gamepad widgets have no maximum scale cap | TODO |
 | Persist layout | Implemented | Config persistence ported; layout editing TODO |
 | Multiple presets | Built-in plus custom profiles | Built-in plus custom profiles |
-| Keyboard macro buttons | Implemented with Windows/Mac preset sets on Android Touch Mouse and Gamepad layouts; arbitrary custom macro editor not yet implemented | TODO |
+| Keyboard macro buttons | Implemented with Windows/Mac preset sets on Android Touch Mouse and Gamepad layouts; custom macro editor (`CustomMacroEditorDialog`) allows adding arbitrary modifier+key combinations | TODO |
 | Visual press feedback | Implemented | Initial press styling |
 | Rumble | TODO | TODO |
 
@@ -109,6 +112,8 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | High Contrast | Settings dialog stores preference; activity applies high-contrast Material theme after recreate | `AppSettingsView` stores preference; SwiftUI root applies stronger contrast and primary tint |
 | Session logging | Toggle in Settings dialog; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
 | Orientation lock | System / Portrait / Landscape; Settings dialog + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
+| Connection status chip | Implemented via ActionBar subtitle in `MainActivity`; visible on Home and Tutorial screens; shows empty (Idle), Starting, Waiting, Connecting, Connected, and Error states | TODO |
+| Screen pinning | Implemented; opt-in toggle in Settings; `startLockTask()` called in `GamepadFragment` and `TouchMouseFragment` `onResume()` | TODO |
 | Known host management | Rename / forget host; last 10 hosts stored | Rename / forget host; list stored in `UserDefaults` |
 | Multi-profile support | Built-in + custom profiles; profile-namespaced config storage | Built-in + custom profiles; profile-namespaced `UserDefaults` keys |
 
@@ -117,5 +122,5 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Unit tests for report bytes | Added for Android mouse, gamepad, keyboard builders and combined descriptor presence | Added for iOS report builders |
-| CI | TODO | TODO |
+| CI | Implemented; debug build and unit tests run on push/PR to main | TODO |
 | App Store readiness | Not applicable yet | Blocked until transport strategy is chosen |

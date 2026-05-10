@@ -139,6 +139,17 @@
     <string name="onboarding_p4_body">Choose the Bluetooth name your computer will see when pairing. You can change it later in Settings.</string>
     <string name="onboarding_p4_hint">Device name (e.g. TabletHID - Max)</string>
 
+    <!-- Screen pinning -->
+    <string name="setting_screen_pinning">Screen pinning (locks to this app when in control mode)</string>
+
+    <!-- Foreground service notification -->
+    <string name="notif_channel_name">HID Connection</string>
+    <string name="notif_action_disconnect">Disconnect</string>
+    <string name="notif_action_stop">Stop</string>
+
+    <!-- Settings — auto-reconnect -->
+    <string name="setting_auto_reconnect">Auto-reconnect on app open</string>
+
     <!-- Dynamic zone calibration -->
     <string name="config_scroll_section">Three-Finger Scroll</string>
     <string name="config_scroll_enabled">Enable</string>
@@ -147,4 +158,12 @@
     <string name="calibrate_hint_primary">Step 1 of 3 — Place your pointer finger anywhere on the screen</string>
     <string name="calibrate_hint_left">Step 2 of 3 — Keep pointer finger down, then place your left-click finger where it feels comfortable</string>
     <string name="calibrate_hint_right">Step 3 of 3 — Keep both fingers down, then place your right-click finger where it feels comfortable</string>
+
+    <!-- Custom macro editor -->
+    <string name="macro_add_custom">Add custom macro…</string>
+    <string name="macro_editor_title">New Macro Button</string>
+    <string name="macro_editor_label_hint">Button label</string>
+    <string name="macro_editor_modifiers">Modifiers</string>
+    <string name="macro_editor_key">Key</string>
+    <string name="macro_editor_add">Add</string>
 </resources>

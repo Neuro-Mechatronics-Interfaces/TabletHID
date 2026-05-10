@@ -38,6 +38,7 @@ import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.TouchMouseSubRegionConfig
 import com.tablet.hid.model.ZoneType
+import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.OrientationStore
 import kotlin.math.sqrt
 import kotlinx.coroutines.launch
@@ -144,12 +145,16 @@ class TouchMouseFragment : Fragment() {
         super.onResume()
         (requireActivity() as? AppCompatActivity)?.supportActionBar?.hide()
         enterImmersiveMode()
+        if (HidPrefs.isScreenPinningEnabled(requireContext())) {
+            activity?.startLockTask()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         exitImmersiveMode()
         (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
+        try { activity?.stopLockTask() } catch (_: Exception) {}
     }
 
     // ── Back-press guard ─────────────────────────────────────────────────────

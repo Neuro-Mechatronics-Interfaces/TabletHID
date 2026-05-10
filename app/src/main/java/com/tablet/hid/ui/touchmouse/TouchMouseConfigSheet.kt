@@ -4,17 +4,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.slider.Slider
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.databinding.SheetTouchMouseConfigBinding
 import com.tablet.hid.model.ClickBehavior
+import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.model.KeyboardMacroPresets
 import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.TouchMode
+import com.tablet.hid.ui.macro.CustomMacroEditorDialog
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.ZoneType
 
@@ -44,6 +49,18 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         applyConfig(viewModel.touchMouseConfig.value)
         setupListeners()
+        rebuildMacroList(viewModel.touchMouseConfig.value.macroButtons)
+        binding.btnAddCustomMacro.setOnClickListener {
+            val dialog = CustomMacroEditorDialog()
+            dialog.onMacroCreated = CustomMacroEditorDialog.OnMacroCreated { macro ->
+                val updated = viewModel.touchMouseConfig.value.let {
+                    it.copy(macroButtons = it.macroButtons + macro)
+                }
+                viewModel.updateTouchMouseConfig(updated)
+                rebuildMacroList(updated.macroButtons)
+            }
+            dialog.show(parentFragmentManager, "custom_macro")
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -147,6 +164,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.btnClearMacros.setOnClickListener {
             val prev = viewModel.touchMouseConfig.value
             viewModel.updateTouchMouseConfig(prev.copy(macroButtons = emptyList()))
+            rebuildMacroList(emptyList())
         }
 
         binding.switchSharedDynamic.setOnCheckedChangeListener { _, checked ->
@@ -310,6 +328,40 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
 
     private fun formatOffset(v: Float) =
         if (v >= 0) "+%.2f".format(v) else "%.2f".format(v)
+
+    private fun rebuildMacroList(macros: List<KeyboardMacroButtonConfig>) {
+        binding.macroList.removeAllViews()
+        val dp = resources.displayMetrics.density
+        macros.forEachIndexed { index, macro ->
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+            }
+            val label = TextView(requireContext()).apply {
+                text = macro.label
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val removeBtn = MaterialButton(requireContext(),
+                null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+                text = "×"
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setOnClickListener {
+                    val updated = viewModel.touchMouseConfig.value.let {
+                        it.copy(macroButtons = it.macroButtons.toMutableList().also { list -> list.removeAt(index) })
+                    }
+                    viewModel.updateTouchMouseConfig(updated)
+                    rebuildMacroList(updated.macroButtons)
+                }
+            }
+            row.addView(label)
+            row.addView(removeBtn)
+            binding.macroList.addView(row)
+        }
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Build config from current UI state and push to ViewModel

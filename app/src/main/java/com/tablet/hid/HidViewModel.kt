@@ -1,7 +1,10 @@
 package com.tablet.hid
 
 import android.app.Application
+import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tablet.hid.bluetooth.BleHidManager
@@ -231,6 +234,17 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun disconnect() = hidManager.disconnect()
+
+    // ── Foreground service helpers ────────────────────────────────────────────
+
+    fun startServiceForMode(context: Context, mode: DeviceMode, reconnectAddress: String? = null) {
+        val intent = HidForegroundService.startIntent(context, mode, reconnectAddress)
+        ContextCompat.startForegroundService(context, intent)
+    }
+
+    fun stopService(context: Context) {
+        context.stopService(Intent(context, HidForegroundService::class.java))
+    }
 
     override fun onCleared() {
         endSession()

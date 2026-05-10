@@ -88,18 +88,18 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 
 ### Connection & pairing
 
-- [ ] **Foreground service** — BT connection survives Home button press / screen-off
-- [ ] **Auto-reconnect** — optionally reconnect to last paired device on app open
-- [ ] **Persistent notification** — quick-disconnect action while connected
-- [ ] **"Forget device" option** — remove bond without full disconnect flow
+- [x] **Foreground service** — BT connection survives Home button press / screen-off
+- [x] **Auto-reconnect** — optionally reconnect to last paired device on app open
+- [x] **Persistent notification** — quick-disconnect action while connected
+- [x] **"Forget device" option** — remove bond without full disconnect flow
 
 ### UX & polish
 
-- [ ] **Screen pinning** (`startLockTask()`) — optional advanced lock-in; toggle in Settings
+- [x] **Screen pinning** (`startLockTask()`) — optional advanced lock-in; toggle in Settings
 - [ ] **Settings fragment** — optional dedicated settings screen if the dialog becomes too dense
-- [ ] **Onboarding screen** — shown once on first launch
+- [x] **Onboarding screen** — shown once on first launch
 - [x] **Orientation lock** — System / Portrait / Landscape, accessible from Settings dialog and in-canvas status bar
-- [ ] **Connection status chip** — persistent across all fragments
+- [x] **Connection status chip** — persistent across all fragments
 
 ### Input customization and HID expansion
 
@@ -111,7 +111,7 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 - [x] **Keyboard HID report support** - add a third standard keyboard report collection/descriptor to the combined HID report map so TabletHID can send keyboard key combinations without changing the mouse/gamepad reports.
 - [x] **Keyboard macro buttons on existing layouts** - allow users to add preset macro buttons to Touch Mouse and Gamepad layouts; pressing one sends the configured keyboard combination through the keyboard report.
 - [x] **Keyboard macro defaults by host OS** - pre-populate macro choices with common Windows and Mac defaults, such as Alt+Tab or Cmd+Tab and Ctrl+S or Cmd+S, with an option to choose the target defaults.
-- [ ] **Custom keyboard macro editor** - allow users to create arbitrary keyboard combinations beyond the built-in Windows/Mac preset macro buttons.
+- [x] **Custom keyboard macro editor** - allow users to create arbitrary keyboard combinations beyond the built-in Windows/Mac preset macro buttons.
 - [x] **Overlapping static mouse zones combine buttons** - when static or dynamic Touch Mouse button regions overlap, touching the overlap sends a mouse report with every overlapping mouse button pressed.
 - [x] **Multiple mouse button sub-regions** - add/edit/clear static Touch Mouse sub-regions from the Android settings sheet.
 - [x] **Mouse sub-region modifiers** - support Android middle-click alternate sub-regions and Ctrl modifier sub-regions through mouse plus keyboard reports.
@@ -119,6 +119,27 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 ### Quality / CI
 
 - [x] Unit tests for HID report byte construction
-- [ ] Integration test stubs for `HidManager` state machine
-- [ ] ProGuard/R8 rules for production build
-- [ ] GitHub Actions CI workflow
+- [x] Integration test stubs for `HidManager` state machine
+- [x] ProGuard/R8 rules for production build
+- [x] GitHub Actions CI workflow
+
+---
+
+## Future Tech / Phase 4
+
+### Improved Gestures
+- [ ] **A "hold" gesture (e.g., double-tap and hold)** - latches a mouse button pressed until the user taps again. Useful for long drags without maintaining continuous finger contact. Could be a toggle within the dynamic zone config or a dedicated gesture zone.
+
+- [ ] **Sensitivity adjuster** - A zone or button that, while held, applies a temporary sensitivity divisor (e.g., 0.25×) for fine cursor placement — analogous to a "sniper button" on gaming mice. Could be a static zone in Touch Mouse mode or a macro button on the Gamepad layout.
+
+### Haptics
+- [ ] **Vibrotactile feedback** - Short vibration pulses via `Vibrator`/`VibrationEffect` when pressing gamepad buttons (A, B, X, Y, LB, RB, triggers). Configurable intensity (off / light / medium / strong) per profile. Care needed to keep vibration latency low and not disturb button state.
+
+### Customization 
+- [ ] **Keyboard shortcut launcher panel** - A scrollable grid of user-defined or preset keyboard shortcuts (Ctrl+Z, Ctrl+C, Win+D, Alt+F4, etc.) accessible as a side-panel or overlay within Touch Mouse mode. Each button sends one `sendKeyboardReport` call. Could reuse the existing macro button infrastructure.
+
+- [ ] **Custom button icons or labels** - Allow users to rename any gamepad button (e.g., relabel A/B/X/Y for a specific game) or pick from a small icon library. Stored per profile. Purely cosmetic; no HID report changes.
+
+- [ ] **App home screen shortcuts** - Android app shortcuts (`shortcuts.xml`) that launch directly into Touch Mouse or Gamepad mode with a specific profile, bypassing the Home fragment. Users long-press the launcher icon to pick a shortcut. Shortcut list could be auto-generated from the saved profile list.
+
+- [ ] **Android home screen widget** - A resizable `AppWidgetProvider` widget that shows connection status (device name + connected/idle) and provides a single Reconnect or Disconnect button, without opening the full app. Complements the Quick Settings tile for users who prefer widgets.

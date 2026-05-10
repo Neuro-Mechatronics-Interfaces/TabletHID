@@ -437,7 +437,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginStart="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="8dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddMacroDefaults"
@@ -454,6 +454,23 @@
                 android:layout_marginStart="8dp"
                 android:text="Clear macros" />
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddCustomMacro"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/macro_add_custom" />
+
+        <LinearLayout
+            android:id="@+id/macroList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp" />
 
         <TextView
             android:layout_width="wrap_content"
