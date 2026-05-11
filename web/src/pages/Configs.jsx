@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
 import DeviceFrame from './configs/DeviceFrame.jsx';
 import GamepadCanvas from './configs/GamepadCanvas.jsx';
@@ -7,6 +8,7 @@ import DEVICE_PRESETS from './configs/constants/devicePresets.js';
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
 
 export default function Configs() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('browser');
   const [selectedConfig, setSelectedConfig] = useState(null);
   const [deviceId, setDeviceId] = useState(DEFAULT_DEVICE_ID);
@@ -67,7 +69,15 @@ export default function Configs() {
                 {landscape ? '⟷ Landscape' : '↕ Portrait'}
               </button>
               {selectedConfig && (
-                <span className="configs-config-label">{selectedConfig.profile_name}</span>
+                <>
+                  <span className="configs-config-label">{selectedConfig.profile_name}</span>
+                  <button
+                    className="btn btn-primary configs-clone-btn"
+                    onClick={() => navigate(`/configs/clone/${selectedConfig.id}`)}
+                  >
+                    Clone &amp; Edit
+                  </button>
+                </>
               )}
             </div>
 
