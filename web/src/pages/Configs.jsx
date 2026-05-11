@@ -25,10 +25,7 @@ export default function Configs() {
     <div className="configs-page">
       <div className="configs-hero">
         <h1>Community Configs</h1>
-        <p>
-          Browse public controller configs shared by the community. Applying a config increments its download count.
-          Listings are user-generated and may contain language we do not condone.
-        </p>
+        <p>Browse and preview controller configs. User-generated content.</p>
       </div>
 
       <div className="configs-tab-bar">

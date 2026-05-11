@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ConfigOptionsPanel from './ConfigOptionsPanel.jsx';
 import DeviceFrame from './DeviceFrame.jsx';
-import GamepadCanvas from './GamepadCanvas.jsx';
+import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './GamepadCanvas.jsx';
 import DEVICE_PRESETS from './constants/devicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
@@ -27,6 +27,7 @@ export default function CloneConfigPage() {
   const [deviceId, setDeviceId] = useState(DEFAULT_DEVICE_ID);
   const [landscape, setLandscape] = useState(true);
   const [editLayout, setEditLayout] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(null);
@@ -60,13 +61,14 @@ export default function CloneConfigPage() {
     const fresh = deepClone(source.config_json);
     if (fresh.buttons) {
       for (const key of Object.keys(fresh.buttons)) {
-        fresh.buttons[key].offsetX = 0;
-        fresh.buttons[key].offsetY = 0;
+        fresh.buttons[key].offsetX = 0; fresh.buttons[key].offsetY = 0;
+        fresh.buttons[key].scaleX = 1;  fresh.buttons[key].scaleY = 1;
       }
     }
-    if (fresh.leftJoystick)  { fresh.leftJoystick.offsetX  = 0; fresh.leftJoystick.offsetY  = 0; }
-    if (fresh.rightJoystick) { fresh.rightJoystick.offsetX = 0; fresh.rightJoystick.offsetY = 0; }
+    if (fresh.leftJoystick)  { fresh.leftJoystick.offsetX  = 0; fresh.leftJoystick.offsetY  = 0; fresh.leftJoystick.scaleX  = 1; fresh.leftJoystick.scaleY  = 1; }
+    if (fresh.rightJoystick) { fresh.rightJoystick.offsetX = 0; fresh.rightJoystick.offsetY = 0; fresh.rightJoystick.scaleX = 1; fresh.rightJoystick.scaleY = 1; }
     setConfig(fresh);
+    setSelectedKey(null);
   }
 
   async function handleSubmit() {
@@ -179,7 +181,7 @@ export default function CloneConfigPage() {
               <>
                 <button
                   className={'configs-orient-btn' + (editLayout ? ' active' : '')}
-                  onClick={() => setEditLayout(m => !m)}
+                  onClick={() => { setEditLayout(m => !m); setSelectedKey(null); }}
                 >
                   {editLayout ? 'Done Editing' : 'Edit Layout'}
                 </button>
@@ -192,7 +194,7 @@ export default function CloneConfigPage() {
 
           {editLayout && (
             <div className="clone-edit-hint">
-              Drag buttons and joysticks to reposition them.
+              Drag to reposition. <strong>Shift+drag</strong> to resize. Click to select.
             </div>
           )}
 
@@ -206,12 +208,42 @@ export default function CloneConfigPage() {
                   editMode={editLayout}
                   canvasScale={canvasScale}
                   onConfigChange={setConfig}
+                  selectedKey={editLayout ? selectedKey : null}
+                  onSelect={editLayout ? setSelectedKey : undefined}
                 />
               ) : (
                 <div className="canvas-phase-stub">Touch Mouse canvas — coming soon</div>
               )}
             </DeviceFrame>
           </div>
+
+          {editLayout && selectedKey && (() => {
+            const { ox, oy, sx, sy } = getElementOffset(config, selectedKey);
+            return (
+              <div className="elem-props-bar">
+                <span className="elem-props-key">{selectedKey}</span>
+                <label className="elem-props-field">
+                  <span>X</span>
+                  <input type="number" step="1" value={Math.round(ox)}
+                    onChange={e => setConfig(c => applyOffset(c, selectedKey, Number(e.target.value), oy))} />
+                </label>
+                <label className="elem-props-field">
+                  <span>Y</span>
+                  <input type="number" step="1" value={Math.round(oy)}
+                    onChange={e => setConfig(c => applyOffset(c, selectedKey, ox, Number(e.target.value)))} />
+                </label>
+                <label className="elem-props-field">
+                  <span>Scale</span>
+                  <input type="number" step="0.05" min="0.2" max="4"
+                    value={Number(sx.toFixed(2))}
+                    onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfig(c => applyScale(c, selectedKey, v, v)); }} />
+                </label>
+                <button className="elem-props-reset" onClick={() => setConfig(c => applyScale(applyOffset(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
+                  Reset
+                </button>
+              </div>
+            );
+          })()}
 
           <div className="clone-actions">
             {submitError && <p className="clone-submit-error">{submitError}</p>}

@@ -27,6 +27,8 @@ const BUTTON_KEYS = [
   'back', 'start', 'dpadUp', 'dpadDown', 'dpadLeft', 'dpadRight',
 ];
 
+const DRAG_THRESHOLD = 5; // px screen movement before considered a drag
+
 function clampOffset(nat, ox, oy, sx, sy, cW, cH) {
   const halfW = (nat.w * sx) / 2;
   const halfH = (nat.h * sy) / 2;
@@ -38,31 +40,41 @@ function clampOffset(nat, ox, oy, sx, sy, cW, cH) {
   };
 }
 
-function applyOffset(config, key, ox, oy) {
+export function applyOffset(config, key, ox, oy) {
   if (key === 'leftJoystick' || key === 'rightJoystick') {
     return { ...config, [key]: { ...(config?.[key] ?? {}), offsetX: ox, offsetY: oy } };
   }
   if (key === 'singleJoystickSideBtn') {
-    return {
-      ...config,
-      buttons: {
-        ...(config?.buttons ?? {}),
-        singleJoystickToggle: { ...(config?.buttons?.singleJoystickToggle ?? {}), offsetX: ox, offsetY: oy },
-      },
-    };
+    return { ...config, buttons: { ...(config?.buttons ?? {}), singleJoystickToggle: { ...(config?.buttons?.singleJoystickToggle ?? {}), offsetX: ox, offsetY: oy } } };
   }
-  return {
-    ...config,
-    buttons: {
-      ...(config?.buttons ?? {}),
-      [key]: { ...(config?.buttons?.[key] ?? {}), offsetX: ox, offsetY: oy },
-    },
-  };
+  return { ...config, buttons: { ...(config?.buttons ?? {}), [key]: { ...(config?.buttons?.[key] ?? {}), offsetX: ox, offsetY: oy } } };
+}
+
+export function applyScale(config, key, sx, sy) {
+  if (key === 'leftJoystick' || key === 'rightJoystick') {
+    return { ...config, [key]: { ...(config?.[key] ?? {}), scaleX: sx, scaleY: sy } };
+  }
+  if (key === 'singleJoystickSideBtn') {
+    return { ...config, buttons: { ...(config?.buttons ?? {}), singleJoystickToggle: { ...(config?.buttons?.singleJoystickToggle ?? {}), scaleX: sx, scaleY: sy } } };
+  }
+  return { ...config, buttons: { ...(config?.buttons ?? {}), [key]: { ...(config?.buttons?.[key] ?? {}), scaleX: sx, scaleY: sy } } };
+}
+
+export function getElementOffset(config, key) {
+  if (key === 'leftJoystick')  return { ox: config?.leftJoystick?.offsetX  ?? 0, oy: config?.leftJoystick?.offsetY  ?? 0, sx: config?.leftJoystick?.scaleX  ?? 1, sy: config?.leftJoystick?.scaleY  ?? 1 };
+  if (key === 'rightJoystick') return { ox: config?.rightJoystick?.offsetX ?? 0, oy: config?.rightJoystick?.offsetY ?? 0, sx: config?.rightJoystick?.scaleX ?? 1, sy: config?.rightJoystick?.scaleY ?? 1 };
+  if (key === 'singleJoystickSideBtn') {
+    const b = config?.buttons?.singleJoystickToggle ?? {};
+    return { ox: b.offsetX ?? 0, oy: b.offsetY ?? 0, sx: b.scaleX ?? 1, sy: b.scaleY ?? 1 };
+  }
+  const b = config?.buttons?.[key] ?? {};
+  return { ox: b.offsetX ?? 0, oy: b.offsetY ?? 0, sx: b.scaleX ?? 1, sy: b.scaleY ?? 1 };
 }
 
 export default function GamepadCanvas({
   canvasW, canvasH, config,
   editMode = false, canvasScale = 1, onConfigChange,
+  selectedKey = null, onSelect,
 }) {
   const layout = useMemo(() => resolveLayout(canvasW, canvasH), [canvasW, canvasH]);
   const dragRef = useRef(null);
@@ -77,44 +89,71 @@ export default function GamepadCanvas({
     ? (outputSide === 'LEFT' ? JOYSTICK_COLORS.outputLeft : JOYSTICK_COLORS.outputRight)
     : JOYSTICK_COLORS.default;
 
-  function getOffset(key) {
-    if (key === 'leftJoystick')  return { ox: config?.leftJoystick?.offsetX  ?? 0, oy: config?.leftJoystick?.offsetY  ?? 0, sx: config?.leftJoystick?.scaleX  ?? 1, sy: config?.leftJoystick?.scaleY  ?? 1 };
-    if (key === 'rightJoystick') return { ox: config?.rightJoystick?.offsetX ?? 0, oy: config?.rightJoystick?.offsetY ?? 0, sx: config?.rightJoystick?.scaleX ?? 1, sy: config?.rightJoystick?.scaleY ?? 1 };
-    if (key === 'singleJoystickSideBtn') return { ox: config?.buttons?.singleJoystickToggle?.offsetX ?? 0, oy: config?.buttons?.singleJoystickToggle?.offsetY ?? 0, sx: 1, sy: 1 };
-    const b = config?.buttons?.[key] ?? {};
-    return { ox: b.offsetX ?? 0, oy: b.offsetY ?? 0, sx: b.scaleX ?? 1, sy: b.scaleY ?? 1 };
-  }
-
   function startDrag(e, key) {
     if (!editMode) return;
     e.stopPropagation();
-    const { ox, oy } = getOffset(key);
-    dragRef.current = { key, startX: e.clientX, startY: e.clientY, startOX: ox, startOY: oy };
+    const { ox, oy, sx, sy } = getElementOffset(config, key);
+    dragRef.current = {
+      key, hasMoved: false,
+      startX: e.clientX, startY: e.clientY,
+      startOX: ox, startOY: oy, startSX: sx, startSY: sy,
+    };
     setActiveKey(key);
   }
 
   function handleMove(e) {
     if (!dragRef.current) return;
-    const { key, startX, startY, startOX, startOY } = dragRef.current;
+    const { key, startX, startY, startOX, startOY, startSX, startSY } = dragRef.current;
+
+    const screenDX = e.clientX - startX;
+    const screenDY = e.clientY - startY;
+    if (!dragRef.current.hasMoved && Math.sqrt(screenDX ** 2 + screenDY ** 2) > DRAG_THRESHOLD) {
+      dragRef.current.hasMoved = true;
+    }
+    if (!dragRef.current.hasMoved) return;
+
     const nat = layout[key];
     if (!nat) return;
-    const { sx, sy } = getOffset(key);
-    const dx = (e.clientX - startX) / canvasScale;
-    const dy = (e.clientY - startY) / canvasScale;
-    const { x, y } = clampOffset(nat, startOX + dx, startOY + dy, sx, sy, canvasW, canvasH);
-    onConfigChange?.(applyOffset(config, key, x, y));
+
+    if (e.shiftKey) {
+      // Shift+drag: uniform scale via vertical movement
+      // 120px up → ×1.5; 120px down → ×0.67
+      const factor = Math.pow(1.5, -screenDY / 120);
+      const newScale = Math.max(0.2, Math.min(4, startSX * factor));
+      onConfigChange?.(applyScale(config, key, newScale, newScale));
+    } else {
+      // Normal drag: translate
+      const { sx, sy } = getElementOffset(config, key);
+      const dx = screenDX / canvasScale;
+      const dy = screenDY / canvasScale;
+      const { x, y } = clampOffset(nat, startOX + dx, startOY + dy, sx, sy, canvasW, canvasH);
+      onConfigChange?.(applyOffset(config, key, x, y));
+    }
   }
 
   function handleUp() {
+    if (!dragRef.current) return;
+    const { key, hasMoved } = dragRef.current;
     dragRef.current = null;
     setActiveKey(null);
+    if (!hasMoved) {
+      // Click without drag → toggle selection
+      onSelect?.(selectedKey === key ? null : key);
+    }
   }
 
-  function editProps(key) {
-    if (!editMode) return {};
+  function elementStyle(key, base) {
+    const isDragging = editMode && activeKey === key;
+    const isSelected = editMode && selectedKey === key && !isDragging;
     return {
-      onPointerDown: (e) => startDrag(e, key),
-      style_extra: { cursor: activeKey === key ? 'grabbing' : 'grab', filter: activeKey === key ? 'brightness(1.5)' : undefined },
+      ...base,
+      cursor: editMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
+      boxShadow: isDragging
+        ? `0 0 0 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.4)`
+        : isSelected
+          ? `0 0 0 2px rgba(255,255,255,0.5), 0 0 0 4px rgba(255,255,255,0.15)`
+          : base.boxShadow,
+      filter: isDragging ? 'brightness(1.5)' : undefined,
     };
   }
 
@@ -128,31 +167,25 @@ export default function GamepadCanvas({
     const color = BUTTON_COLORS[key] ?? '#d1d5db';
     const isTrigger = key === 'lt' || key === 'rt';
     const isDpad = key.startsWith('dpad');
-    const { ox, oy, sx, sy } = getOffset(key);
-    const isActive = editMode && activeKey === key;
+    const { ox, oy, sx, sy } = getElementOffset(config, key);
 
     return (
       <div
         key={key}
         onPointerDown={editMode ? (e) => startDrag(e, key) : undefined}
-        style={{
+        style={elementStyle(key, {
           position: 'absolute',
-          left: nat.left,
-          top: nat.top,
-          width: nat.w,
-          height: nat.h,
+          left: nat.left, top: nat.top, width: nat.w, height: nat.h,
           transform: `translate(${ox}px, ${oy}px) scale(${sx}, ${sy})`,
           transformOrigin: 'center center',
           background: color + '22',
-          border: `2px solid ${isActive ? color : color + '99'}`,
+          border: `2px solid ${color}99`,
           borderRadius: isTrigger ? 8 : isDpad ? 6 : 28,
-          boxShadow: isActive ? `0 0 0 2px ${color}66` : undefined,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: nat.w > 70 ? 12 : 10,
           fontWeight: 700, color: '#ffffff', letterSpacing: '0.02em',
           userSelect: 'none',
-          cursor: editMode ? (isActive ? 'grabbing' : 'grab') : 'default',
-        }}
+        })}
       >
         {label}
       </div>
@@ -166,36 +199,30 @@ export default function GamepadCanvas({
     if (joy?.enabled === false) return null;
     if (isSingle && !isLeft) return null;
 
-    const { ox, oy, sx, sy } = getOffset(key);
+    const { ox, oy, sx, sy } = getElementOffset(config, key);
     const colors = isLeft ? leftJoyColors : JOYSTICK_COLORS.default;
     const knobSize = nat.w * 0.38;
-    const isActive = editMode && activeKey === key;
 
     return (
       <div
         key={key}
         onPointerDown={editMode ? (e) => startDrag(e, key) : undefined}
-        style={{
+        style={elementStyle(key, {
           position: 'absolute',
-          left: nat.left, top: nat.top,
-          width: nat.w, height: nat.h,
+          left: nat.left, top: nat.top, width: nat.w, height: nat.h,
           transform: `translate(${ox}px, ${oy}px) scale(${sx}, ${sy})`,
           transformOrigin: 'center center',
-          cursor: editMode ? (isActive ? 'grabbing' : 'grab') : 'default',
-        }}
+        })}
       >
         <div style={{
           position: 'absolute', inset: 0, borderRadius: '50%',
-          background: colors.fill,
-          border: `2.5px solid ${isActive ? colors.ring.replace(')', ', 1.0)').replace('rgba', 'rgba') : colors.ring}`,
-          boxShadow: isActive ? `0 0 0 2px ${colors.ring}` : undefined,
+          background: colors.fill, border: `2.5px solid ${colors.ring}`,
         }} />
         <div style={{
           position: 'absolute', left: '50%', top: '50%',
           width: knobSize, height: knobSize,
           transform: 'translate(-50%, -50%)',
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.75)',
+          borderRadius: '50%', background: 'rgba(255,255,255,0.75)',
         }} />
       </div>
     );
@@ -206,27 +233,23 @@ export default function GamepadCanvas({
     const nat = layout['singleJoystickSideBtn'];
     if (!nat) return null;
     const key = 'singleJoystickSideBtn';
-    const { ox, oy, sx, sy } = getOffset(key);
-    const isActive = editMode && activeKey === key;
+    const { ox, oy, sx, sy } = getElementOffset(config, key);
 
     return (
       <div
         key="sideToggle"
         onPointerDown={editMode ? (e) => startDrag(e, key) : undefined}
-        style={{
+        style={elementStyle(key, {
           position: 'absolute',
           left: nat.left, top: nat.top, width: nat.w, height: nat.h,
           transform: `translate(${ox}px, ${oy}px) scale(${sx}, ${sy})`,
           transformOrigin: 'center center',
           background: 'rgba(255,255,255,0.10)',
           border: '2px solid rgba(255,255,255,0.40)',
-          boxShadow: isActive ? '0 0 0 2px rgba(255,255,255,0.6)' : undefined,
           borderRadius: 6,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700, color: '#ffffff',
-          userSelect: 'none',
-          cursor: editMode ? (isActive ? 'grabbing' : 'grab') : 'default',
-        }}
+          fontSize: 13, fontWeight: 700, color: '#ffffff', userSelect: 'none',
+        })}
       >
         {outputSide === 'LEFT' ? 'L' : 'R'}
       </div>

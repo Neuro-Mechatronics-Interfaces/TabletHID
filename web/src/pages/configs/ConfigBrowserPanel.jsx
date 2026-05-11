@@ -1,41 +1,72 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import ConfigCard from './ConfigCard.jsx';
 
-const LIMIT = 20;
+const FETCH_LIMIT = 100;
+const MAX_CARDS = 50;
 
 export default function ConfigBrowserPanel({ onSelect, selectedId }) {
   const [configs, setConfigs] = useState([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mode, setMode] = useState('');
   const [platform, setPlatform] = useState('');
   const [sort, setSort] = useState('recent');
+  const [category, setCategory] = useState('');
+  const [activeTag, setActiveTag] = useState('');
+  const [search, setSearch] = useState('');
 
-  const fetchConfigs = useCallback(async (append = false, currentLength = 0) => {
+  const fetchConfigs = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams({ sort, limit: LIMIT, offset: append ? currentLength : 0 });
+    const params = new URLSearchParams({ sort, limit: FETCH_LIMIT, offset: 0 });
     if (mode) params.set('mode', mode);
     if (platform) params.set('platform', platform);
+    if (category) params.set('category', category);
+    if (activeTag) params.set('tags', activeTag);
     try {
       const res = await fetch(`/api/v1/configs?${params}`);
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      setConfigs(prev => append ? [...prev, ...data.configs] : data.configs);
-      setTotal(data.total);
+      setConfigs(data.configs);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [mode, platform, sort]);
+  }, [mode, platform, sort, category, activeTag]);
 
-  useEffect(() => {
-    fetchConfigs(false);
-  }, [fetchConfigs]);
+  useEffect(() => { fetchConfigs(); }, [fetchConfigs]);
 
-  const loadMore = () => fetchConfigs(true, configs.length);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const base = q
+      ? configs.filter(c => {
+          const hay = [
+            c.profile_name,
+            c.description ?? '',
+            (c.tags ?? []).join(' '),
+            c.category ?? '',
+          ].join(' ').toLowerCase();
+          return hay.includes(q);
+        })
+      : configs;
+    return base.slice(0, MAX_CARDS);
+  }, [configs, search]);
+
+  const categories = useMemo(() => {
+    const seen = new Set();
+    for (const c of configs) if (c.category && !seen.has(c.category)) seen.add(c.category);
+    return [...seen].sort();
+  }, [configs]);
+
+  const allTags = useMemo(() => {
+    const counts = {};
+    for (const c of configs) for (const t of c.tags ?? []) counts[t] = (counts[t] ?? 0) + 1;
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([t]) => t);
+  }, [configs]);
 
   const modeChips = [['', 'All'], ['gamepad', 'Gamepad'], ['touch_mouse', 'Touch Mouse']];
   const platformChips = [['', 'All'], ['android', 'Android'], ['ios', 'iOS']];
@@ -44,13 +75,54 @@ export default function ConfigBrowserPanel({ onSelect, selectedId }) {
   return (
     <div className="cfg-browser">
       <div className="cfg-filters">
+        <div className="cfg-search-row">
+          <input
+            className="cfg-search"
+            type="search"
+            placeholder="Search name, tags, category…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+
         <FilterRow label="Mode" chips={modeChips} value={mode} onChange={setMode} />
         <FilterRow label="Platform" chips={platformChips} value={platform} onChange={setPlatform} />
         <FilterRow label="Sort" chips={sortChips} value={sort} onChange={setSort} />
+
+        {categories.length > 0 && (
+          <div className="cfg-filter-row">
+            <span className="cfg-filter-label">Category</span>
+            <select
+              className="cfg-cat-select"
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+            >
+              <option value="">All</option>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        )}
+
+        {allTags.length > 0 && (
+          <div className="cfg-filter-row cfg-filter-row--wrap">
+            <span className="cfg-filter-label">Tags</span>
+            <div className="cfg-chips">
+              {allTags.map(t => (
+                <button
+                  key={t}
+                  className={'cfg-chip cfg-tag-chip' + (activeTag === t ? ' active' : '')}
+                  onClick={() => setActiveTag(activeTag === t ? '' : t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="cfg-list">
-        {configs.map(cfg => (
+        {filtered.map(cfg => (
           <ConfigCard
             key={cfg.id}
             config={cfg}
@@ -58,17 +130,19 @@ export default function ConfigBrowserPanel({ onSelect, selectedId }) {
             onClick={() => onSelect(cfg)}
           />
         ))}
-        {loading && <div className="cfg-loading">Loading...</div>}
-        {!loading && !error && configs.length === 0 && (
-          <div className="cfg-empty">No configs found.</div>
+        {loading && <div className="cfg-loading">Loading…</div>}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="cfg-empty">
+            {search || activeTag || category ? 'No matching configs.' : 'No configs yet.'}
+          </div>
         )}
         {error && <div className="cfg-error">Error: {error}</div>}
       </div>
 
-      {!loading && configs.length > 0 && configs.length < total && (
-        <button className="cfg-load-more" onClick={loadMore}>
-          Load more ({configs.length} of {total})
-        </button>
+      {!loading && filtered.length > 0 && (
+        <div className="cfg-count">
+          {filtered.length}{filtered.length === MAX_CARDS ? '+' : ''} config{filtered.length !== 1 ? 's' : ''}
+        </div>
       )}
     </div>
   );
