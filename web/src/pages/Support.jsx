@@ -175,7 +175,7 @@ function IosWalkthrough() {
       <div id="pairing-video" className="video-section">
         <h2>macOS pairing walkthrough (Touch Mouse &amp; Gamepad)</h2>
         <video className="video-player" controls preload="metadata">
-          <source src="/vid/Mac Pairing.mov" type="video/quicktime" />
+          <source src="/vid/Mac Pairing.mp4" type="video/mp4" />
           Your browser does not support this video format.
         </video>
       </div>
@@ -183,7 +183,7 @@ function IosWalkthrough() {
       <div id="device-name-tutorial" className="video-section">
         <h2>Setting your device name</h2>
         <video className="video-player" controls preload="metadata">
-          <source src="/vid/Mac Tutorial.mov" type="video/quicktime" />
+          <source src="/vid/Mac Tutorial.mp4" type="video/mp4" />
           Your browser does not support this video format.
         </video>
       </div>
@@ -286,7 +286,7 @@ function AndroidWalkthrough() {
         <h2>Windows pairing walkthrough</h2>
         {/* MKV plays in Chrome/Firefox/Edge. Convert to MP4 for Safari support. */}
         <video className="video-player" controls preload="metadata">
-          <source src="/vid/Android Pairing.mkv" type="video/x-matroska" />
+          <source src="/vid/Android Pairing.mp4" type="video/mp4" />
           Your browser does not support this video format.
         </video>
       </div>
@@ -294,7 +294,7 @@ function AndroidWalkthrough() {
       <div id="mac-pairing-video" className="video-section">
         <h2>macOS pairing walkthrough (Touch Mouse &amp; Gamepad)</h2>
         <video className="video-player" controls preload="metadata">
-          <source src="/vid/Mac Pairing.mov" type="video/quicktime" />
+          <source src="/vid/Mac Pairing.mp4" type="video/mp4" />
           Your browser does not support this video format.
         </video>
       </div>
@@ -302,7 +302,7 @@ function AndroidWalkthrough() {
       <div id="device-name-tutorial" className="video-section">
         <h2>Setting your device name</h2>
         <video className="video-player" controls preload="metadata">
-          <source src="/vid/Mac Tutorial.mov" type="video/quicktime" />
+          <source src="/vid/Mac Tutorial.mp4" type="video/mp4" />
           Your browser does not support this video format.
         </video>
       </div>
