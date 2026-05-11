@@ -42,6 +42,20 @@ final class CommunityConfigCache {
         defaults.set(str, forKey: Self.keyCacheV1)
     }
 
+    func replaceOrInsert(_ record: CommunityConfigRecord) {
+        var records = getAll()
+        if let index = records.firstIndex(where: { $0.id == record.id }) {
+            records[index] = record
+        } else {
+            records.append(record)
+        }
+        if records.count > Self.maxCacheSize {
+            records.sort { $0.uploadedAt > $1.uploadedAt }
+            records = Array(records.prefix(Self.maxCacheSize))
+        }
+        replaceAll(records)
+    }
+
     /// Merge-insert: insert new records by id; never replace existing records.
     /// Trims to the most-recent 500 records when the cache exceeds the cap.
     func mergeIn(_ newRecords: [CommunityConfigRecord]) {

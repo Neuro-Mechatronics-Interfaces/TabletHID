@@ -35,7 +35,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET`  | `/api/v1/configs` | List configs with optional filters |
-| `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` |
+| `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` and returns the incremented count |
 | `POST` | `/api/v1/configs` | Upload a config |
 
 ### GET /api/v1/configs — query parameters
@@ -72,7 +72,7 @@ Response:
 
 ### GET /api/v1/configs/:id
 
-Response: full `ConfigRecord`. Returns 404 if not found.
+Response: full `ConfigRecord` after incrementing `download_count`. Returns 404 if not found.
 
 ### POST /api/v1/configs
 

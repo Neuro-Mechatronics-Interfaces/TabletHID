@@ -44,6 +44,9 @@ class BrowseFragment : Fragment() {
         ) { _, result ->
             val profileName = result.getString(ImportSheet.KEY_PROFILE) ?: return@setFragmentResultListener
             Snackbar.make(binding.root, getString(R.string.community_applied_snackbar, profileName), Snackbar.LENGTH_SHORT).show()
+            if (result.getBoolean(ImportSheet.KEY_REFRESH, false)) {
+                viewModel.refresh()
+            }
         }
 
         // ── RecyclerView setup ──────────────────────────────────────────────

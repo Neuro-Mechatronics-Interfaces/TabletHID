@@ -15,6 +15,9 @@ struct GamepadView: View {
     @State private var dLeft = false
     @State private var dRight = false
     @State private var showSettings = false
+    @State private var isEditingLayout = false
+    @State private var dragStartOffsets: [GamepadLayoutItem: CGSize] = [:]
+    @State private var scaleStartValues: [GamepadLayoutItem: CGSize] = [:]
     let onExit: () -> Void
 
     private var cfg: GamepadConfig { appState.gamepadConfig }
@@ -93,6 +96,7 @@ struct GamepadView: View {
                         #if canImport(UIKit)
                         orientationButton
                         #endif
+                        layoutEditButton
                         settingsButton
                         profileLabel
                     }
@@ -110,6 +114,7 @@ struct GamepadView: View {
                     #if canImport(UIKit)
                     orientationButton
                     #endif
+                    layoutEditButton
                     settingsButton
                     profileLabel
                 }
@@ -130,6 +135,20 @@ struct GamepadView: View {
             Image(systemName: "gearshape")
         }
         .buttonStyle(.bordered)
+    }
+
+    private var layoutEditButton: some View {
+        Button {
+            isEditingLayout.toggle()
+            if !isEditingLayout {
+                dragStartOffsets.removeAll()
+                scaleStartValues.removeAll()
+            }
+        } label: {
+            Image(systemName: isEditingLayout ? "checkmark" : "pencil.and.outline")
+        }
+        .buttonStyle(.bordered)
+        .tint(isEditingLayout ? Color.accentColor : nil)
     }
 
     #if canImport(UIKit)
@@ -180,9 +199,12 @@ struct GamepadView: View {
                 VStack(spacing: metrics.spacing) {
                     faceButtons(metrics)
                     if !cfg.singleJoystickMode {
-                        Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
-                            rightStick = CGPoint(x: x, y: y)
-                            sendReport()
+                        layoutEditable(item: .rightJoystick, offsetX: cfg.rightJoystick.offsetX, offsetY: cfg.rightJoystick.offsetY, scaleX: cfg.rightJoystick.scaleX, scaleY: cfg.rightJoystick.scaleY) {
+                            Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
+                                guard !isEditingLayout else { return }
+                                rightStick = CGPoint(x: x, y: y)
+                                sendReport()
+                            }
                         }
                     }
                 }
@@ -204,9 +226,12 @@ struct GamepadView: View {
     private func visibleJoystick(_ metrics: GamepadMetrics) -> some View {
         let side = cfg.singleJoystickMode ? cfg.singleJoystickOutputSide : .left
         let label = side == .left ? "L" : "R"
-        return Joystick(label: label, size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
+        return layoutEditable(item: .leftJoystick, offsetX: cfg.leftJoystick.offsetX, offsetY: cfg.leftJoystick.offsetY, scaleX: cfg.leftJoystick.scaleX, scaleY: cfg.leftJoystick.scaleY) {
+            Joystick(label: label, size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
+                guard !isEditingLayout else { return }
                         leftStick = CGPoint(x: x, y: y)
                         sendReport()
+            }
         }
     }
 
@@ -233,18 +258,18 @@ struct GamepadView: View {
         HStack(spacing: metrics.buttonSpacing) {
             switch side {
             case .left:
-                GamepadButton(label: label(for: "lt", fallback: "LT"), size: metrics.buttonSize, config: cfg.btnLT, vibration: .off) { pressed in
+                gamepadButton(item: .btnLT, label: label(for: "lt", fallback: "LT"), size: metrics.buttonSize, config: cfg.btnLT, vibration: .off) { pressed in
                     leftTrigger = pressed ? 255 : 0
                     sendReport()
                 }
-                GamepadButton(label: label(for: "lb", fallback: "LB"), size: metrics.buttonSize, config: cfg.btnLB, vibration: cfg.vibrationIntensity) { pressed in
+                gamepadButton(item: .btnLB, label: label(for: "lb", fallback: "LB"), size: metrics.buttonSize, config: cfg.btnLB, vibration: cfg.vibrationIntensity) { pressed in
                     setButton(.btnLB, pressed: pressed)
                 }
             case .right:
-                GamepadButton(label: label(for: "rb", fallback: "RB"), size: metrics.buttonSize, config: cfg.btnRB, vibration: cfg.vibrationIntensity) { pressed in
+                gamepadButton(item: .btnRB, label: label(for: "rb", fallback: "RB"), size: metrics.buttonSize, config: cfg.btnRB, vibration: cfg.vibrationIntensity) { pressed in
                     setButton(.btnRB, pressed: pressed)
                 }
-                GamepadButton(label: label(for: "rt", fallback: "RT"), size: metrics.buttonSize, config: cfg.btnRT, vibration: .off) { pressed in
+                gamepadButton(item: .btnRT, label: label(for: "rt", fallback: "RT"), size: metrics.buttonSize, config: cfg.btnRT, vibration: .off) { pressed in
                     rightTrigger = pressed ? 255 : 0
                     sendReport()
                 }
@@ -254,8 +279,8 @@ struct GamepadView: View {
 
     private func centerControls(_ metrics: GamepadMetrics) -> some View {
         HStack(spacing: metrics.buttonSpacing) {
-            GamepadButton(label: label(for: "back", fallback: "Back"),  size: metrics.buttonSize, config: cfg.btnBack, vibration: cfg.vibrationIntensity)  { pressed in setButton(.btnBack,  pressed: pressed) }
-            GamepadButton(label: label(for: "start", fallback: "Start"), size: metrics.buttonSize, config: cfg.btnStart, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnStart, pressed: pressed) }
+            gamepadButton(item: .btnBack, label: label(for: "back", fallback: "Back"),  size: metrics.buttonSize, config: cfg.btnBack, vibration: cfg.vibrationIntensity)  { pressed in setButton(.btnBack,  pressed: pressed) }
+            gamepadButton(item: .btnStart, label: label(for: "start", fallback: "Start"), size: metrics.buttonSize, config: cfg.btnStart, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnStart, pressed: pressed) }
         }
     }
 
@@ -264,9 +289,12 @@ struct GamepadView: View {
             shoulderControls(metrics, side: .right)
             faceButtons(metrics)
             if !cfg.singleJoystickMode {
-                Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
-                    rightStick = CGPoint(x: x, y: y)
-                    sendReport()
+                layoutEditable(item: .rightJoystick, offsetX: cfg.rightJoystick.offsetX, offsetY: cfg.rightJoystick.offsetY, scaleX: cfg.rightJoystick.scaleX, scaleY: cfg.rightJoystick.scaleY) {
+                    Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
+                        guard !isEditingLayout else { return }
+                        rightStick = CGPoint(x: x, y: y)
+                        sendReport()
+                    }
                 }
             }
         }
@@ -274,25 +302,174 @@ struct GamepadView: View {
 
     private func faceButtons(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: label(for: "y", fallback: "Y"), tint: .yellow, size: metrics.buttonSize, config: cfg.btnY, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnY, pressed: pressed) }
+            gamepadButton(item: .btnY, label: label(for: "y", fallback: "Y"), tint: .yellow, size: metrics.buttonSize, config: cfg.btnY, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnY, pressed: pressed) }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: label(for: "x", fallback: "X"), tint: .blue,  size: metrics.buttonSize, config: cfg.btnX, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnX, pressed: pressed) }
-                GamepadButton(label: label(for: "b", fallback: "B"), tint: .red,   size: metrics.buttonSize, config: cfg.btnB, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnB, pressed: pressed) }
+                gamepadButton(item: .btnX, label: label(for: "x", fallback: "X"), tint: .blue,  size: metrics.buttonSize, config: cfg.btnX, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnX, pressed: pressed) }
+                gamepadButton(item: .btnB, label: label(for: "b", fallback: "B"), tint: .red,   size: metrics.buttonSize, config: cfg.btnB, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnB, pressed: pressed) }
             }
-            GamepadButton(label: label(for: "a", fallback: "A"), tint: .green, size: metrics.buttonSize, config: cfg.btnA, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnA, pressed: pressed) }
+            gamepadButton(item: .btnA, label: label(for: "a", fallback: "A"), tint: .green, size: metrics.buttonSize, config: cfg.btnA, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnA, pressed: pressed) }
         }
     }
 
     private func dpad(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: label(for: "dup", fallback: "Up"),    size: metrics.buttonSize, config: cfg.dpadUp, vibration: cfg.vibrationIntensity)    { pressed in dUp    = pressed; sendReport() }
+            gamepadButton(item: .dpadUp, label: label(for: "dup", fallback: "Up"),    size: metrics.buttonSize, config: cfg.dpadUp, vibration: cfg.vibrationIntensity)    { pressed in dUp    = pressed; sendReport() }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: label(for: "dleft", fallback: "Left"),  size: metrics.buttonSize, config: cfg.dpadLeft, vibration: cfg.vibrationIntensity)  { pressed in dLeft  = pressed; sendReport() }
-                GamepadButton(label: label(for: "dright", fallback: "Right"), size: metrics.buttonSize, config: cfg.dpadRight, vibration: cfg.vibrationIntensity) { pressed in dRight = pressed; sendReport() }
+                gamepadButton(item: .dpadLeft, label: label(for: "dleft", fallback: "Left"),  size: metrics.buttonSize, config: cfg.dpadLeft, vibration: cfg.vibrationIntensity)  { pressed in dLeft  = pressed; sendReport() }
+                gamepadButton(item: .dpadRight, label: label(for: "dright", fallback: "Right"), size: metrics.buttonSize, config: cfg.dpadRight, vibration: cfg.vibrationIntensity) { pressed in dRight = pressed; sendReport() }
             }
-            GamepadButton(label: label(for: "ddown", fallback: "Down"),  size: metrics.buttonSize, config: cfg.dpadDown, vibration: cfg.vibrationIntensity)  { pressed in dDown  = pressed; sendReport() }
+            gamepadButton(item: .dpadDown, label: label(for: "ddown", fallback: "Down"),  size: metrics.buttonSize, config: cfg.dpadDown, vibration: cfg.vibrationIntensity)  { pressed in dDown  = pressed; sendReport() }
         }
         .font(.caption)
+    }
+
+    private func gamepadButton(
+        item: GamepadLayoutItem,
+        label: String,
+        tint: Color = .gray,
+        size: CGSize,
+        config: ButtonConfig,
+        vibration: VibrationIntensity,
+        onChanged: @escaping (Bool) -> Void
+    ) -> some View {
+        layoutEditable(item: item, offsetX: config.offsetX, offsetY: config.offsetY, scaleX: config.scaleX, scaleY: config.scaleY) {
+            GamepadButton(label: label, tint: tint, size: size, config: config, vibration: vibration) { pressed in
+                guard !isEditingLayout else { return }
+                onChanged(pressed)
+            }
+        }
+    }
+
+    private func layoutEditable<Content: View>(
+        item: GamepadLayoutItem,
+        offsetX: Double,
+        offsetY: Double,
+        scaleX: Double,
+        scaleY: Double,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .allowsHitTesting(!isEditingLayout)
+            .scaleEffect(x: CGFloat(scaleX), y: CGFloat(scaleY))
+            .offset(x: CGFloat(offsetX), y: CGFloat(offsetY))
+            .overlay {
+                if isEditingLayout {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 2, dash: [5, 4]))
+                        .background(Color.accentColor.opacity(0.08))
+                        .contentShape(Rectangle())
+                        .gesture(layoutDragGesture(for: item))
+                        .simultaneousGesture(layoutMagnifyGesture(for: item))
+                }
+            }
+    }
+
+    private func layoutDragGesture(for item: GamepadLayoutItem) -> some Gesture {
+        DragGesture()
+            .onChanged { value in
+                if dragStartOffsets[item] == nil {
+                    dragStartOffsets[item] = layoutValues(for: item).offset
+                }
+                let start = dragStartOffsets[item] ?? layoutValues(for: item).offset
+                let values = layoutValues(for: item)
+                let offset = CGSize(
+                    width: (start.width + value.translation.width).clamped(to: -500...500),
+                    height: (start.height + value.translation.height).clamped(to: -500...500)
+                )
+                setLayout(item, offset: offset, scale: values.scale)
+            }
+            .onEnded { _ in
+                dragStartOffsets[item] = nil
+            }
+    }
+
+    private func layoutMagnifyGesture(for item: GamepadLayoutItem) -> some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                if scaleStartValues[item] == nil {
+                    scaleStartValues[item] = layoutValues(for: item).scale
+                }
+                let start = scaleStartValues[item] ?? layoutValues(for: item).scale
+                let values = layoutValues(for: item)
+                let scale = CGSize(
+                    width: (start.width * value.magnification).clamped(to: 0.3...3.0),
+                    height: (start.height * value.magnification).clamped(to: 0.3...3.0)
+                )
+                setLayout(item, offset: values.offset, scale: scale)
+            }
+            .onEnded { _ in
+                scaleStartValues[item] = nil
+            }
+    }
+
+    private func layoutValues(for item: GamepadLayoutItem) -> (offset: CGSize, scale: CGSize) {
+        switch item {
+        case .btnA: return values(cfg.btnA)
+        case .btnB: return values(cfg.btnB)
+        case .btnX: return values(cfg.btnX)
+        case .btnY: return values(cfg.btnY)
+        case .btnLB: return values(cfg.btnLB)
+        case .btnRB: return values(cfg.btnRB)
+        case .btnLT: return values(cfg.btnLT)
+        case .btnRT: return values(cfg.btnRT)
+        case .btnBack: return values(cfg.btnBack)
+        case .btnStart: return values(cfg.btnStart)
+        case .dpadUp: return values(cfg.dpadUp)
+        case .dpadDown: return values(cfg.dpadDown)
+        case .dpadLeft: return values(cfg.dpadLeft)
+        case .dpadRight: return values(cfg.dpadRight)
+        case .leftJoystick: return values(cfg.leftJoystick)
+        case .rightJoystick: return values(cfg.rightJoystick)
+        }
+    }
+
+    private func values(_ config: ButtonConfig) -> (offset: CGSize, scale: CGSize) {
+        (
+            CGSize(width: CGFloat(config.offsetX), height: CGFloat(config.offsetY)),
+            CGSize(width: CGFloat(config.scaleX), height: CGFloat(config.scaleY))
+        )
+    }
+
+    private func values(_ config: JoystickConfig) -> (offset: CGSize, scale: CGSize) {
+        (
+            CGSize(width: CGFloat(config.offsetX), height: CGFloat(config.offsetY)),
+            CGSize(width: CGFloat(config.scaleX), height: CGFloat(config.scaleY))
+        )
+    }
+
+    private func setLayout(_ item: GamepadLayoutItem, offset: CGSize, scale: CGSize) {
+        var next = cfg
+        func apply(_ button: inout ButtonConfig) {
+            button.offsetX = Double(offset.width)
+            button.offsetY = Double(offset.height)
+            button.scaleX = Double(scale.width)
+            button.scaleY = Double(scale.height)
+        }
+        func apply(_ joystick: inout JoystickConfig) {
+            joystick.offsetX = Double(offset.width)
+            joystick.offsetY = Double(offset.height)
+            joystick.scaleX = Double(scale.width)
+            joystick.scaleY = Double(scale.height)
+        }
+        switch item {
+        case .btnA: apply(&next.btnA)
+        case .btnB: apply(&next.btnB)
+        case .btnX: apply(&next.btnX)
+        case .btnY: apply(&next.btnY)
+        case .btnLB: apply(&next.btnLB)
+        case .btnRB: apply(&next.btnRB)
+        case .btnLT: apply(&next.btnLT)
+        case .btnRT: apply(&next.btnRT)
+        case .btnBack: apply(&next.btnBack)
+        case .btnStart: apply(&next.btnStart)
+        case .dpadUp: apply(&next.dpadUp)
+        case .dpadDown: apply(&next.dpadDown)
+        case .dpadLeft: apply(&next.dpadLeft)
+        case .dpadRight: apply(&next.dpadRight)
+        case .leftJoystick: apply(&next.leftJoystick)
+        case .rightJoystick: apply(&next.rightJoystick)
+        }
+        appState.updateGamepadConfig(next)
     }
 
     private func label(for key: String, fallback: String) -> String {
@@ -359,6 +536,31 @@ enum GamepadButtonBit: Int {
     case btnRB = 5
     case btnBack = 6
     case btnStart = 7
+}
+
+private enum GamepadLayoutItem: Hashable {
+    case btnA
+    case btnB
+    case btnX
+    case btnY
+    case btnLB
+    case btnRB
+    case btnLT
+    case btnRT
+    case btnBack
+    case btnStart
+    case dpadUp
+    case dpadDown
+    case dpadLeft
+    case dpadRight
+    case leftJoystick
+    case rightJoystick
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
 }
 
 private struct GamepadMetrics {

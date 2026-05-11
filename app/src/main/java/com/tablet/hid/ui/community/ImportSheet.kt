@@ -15,6 +15,7 @@ import com.tablet.hid.R
 import com.tablet.hid.databinding.SheetImportBinding
 import com.tablet.hid.model.CommunityConfigRecord
 import com.tablet.hid.model.Profile
+import com.tablet.hid.util.ConfigApiClient
 import com.tablet.hid.util.ConfigMerger
 import com.tablet.hid.util.GamepadConfigSerializer
 import com.tablet.hid.util.GamepadConfigStore
@@ -32,6 +33,7 @@ class ImportSheet : BottomSheetDialogFragment() {
         const val ARG_RECORD_JSON = "record_json"
         const val REQUEST_APPLY = "import_apply"
         const val KEY_PROFILE   = "profile"
+        const val KEY_REFRESH   = "refresh"
     }
 
     private var _binding: SheetImportBinding? = null
@@ -187,8 +189,16 @@ class ImportSheet : BottomSheetDialogFragment() {
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val configJsonObj = JSONObject(record.configJson)
-                    if (record.mode == "gamepad") {
+                    var shouldRefresh = false
+                    val importRecord = ConfigApiClient.fetchConfig(record.id).fold(
+                        onSuccess = {
+                            shouldRefresh = true
+                            it
+                        },
+                        onFailure = { record },
+                    )
+                    val configJsonObj = JSONObject(importRecord.configJson)
+                    if (importRecord.mode == "gamepad") {
                         val source = GamepadConfigSerializer.fromCanonicalJson(configJsonObj)
                         val target = GamepadConfigStore.load(ctx, profile)
                         val subsets = buildSet {
@@ -213,6 +223,7 @@ class ImportSheet : BottomSheetDialogFragment() {
                         val merged = ConfigMerger.mergeTouchMouse(target, source, subsets)
                         TouchMouseConfigStore.save(ctx, merged, profile)
                     }
+                    shouldRefresh
                 }
             }
 
@@ -221,7 +232,10 @@ class ImportSheet : BottomSheetDialogFragment() {
                 // stays visible after this sheet dismisses.
                 parentFragmentManager.setFragmentResult(
                     REQUEST_APPLY,
-                    bundleOf(KEY_PROFILE to profile.name),
+                    bundleOf(
+                        KEY_PROFILE to profile.name,
+                        KEY_REFRESH to (result.getOrNull() == true),
+                    ),
                 )
                 dismiss()
             } else {

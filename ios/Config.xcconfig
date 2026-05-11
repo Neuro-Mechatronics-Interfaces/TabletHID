@@ -1,0 +1,6 @@
+// Checked-in defaults for local iOS builds.
+// Secrets.xcconfig is ignored by git and may override these values locally.
+
+COMMUNITY_API_BASE_URL = https://tablet.nml.wtf
+
+#include? "Secrets.xcconfig"

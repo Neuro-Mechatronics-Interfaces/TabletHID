@@ -143,21 +143,23 @@ struct ShareView: View {
 
     private var profilePickerSheet: some View {
         NavigationStack {
-            List(appState.allProfiles) { profile in
-                Button {
-                    appState.setProfile(profile)
-                    showProfilePicker = false
-                } label: {
-                    HStack {
-                        Text(profile.name)
-                        Spacer()
-                        if profile.key == appState.activeProfile.key {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(.accentColor)
+            List {
+                ForEach(appState.allProfiles, id: \.key) { (profile: Profile) in
+                    Button {
+                        appState.setProfile(profile)
+                        showProfilePicker = false
+                    } label: {
+                        HStack {
+                            Text(profile.name)
+                            Spacer()
+                            if profile.key == appState.activeProfile.key {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Color.accentColor)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .navigationTitle("Share From Profile")
             .navigationBarTitleDisplayMode(.inline)

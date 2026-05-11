@@ -138,7 +138,7 @@ struct CommunityListResponse: Codable {
 // MARK: - CommunityUploadBody
 
 /// Request body for POST /api/v1/configs. Field names match the server contract.
-struct CommunityUploadBody: Codable {
+struct CommunityUploadBody: Encodable {
     let platform: String
     let mode: String
     let profileName: String

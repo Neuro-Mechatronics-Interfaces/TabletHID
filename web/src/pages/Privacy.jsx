@@ -7,10 +7,11 @@ export default function Privacy() {
 
         <h2>Overview</h2>
         <p>
-          TabletHID is a Bluetooth HID peripheral app. It does not collect, store,
-          transmit, or share any personal data. There are no accounts, no analytics,
-          no advertising, and no network requests — all communication is local
-          Bluetooth between your device and your host computer.
+          TabletHID is a Bluetooth HID peripheral app. Core input control is local
+          Bluetooth between your device and your host computer. There are no accounts,
+          no analytics, and no advertising. The optional Community Configs feature
+          uses network requests only when you browse or intentionally upload shared
+          layouts.
         </p>
 
         <h2>Data We Collect</h2>
@@ -19,8 +20,8 @@ export default function Privacy() {
           <li>No names, email addresses, or account information</li>
           <li>No usage analytics or crash telemetry</li>
           <li>No location data</li>
-          <li>No device identifiers sent to any server</li>
           <li>No advertising identifiers</li>
+          <li>No device identifiers sent to any server unless you explicitly upload a public Community Config</li>
         </ul>
 
         <h2>Bluetooth Usage</h2>
@@ -55,10 +56,26 @@ export default function Privacy() {
           data never leaves your device.
         </p>
 
+        <h2>Community Configs</h2>
+        <p>
+          Community Configs are optional and user-initiated. Browsing configs requests
+          public layout records from the TabletHID server. Uploading a config sends
+          the selected profile name, layout/config JSON, optional description, tags,
+          category, app version, device model, OS version, and screen dimensions.
+          Uploaded configs are public, so do not put personal information in the
+          profile name or description.
+        </p>
+        <p>
+          The server uses Cloudflare infrastructure and may process request IP
+          addresses for routing, abuse prevention, and rate limiting. Community
+          Config uploads are not used for advertising or tracking.
+        </p>
+
         <h2>Third-Party Services</h2>
         <p>
-          TabletHID does not integrate with any third-party SDKs, analytics services,
-          advertising networks, or cloud backends.
+          TabletHID does not integrate with third-party SDKs, analytics services, or
+          advertising networks. The optional Community Configs server is proxied
+          through Cloudflare for hosting, routing, and rate limiting.
         </p>
 
         <h2>Children's Privacy</h2>

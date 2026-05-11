@@ -109,6 +109,14 @@ final class CommunityViewModel {
         return try await ConfigApiClient.shared.uploadConfig(body: body)
     }
 
+    /// Fetching by id increments the server-side download count; use this before import.
+    func fetchConfigForImport(id: String) async throws -> CommunityConfigRecord {
+        let record = try await ConfigApiClient.shared.fetchConfig(id: id)
+        cache.replaceOrInsert(record)
+        configs = applyFilters(cache.getAll())
+        return record
+    }
+
     // MARK: - Filtering (client-side, same logic as Android)
 
     private func applyFilters(_ all: [CommunityConfigRecord]) -> [CommunityConfigRecord] {

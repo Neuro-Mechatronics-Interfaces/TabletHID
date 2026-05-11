@@ -68,9 +68,9 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Wire latching and turbo behavior into button controls.
 - [ ] Implement analog trigger drag travel like Android.
 - [ ] Add settings sheet for button behavior, turbo, trigger travel, joystick deadzone/gain.
-- [ ] Add drag-to-reposition layout edit mode.
-- [ ] Add pinch-to-resize layout edit mode.
-- [ ] Persist edited gamepad layout.
+- [x] Add drag-to-reposition layout edit mode.
+- [x] Add pinch-to-resize layout edit mode.
+- [x] Persist edited gamepad layout.
 
 ## Phase 2 - Parity And Polish
 
@@ -104,6 +104,16 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [ ] Make overlapping static Touch Mouse button zones send all overlapping mouse button presses in the same report.
 - [ ] Allow each Touch Mouse button to define multiple sub-regions.
 - [ ] Allow each Touch Mouse sub-region to add a key modifier or alternate mouse button while pressed.
+
+## Phase 2 - Community Config Sharing
+
+- [x] Add Community entry point on Home and a SwiftUI Browse/Share tab host.
+- [x] Add UserDefaults-backed community config cache with `latest_at` cursor and merge-insert behavior.
+- [x] Add URLSession API client for `/api/v1/configs`, disabled when `COMMUNITY_API_BASE_URL` is unset.
+- [x] Add canonical JSON serializers for iOS gamepad and touch-mouse configs.
+- [x] Add import sheet with Android-matching subset presets, target profile picker, and profile-specific save path.
+- [x] Add share/upload sheet with profile name, description, tags, category, device metadata, and public-upload disclosure.
+- [x] Wire community sources into the Xcode project and verify simulator build/test.
 
 ## Phase 3 - TestFlight And App Store
 

@@ -263,14 +263,34 @@ final class AppState: ObservableObject {
     // MARK: - Config
 
     func updateTouchMouseConfig(_ config: TouchMouseConfig) {
+        updateTouchMouseConfig(config, profile: activeProfile)
+    }
+
+    func updateTouchMouseConfig(_ config: TouchMouseConfig, profile: Profile) {
         let normalized = config.normalizedForStorage()
-        touchMouseConfig = normalized
-        store.saveTouchMouseConfig(normalized, profile: activeProfile)
+        store.saveTouchMouseConfig(normalized, profile: profile)
+        if profile.key == activeProfile.key {
+            touchMouseConfig = normalized
+        }
     }
 
     func updateGamepadConfig(_ config: GamepadConfig) {
-        gamepadConfig = config
-        store.saveGamepadConfig(config, profile: activeProfile)
+        updateGamepadConfig(config, profile: activeProfile)
+    }
+
+    func updateGamepadConfig(_ config: GamepadConfig, profile: Profile) {
+        store.saveGamepadConfig(config, profile: profile)
+        if profile.key == activeProfile.key {
+            gamepadConfig = config
+        }
+    }
+
+    func touchMouseConfig(for profile: Profile) -> TouchMouseConfig {
+        profile.key == activeProfile.key ? touchMouseConfig : store.loadTouchMouseConfig(profile: profile)
+    }
+
+    func gamepadConfig(for profile: Profile) -> GamepadConfig {
+        profile.key == activeProfile.key ? gamepadConfig : store.loadGamepadConfig(profile: profile)
     }
 
     // MARK: - HID reports

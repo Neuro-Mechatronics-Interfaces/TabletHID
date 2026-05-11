@@ -23,7 +23,7 @@ struct BrowseView: View {
         }
         .task { await viewModel.syncIfStale() }
         .sheet(item: $selectedRecord) { record in
-            ImportSheet(record: record)
+            ImportSheet(record: record, viewModel: viewModel)
         }
     }
 

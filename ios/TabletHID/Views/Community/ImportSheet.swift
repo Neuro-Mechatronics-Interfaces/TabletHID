@@ -13,6 +13,7 @@ struct ImportSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let record: CommunityConfigRecord
+    let viewModel: CommunityViewModel
 
     @State private var targetProfile: Profile
     @State private var showProfilePicker = false
@@ -23,8 +24,9 @@ struct ImportSheet: View {
     @State private var applyError: String? = nil
     @State private var showSuccess = false
 
-    init(record: CommunityConfigRecord) {
+    init(record: CommunityConfigRecord, viewModel: CommunityViewModel) {
         self.record = record
+        self.viewModel = viewModel
         // Default target is the active profile — resolved properly in onAppear.
         _targetProfile = State(initialValue: Profile.defaultProfile)
     }
@@ -214,7 +216,7 @@ struct ImportSheet: View {
 
     private var applyButton: some View {
         Button {
-            applyImport()
+            Task { await applyImport() }
         } label: {
             Group {
                 if isApplying {
@@ -236,21 +238,23 @@ struct ImportSheet: View {
 
     private var profilePickerSheet: some View {
         NavigationStack {
-            List(appState.allProfiles) { profile in
-                Button {
-                    targetProfile = profile
-                    showProfilePicker = false
-                } label: {
-                    HStack {
-                        Text(profile.name)
-                        Spacer()
-                        if profile.key == targetProfile.key {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(.accentColor)
+            List {
+                ForEach(appState.allProfiles, id: \.key) { (profile: Profile) in
+                    Button {
+                        targetProfile = profile
+                        showProfilePicker = false
+                    } label: {
+                        HStack {
+                            Text(profile.name)
+                            Spacer()
+                            if profile.key == targetProfile.key {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Color.accentColor)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .navigationTitle("Import To Profile")
             .navigationBarTitleDisplayMode(.inline)
@@ -309,26 +313,28 @@ struct ImportSheet: View {
         selectedPreset = .custom
     }
 
-    private func applyImport() {
+    private func applyImport() async {
         isApplying = true
         applyError = nil
-        guard let jsonData = record.configJson.data(using: .utf8),
+
+        let importRecord = (try? await viewModel.fetchConfigForImport(id: record.id)) ?? record
+        guard let jsonData = importRecord.configJson.data(using: .utf8),
               let jsonDict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
             applyError = "Config JSON is invalid."
             isApplying = false
             return
         }
 
-        if record.mode == "gamepad" {
+        if importRecord.mode == "gamepad" {
             let source = GamepadConfigSerializer.fromCanonicalJson(jsonDict)
-            let target = appState.gamepadConfig
+            let target = appState.gamepadConfig(for: targetProfile)
             let merged = ConfigMerger.mergeGamepad(target: target, source: source, subsets: gamepadSubsets)
-            appState.updateGamepadConfig(merged)
+            appState.updateGamepadConfig(merged, profile: targetProfile)
         } else {
             let source = TouchMouseConfigSerializer.fromCanonicalJson(jsonDict)
-            let target = appState.touchMouseConfig
+            let target = appState.touchMouseConfig(for: targetProfile)
             let merged = ConfigMerger.mergeTouchMouse(target: target, source: source, subsets: touchSubsets)
-            appState.updateTouchMouseConfig(merged)
+            appState.updateTouchMouseConfig(merged, profile: targetProfile)
         }
 
         isApplying = false

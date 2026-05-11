@@ -137,12 +137,12 @@ export async function getConfig(req, res) {
       return res.status(400).json({ error: 'Invalid config ID format.' });
     }
 
-    const row = db.prepare('SELECT * FROM configs WHERE id = ?').get(id);
-    if (!row) {
+    const result = db.prepare('UPDATE configs SET download_count = download_count + 1 WHERE id = ?').run(id);
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Not found.' });
     }
 
-    db.prepare('UPDATE configs SET download_count = download_count + 1 WHERE id = ?').run(id);
+    const row = db.prepare('SELECT * FROM configs WHERE id = ?').get(id);
 
     return res.json(parseRow(row));
   } catch (err) {

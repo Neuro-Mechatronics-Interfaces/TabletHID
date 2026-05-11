@@ -4,8 +4,6 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>TabletHID</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -20,14 +18,16 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CommunityApiBaseUrl</key>
+	<string>https://tablet.nml.wtf</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>TabletHID needs Bluetooth access to connect to the host device as a peripheral mouse or gamepad.</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>CommunityApiBaseUrl</key>
-	<string>$(COMMUNITY_API_BASE_URL)</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

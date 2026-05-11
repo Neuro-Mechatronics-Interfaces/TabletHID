@@ -5,10 +5,10 @@ options:
     iOS: "17.0"
 settings:
   base:
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.6.2"
+    CURRENT_PROJECT_VERSION: "38"
     SWIFT_VERSION: "5.9"
-    DEVELOPMENT_TEAM: "Max Murphy"
+    DEVELOPMENT_TEAM: "4Y8T66B2HQ"
 targets:
   TabletHID:
     type: application
@@ -26,6 +26,9 @@ targets:
     scheme:
       testTargets:
         - TabletHIDTests
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
   TabletHIDTests:
     type: bundle.unit-test
     platform: iOS

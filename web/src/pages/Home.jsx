@@ -169,7 +169,7 @@ export default function Home() {
                 <li>Single-stick layout with L/R output toggle</li>
                 <li>Windows and Mac keyboard macro buttons</li>
                 <li>Custom labels and configurable haptics</li>
-                <li>Android: drag to reposition and pinch to resize</li>
+                <li>Drag to reposition and pinch to resize</li>
               </ul>
             </div>
             <div className="card">
@@ -192,6 +192,17 @@ export default function Home() {
                 <li>Per-profile layouts &amp; config</li>
                 <li>Custom profiles with any name</li>
                 <li>Persisted across app restarts</li>
+              </ul>
+            </div>
+            <div className="card">
+              <div className="card-icon"><IconProfiles /></div>
+              <h3>Community Configs</h3>
+              <p>Browse public layouts from other users or share your current profile when you choose.</p>
+              <ul>
+                <li>Browse by mode and platform</li>
+                <li>Import only layout, macros, behavior, or everything</li>
+                <li>Uploads are public and optional</li>
+                <li>Available in Android and iOS builds when configured</li>
               </ul>
             </div>
           </div>

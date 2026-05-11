@@ -75,7 +75,7 @@ enum GamepadConfigSerializer {
     // MARK: - ButtonConfig helpers
 
     private static func buttonToJson(_ btn: ButtonConfig, isTrigger: Bool) -> [String: Any] {
-        var j: [String: Any] = [
+        let j: [String: Any] = [
             "enabled":         btn.enabled,
             "behavior":        btn.behavior.rawValue.uppercased(),
             "turbo":           btn.turbo,

@@ -188,15 +188,15 @@ Anonymous, opt-in config upload and browsing. No user accounts. Rate-limited by 
 
 ### iOS client
 
-- [ ] **Device metadata collection** — gather `UIDevice.current.model`, `UIDevice.current.systemVersion`, `UIScreen.main.nativeBounds`, `UIScreen.main.nativeScale`, and `sysctlbyname("hw.machine")` for `device_hw_id`; compute logical point dimensions from `nativeBounds / nativeScale`
-- [ ] **Config serialiser** — iOS equivalent of the Android canonical JSON serialiser/deserialiser for `spec/server-schema.md` v1 schemas; must produce identical JSON field names
-- [ ] **Upload flow** — same UX shape as Android: confirmation dialog with privacy disclosure, POST to `/api/v1/configs`
-- [ ] **Browse & download UI** — same feature set as Android; unified layout where practical given SwiftUI vs Compose difference
+- [x] **Device metadata collection** — gather `UIDevice.current.model`, `UIDevice.current.systemVersion`, `UIScreen` dimensions/scale, and `sysctlbyname("hw.machine")` for `device_hw_id`.
+- [x] **Config serialiser** — iOS equivalent of the Android canonical JSON serialiser/deserialiser for `spec/server-schema.md` v1 schemas; produces identical JSON field names.
+- [x] **Upload flow** — same UX shape as Android: upload sheet with privacy disclosure, POST to `/api/v1/configs`.
+- [x] **Browse & download UI** — same feature set as Android; SwiftUI browse list, filters, sort, import sheet, profile picker, and subset merge.
 
 ### Privacy & store submissions
 
-- [ ] **Update `web/src/pages/Privacy.jsx`** — add Community Config Sharing section: what is uploaded, that it is opt-in and user-initiated, that uploads are public, that free-text fields should not contain personal information, and that Cloudflare processes request IPs for rate limiting under their own policy
+- [x] **Update `web/src/pages/Privacy.jsx`** — add Community Config Sharing section: what is uploaded, that it is opt-in and user-initiated, that uploads are public, that free-text fields should not contain personal information, and that Cloudflare processes request IPs for rate limiting under their own policy
 - [ ] **In-app upload consent dialog (Android)** — shown before every upload: lists exactly what will be sent (config data, profile name, device model, OS version, screen dimensions); warns against personal information in name/description fields
-- [ ] **In-app upload consent dialog (iOS)** — same content as Android dialog
+- [x] **In-app upload consent dialog (iOS)** — same public-upload disclosure is shown in the upload sheet before submission.
 - [ ] **Google Play — Data Safety update** — declare User-generated content (optional, user-initiated) and App info/performance (app version); mark both as not used for tracking; update before shipping the upload feature
 - [ ] **App Store Connect — Privacy Nutrition Labels update** — declare User Content and Other Data; mark as not linked to user and not used for tracking; update before shipping the upload feature

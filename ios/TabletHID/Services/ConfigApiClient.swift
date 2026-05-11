@@ -73,7 +73,13 @@ actor ConfigApiClient {
     private func resolvedBaseUrl() throws -> String {
         let raw = Bundle.main.infoDictionary?["CommunityApiBaseUrl"] as? String ?? ""
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !trimmed.isEmpty else { throw ConfigApiError.notConfigured }
+        guard !trimmed.isEmpty,
+              !trimmed.contains("$("),
+              let url = URL(string: trimmed),
+              url.scheme != nil,
+              url.host != nil else {
+            throw ConfigApiError.notConfigured
+        }
         return trimmed
     }
 
