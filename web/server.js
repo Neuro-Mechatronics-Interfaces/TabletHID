@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import apiRouter from './api/router.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -110,6 +111,8 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'dist')));
+
+app.use('/api/v1', express.json({ limit: '64kb' }), apiRouter);
 
 // SPA fallback — let React Router handle all routes
 app.get('*', (_req, res) => {

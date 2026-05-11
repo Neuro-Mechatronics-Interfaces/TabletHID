@@ -7,9 +7,24 @@ See [Agent workflow](#agent-workflow) for the required steps.
 
 ---
 
-## Worker location
+## Server location
 
-Source lives in `cf-worker/`. It is a Hono-based Cloudflare Worker bound to a D1 database named `TABLETHID_DB`.
+The API runs inside the existing Express server at `web/server.js` (Node.js ESM, port 12122), which is exposed to the internet via a `cloudflared` tunnel and proxied through Cloudflare Zero Trust. `express.set('trust proxy', true)` is already in place.
+
+API route modules live in `web/api/`:
+
+| File | Purpose |
+|------|---------|
+| `web/api/db.js` | SQLite initialisation and auto-migration |
+| `web/api/sanitize.js` | String sanitisation utilities |
+| `web/api/validate.js` | Canonical JSON schema validators for each config mode |
+| `web/api/middleware.js` | Rate limiter, request size cap, security headers |
+| `web/api/routes/configs.js` | Route handler functions |
+| `web/api/router.js` | Express Router — mounts all three routes |
+
+`web/server.js` imports and mounts the router at `/api/v1` before the SPA fallback.
+
+Database: SQLite file at `web/data/tablethid.db` (created automatically on first run), using `better-sqlite3`.
 
 ---
 
@@ -33,14 +48,26 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `sort` | `recent` (default) \| `popular` | Sort order |
 | `limit` | integer, default 20, max 100 | Page size |
 | `offset` | integer, default 0 | Pagination offset |
+| `since` | ISO 8601 timestamp (optional) | **Delta sync cursor.** When provided, returns only configs with `uploaded_at > since`. Client stores the `latest_at` value from the previous response and passes it here on the next sync to receive only new records. Omit or leave empty to request a full page regardless of age. |
 
 Response:
 ```json
 {
   "configs": [ { ...ConfigRecord } ],
-  "total": 42
+  "total": 42,
+  "latest_at": "2026-05-11T14:23:00Z"
 }
 ```
+
+`latest_at` is the maximum `uploaded_at` value among the returned records, or `null` if the result set is empty. Clients must store this value locally and pass it as `since` on the next incremental sync. Sorting, deduplication, and all GUI-facing ordering must be performed client-side using the cached record set — the server only guarantees temporal ordering within a single response.
+
+### Client-side caching contract
+
+- Client maintains a local cache of all fetched `ConfigRecord` objects (keyed by `id`).
+- On first load or explicit user-triggered refresh: call without `since`; replace the local cache with the result.
+- On background/incremental sync: call with `since=<stored latest_at>`; merge returned records into the cache (insert new, skip duplicates by `id`).
+- All filtering, sorting, and search for display purposes is performed against the local cache, not via additional server calls.
+- The `total` field in the response reflects the count matching the current query (including the `since` filter), not the global total; clients should not use it for cache-size assertions.
 
 ### GET /api/v1/configs/:id
 

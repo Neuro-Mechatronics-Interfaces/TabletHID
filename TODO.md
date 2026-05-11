@@ -166,16 +166,17 @@ The following items in `web/src/pages/Support.jsx` are factually wrong after rec
 
 Anonymous, opt-in config upload and browsing. No user accounts. Rate-limited by IP. Full schema contract in `spec/server-schema.md`.
 
-### Cloudflare Worker (`cf-worker/`)
+### Server (`web/server.js` + `web/api/`)
 
-- [ ] **Scaffold Hono Worker** — initialise `cf-worker/` with Hono, D1 binding (`TABLETHID_DB`), and wrangler config
-- [ ] **D1 migration: initial schema** — `configs` table + `schema_migrations` table as defined in `spec/server-schema.md`; all indexes included
-- [ ] **`GET /api/v1/configs`** — list endpoint with `mode`, `platform`, `tags`, `sort`, `limit`, `offset` query params
-- [ ] **`GET /api/v1/configs/:id`** — fetch single config; increments `download_count`
-- [ ] **`POST /api/v1/configs`** — upload endpoint; validates `config_json` against canonical schema for the given `mode`; enforces field length limits; rejects unknown `mode` values
-- [ ] **Rate limiting** — Cloudflare built-in rate limiting on `POST` (e.g. 30 uploads per hour per IP); return 429 with `Retry-After` header
-- [ ] **Config schema validation** — Worker-side JSON validation for both `touch_mouse` and `gamepad` canonical schemas (v1); reject malformed uploads with a descriptive 400 error
-- [ ] **iOS device name resolution** — bundle a small `hw-machine-names.json` map (`iPhone15,2` → `"iPhone 14 Pro"`) in the Worker; resolve `device_hw_id` to a friendly name on upload and store the result in `device_name`
+- [ ] **SQLite setup** — `web/api/db.js`; auto-creates `web/data/tablethid.db` and runs schema migration on startup; schema exactly as defined in `spec/server-schema.md`
+- [ ] **Input sanitisation** — `web/api/sanitize.js`; trim/clamp strings, validate tags array, validate ISO 8601 timestamps, validate enums
+- [ ] **Middleware** — `web/api/middleware.js`; IP-based rate limiter on POST (5/hour via `express-rate-limit`), 64 KB request body cap, security headers
+- [ ] **Config schema validation** — `web/api/validate.js`; validates `config_json` structure for both `touch_mouse` and `gamepad` canonical schemas (v1) as defined in `spec/server-schema.md`
+- [ ] **`GET /api/v1/configs`** — list with `mode`, `platform`, `tags`, `sort`, `limit`, `offset`, `since` (delta-sync cursor); returns `{ configs, total, latest_at }`
+- [ ] **`GET /api/v1/configs/:id`** — fetch single config; increments `download_count` atomically
+- [ ] **`POST /api/v1/configs`** — upload with full validation, sanitisation, UUID generation, server-side diagonal computation; returns `{ id }`
+- [ ] **iOS device name resolution** — bundle `web/api/hw-machine-names.json` (`iPhone15,2` → `"iPhone 14 Pro"`); resolve `device_hw_id` to friendly name on upload
+- [ ] **Mount router** — import `web/api/router.js` into `web/server.js` at `/api/v1` before SPA fallback; add `express.json()` middleware scoped to API routes only
 
 ### Android client
 
