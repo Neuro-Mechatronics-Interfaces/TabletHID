@@ -29,7 +29,7 @@ function parseRow(row) {
 
 export async function listConfigs(req, res) {
   try {
-    const { mode, platform, tags: tagsParam, sort, limit: limitParam, offset: offsetParam, since } = req.query;
+    const { mode, platform, tags: tagsParam, category, sort, limit: limitParam, offset: offsetParam, since } = req.query;
 
     // Validate mode
     if (mode !== undefined && !isValidMode(mode)) {
@@ -86,6 +86,10 @@ export async function listConfigs(req, res) {
     for (const tag of tagList) {
       conditions.push('EXISTS (SELECT 1 FROM json_each(configs.tags) WHERE json_each.value = ?)');
       params.push(tag);
+    }
+    if (category !== undefined && category !== '') {
+      conditions.push('category = ?');
+      params.push(trimAndClamp(category, 40));
     }
     if (since !== undefined && since !== '') {
       conditions.push('uploaded_at > ?');
@@ -189,6 +193,10 @@ export async function uploadConfig(req, res) {
 
     const tags = sanitizeTags(body.tags ?? []);
 
+    const category = body.category !== undefined && body.category !== null
+      ? (stripControlChars(trimAndClamp(body.category, 40)) || null)
+      : null;
+
     const app_version = body.app_version !== undefined && body.app_version !== null
       ? trimAndClamp(body.app_version, 20) || null
       : null;
@@ -261,20 +269,20 @@ export async function uploadConfig(req, res) {
     // 11. INSERT
     db.prepare(`
       INSERT INTO configs (
-        id, schema_version, platform, mode, profile_name, description, tags,
+        id, schema_version, platform, mode, profile_name, description, tags, category,
         app_version, config_json, uploaded_at, download_count,
         device_name, device_hw_id, device_os_version, device_os_api_level,
         device_screen_width_px, device_screen_height_px, device_screen_density_dpi,
         device_screen_diagonal_in
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?,
         ?, ?, ?, 0,
         ?, ?, ?, ?,
         ?, ?, ?,
         ?
       )
     `).run(
-      id, schema_version, body.platform, body.mode, profile_name, description, JSON.stringify(tags),
+      id, schema_version, body.platform, body.mode, profile_name, description, JSON.stringify(tags), category,
       app_version, configJsonString, uploaded_at,
       device_name, device_hw_id, device_os_version, device_os_api_level,
       device_screen_width_px, device_screen_height_px, device_screen_density_dpi,

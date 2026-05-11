@@ -80,6 +80,11 @@ class HomeFragment : Fragment() {
         binding.cardTouchMouse.setOnClickListener { onModeTapped(DeviceMode.TOUCH_MOUSE) }
         binding.cardGamepad.setOnClickListener    { onModeTapped(DeviceMode.GAMEPAD) }
 
+        // ── Community card ───────────────────────────────────────────────────
+        binding.cardCommunity.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_community)
+        }
+
         // ── Connection card ──────────────────────────────────────────────────
         updateDeviceNameChip()
         binding.chipDeviceName.setOnClickListener { showEditNameDialog() }

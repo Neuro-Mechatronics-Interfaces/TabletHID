@@ -32,7 +32,7 @@
     <string name="tutorial_status_waiting">Discoverable — open Bluetooth on your host and connect to %1$s</string>
     <string name="tutorial_status_connected">Connected to %1$s</string>
     <string name="tutorial_status_error">Error: %1$s</string>
-    <string name="btn_make_discoverable">Make Discoverable (new pair)</string>
+    <string name="btn_make_discoverable">Make Discoverable</string>
     <string name="btn_enter_mouse_mode">Enter Touch Mouse</string>
     <string name="btn_enter_gamepad_mode">Enter Gamepad</string>
     <string name="btn_reconnect">Reconnect to %1$s</string>
@@ -171,6 +171,74 @@
     <!-- Home screen widget -->
     <string name="widget_description">Shows TabletHID connection status with a quick Reconnect or Disconnect action</string>
     <string name="widget_reconnect">Reconnect</string>
+
+    <!-- Community feature -->
+    <string name="community_title">Community Configs</string>
+    <string name="community_tab_browse">Browse</string>
+    <string name="community_tab_share">Share</string>
+    <string name="community_profile_label">Profile:</string>
+
+    <!-- Browse tab -->
+    <string name="community_filter_all">All</string>
+    <string name="community_filter_gamepad">Gamepad</string>
+    <string name="community_filter_touch_mouse">Touch Mouse</string>
+    <string name="community_filter_android">Android</string>
+    <string name="community_filter_ios">iOS</string>
+    <string name="community_sort_recent">Recent</string>
+    <string name="community_sort_popular">Popular</string>
+
+    <!-- Share tab -->
+    <string name="community_gamepad_config">Gamepad config</string>
+    <string name="community_touch_mouse_config">Touch Mouse config</string>
+    <string name="community_btn_share">Share ↑</string>
+    <string name="community_gamepad_buttons">Buttons: %1$d enabled</string>
+    <string name="community_gamepad_macros">Macros: %1$d</string>
+    <string name="community_gamepad_single_joystick_on">Single joystick: on</string>
+    <string name="community_gamepad_single_joystick_off">Single joystick: off</string>
+    <string name="community_touch_mouse_mode_sensitivity">Mode: %1$s · Sensitivity: %2$d</string>
+    <string name="community_touch_mouse_zones">Left: %1$s · Right: %2$s</string>
+    <string name="community_touch_mouse_macros">Macros: %1$d</string>
+
+    <!-- Import sheet -->
+    <string name="community_import_to">Import to:</string>
+    <string name="community_quick_select">Quick select</string>
+    <string name="community_import_options">Import options</string>
+    <string name="community_preset_everything">Everything</string>
+    <string name="community_preset_layout">Layout</string>
+    <string name="community_preset_macros">Macros</string>
+    <string name="community_preset_behaviors">Behaviors</string>
+    <string name="community_preset_custom">Custom</string>
+    <string name="community_subset_control_layout">Control positions &amp; sizes</string>
+    <string name="community_subset_button_behavior">Button behavior &amp; turbo</string>
+    <string name="community_subset_joystick_settings">Joystick settings</string>
+    <string name="community_subset_macros">Keyboard macros</string>
+    <string name="community_subset_button_labels">Button labels</string>
+    <string name="community_subset_vibration">Vibration</string>
+    <string name="community_subset_zone_positions">Zone positions</string>
+    <string name="community_subset_sensitivity">Sensitivity &amp; scroll</string>
+    <string name="community_subset_touch_button_behavior">Button behavior</string>
+    <string name="community_btn_apply">Apply to Profile</string>
+    <string name="community_applied_snackbar">Applied to %1$s</string>
+    <string name="community_mode_note_gamepad">This is a gamepad config.</string>
+    <string name="community_mode_note_touch_mouse">This is a touch mouse config.</string>
+    <string name="community_downloads">%1$d downloads</string>
+    <string name="community_item_os_line">%1$s · %2$s&quot;</string>
+
+    <!-- Upload sheet -->
+    <string name="community_upload_title">Share %1$s — %2$s publicly?</string>
+    <string name="community_upload_profile_name_hint">Profile name</string>
+    <string name="community_upload_description_hint">Describe this config…</string>
+    <string name="community_upload_tags_hint">e.g. gaming, accessibility</string>
+    <string name="community_upload_category_hint">e.g. gaming, accessibility, productivity</string>
+    <string name="community_upload_device">Device: %1$s</string>
+    <string name="community_upload_os">OS: Android %1$s</string>
+    <string name="community_upload_privacy_notice">Uploads are public. Do not include personal information in the name or description.</string>
+    <string name="community_btn_upload">Upload</string>
+    <string name="community_upload_success">Uploaded! Others can now find your config.</string>
+
+    <!-- Home screen community entry -->
+    <string name="community_home_label">Community</string>
+    <string name="community_home_desc">Browse and share configs with other users</string>
 
     <!-- Custom macro editor -->
     <string name="macro_edit_layout_hint">Edit — drag to move · pinch to resize · tap for precise controls</string>

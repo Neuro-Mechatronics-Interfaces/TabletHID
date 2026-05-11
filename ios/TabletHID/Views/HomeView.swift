@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var showingDeviceNameEditor = false
     @State private var deviceNameDraft = ""
+    @State private var showingCommunity = false
 
     let onSelectMode: (DeviceMode) -> Void
     let onShowSetup: (DeviceMode) -> Void
@@ -23,6 +24,7 @@ struct HomeView: View {
                 connectionCard
                 profilePicker
                 modeGrid
+                communityCard
             }
             .padding(24)
             .frame(maxWidth: 900, alignment: .leading)
@@ -53,6 +55,11 @@ struct HomeView: View {
                 #else
                 .frame(minWidth: 360, minHeight: 280)
                 #endif
+        }
+        .sheet(isPresented: $showingCommunity) {
+            NavigationStack {
+                CommunityView()
+            }
         }
         .alert("New Profile", isPresented: $showingNewProfile) {
             TextField("Profile name", text: $newProfileName)
@@ -293,6 +300,33 @@ struct HomeView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private var communityCard: some View {
+        Button {
+            showingCommunity = true
+        } label: {
+            HStack(spacing: 16) {
+                Image(systemName: "person.2.circle")
+                    .font(.system(size: 34, weight: .semibold))
+                    .foregroundStyle(.blue)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Community")
+                        .font(.title2.weight(.bold))
+                    Text("Browse and share configs with other users.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(cardBackgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
     }
 
     private var groupedBackgroundColor: Color {

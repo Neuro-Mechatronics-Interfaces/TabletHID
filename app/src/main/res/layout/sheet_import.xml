@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- Drag handle -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/bottom_sheet_handle" />
+
+        <!-- ── Config metadata ─────────────────────────────────────────────── -->
+        <TextView
+            android:id="@+id/importProfileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="2dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <TextView
+            android:id="@+id/importModeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="2dp"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorPrimary" />
+
+        <TextView
+            android:id="@+id/importDeviceLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/importDownloads"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="2dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/importDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <!-- ── Import target profile ───────────────────────────────────────── -->
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/community_import_to"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipImportProfile"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Default"
+                app:chipIcon="@drawable/ic_person"
+                app:chipIconSize="16dp" />
+
+        </LinearLayout>
+
+        <!-- ── Quick select presets ────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/community_quick_select"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingHorizontal="16dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupPresets"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:chipSpacingHorizontal="4dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetEverything"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/community_preset_everything" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetLayout"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/community_preset_layout" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetMacros"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/community_preset_macros" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetBehaviors"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/community_preset_behaviors" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPresetCustom"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/community_preset_custom" />
+
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- ── Subset checkboxes ───────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/community_import_options"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+        <!-- Gamepad subset checkboxes (shown when mode == gamepad) -->
+        <LinearLayout
+            android:id="@+id/groupGamepadSubsets"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:visibility="gone">
+
+            <CheckBox
+                android:id="@+id/checkControlLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_control_layout" />
+
+            <CheckBox
+                android:id="@+id/checkButtonBehavior"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_button_behavior" />
+
+            <CheckBox
+                android:id="@+id/checkJoystickSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_joystick_settings" />
+
+            <CheckBox
+                android:id="@+id/checkGamepadMacros"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_macros" />
+
+            <CheckBox
+                android:id="@+id/checkButtonLabels"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_button_labels" />
+
+            <CheckBox
+                android:id="@+id/checkVibration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_vibration" />
+
+        </LinearLayout>
+
+        <!-- Touch Mouse subset checkboxes (shown when mode == touch_mouse) -->
+        <LinearLayout
+            android:id="@+id/groupTouchMouseSubsets"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:visibility="gone">
+
+            <CheckBox
+                android:id="@+id/checkZonePositions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_zone_positions" />
+
+            <CheckBox
+                android:id="@+id/checkSensitivity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_sensitivity" />
+
+            <CheckBox
+                android:id="@+id/checkTouchButtonBehavior"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_touch_button_behavior" />
+
+            <CheckBox
+                android:id="@+id/checkTouchMacros"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/community_subset_macros" />
+
+        </LinearLayout>
+
+        <!-- ── Apply button ────────────────────────────────────────────────── -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnApplyImport"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="20dp"
+            android:text="@string/community_btn_apply" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

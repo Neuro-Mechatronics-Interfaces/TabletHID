@@ -48,6 +48,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `sort` | `recent` (default) \| `popular` | Sort order |
 | `limit` | integer, default 20, max 100 | Page size |
 | `offset` | integer, default 0 | Pagination offset |
+| `category` | string (optional) | Filter by category value (exact match) |
 | `since` | ISO 8601 timestamp (optional) | **Delta sync cursor.** When provided, returns only configs with `uploaded_at > since`. Client stores the `latest_at` value from the previous response and passes it here on the next sync to receive only new records. Omit or leave empty to request a full page regardless of age. |
 
 Response:
@@ -86,6 +87,7 @@ Request body (JSON):
 | `description` | no | string, max 400 chars | |
 | `tags` | no | string[] | Max 8 tags, each max 32 chars |
 | `app_version` | no | string | e.g. `"1.2.0"` |
+| `category` | no | string, max 40 chars | Suggested values: `gaming`, `accessibility`, `productivity`, `media`, `streaming`, `other`. Free-form; no enum constraint enforced. Indexed for web browsing. |
 | `device_name` | no | string, max 80 chars | Human-readable model name, e.g. `"Motorola Moto Stylus 5G (2022)"` |
 | `device_hw_id` | no | string, max 40 chars | Raw hardware identifier; iOS: `hw.machine` value e.g. `"iPhone15,2"`; Android: omit (model string is already specific) |
 | `device_os_version` | no | string, max 20 chars | OS version string: `"14"` (Android) or `"17.4"` (iOS) |
@@ -119,7 +121,8 @@ CREATE TABLE IF NOT EXISTS configs (
   mode           TEXT    NOT NULL,             -- 'touch_mouse' | 'gamepad'
   profile_name   TEXT    NOT NULL,
   description    TEXT,
-  tags           TEXT    NOT NULL DEFAULT '[]', -- JSON array of strings
+  tags           TEXT    NOT NULL DEFAULT '[]', -- JSON array of strings (max 8, each max 32 chars)
+  category       TEXT,                         -- free-form category e.g. 'gaming', 'accessibility', 'productivity', 'media', 'streaming', 'other'
   app_version    TEXT,
   config_json              TEXT    NOT NULL,   -- canonical JSON, see below
   uploaded_at              TEXT    NOT NULL,   -- ISO 8601
@@ -143,6 +146,7 @@ CREATE INDEX IF NOT EXISTS idx_configs_schema_version ON configs (schema_version
 CREATE INDEX IF NOT EXISTS idx_configs_popular        ON configs (download_count DESC);
 CREATE INDEX IF NOT EXISTS idx_configs_recent         ON configs (uploaded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_configs_diagonal       ON configs (device_screen_diagonal_in);
+CREATE INDEX IF NOT EXISTS idx_configs_category       ON configs (category);
 ```
 
 ---
@@ -325,6 +329,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 | Schema version | API version | Date | Changes |
 |---------------|-------------|------|---------|
 | 1 | v1 | 2026-05 | Initial schema: `touch_mouse` and `gamepad` configs as defined above |
+| — | v1 | 2026-05 | DB migration 2: added `category` column and index (additive, no API version bump) |
 
 ---
 

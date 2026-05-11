@@ -55,4 +55,15 @@ db.prepare(`
   VALUES (1, ?, 'Initial schema: touch_mouse and gamepad configs')
 `).run(new Date().toISOString());
 
+// Migration 2: add category column (additive — ALTER TABLE is idempotent via try/catch)
+const hasMigration2 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 2').get();
+if (!hasMigration2) {
+  db.exec('ALTER TABLE configs ADD COLUMN category TEXT');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_configs_category ON configs (category)');
+  db.prepare(`
+    INSERT INTO schema_migrations (version, applied_at, description)
+    VALUES (2, ?, 'Added category column and index')
+  `).run(new Date().toISOString());
+}
+
 export default db;

@@ -20,10 +20,12 @@ android {
         applicationId = "com.tablet.hid"
         minSdk = 29
         targetSdk = 35
-        versionCode = 38
-        versionName = "1.6.2"
+        versionCode = 41
+        versionName = "1.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "COMMUNITY_API_BASE_URL",
+            "\"${localProps.getProperty("COMMUNITY_API_BASE_URL", "")}\"")
     }
 
     signingConfigs {
@@ -74,6 +76,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.swiperefreshlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

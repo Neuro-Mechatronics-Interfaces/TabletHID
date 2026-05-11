@@ -38,6 +38,10 @@
             android:id="@+id/action_home_to_gamepad"
             app:destination="@id/gamepadFragment"
             app:popUpTo="@id/homeFragment" />
+
+        <action
+            android:id="@+id/action_home_to_community"
+            app:destination="@id/communityFragment" />
     </fragment>
 
     <fragment
@@ -86,6 +90,12 @@
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="true" />
     </fragment>
+
+    <fragment
+        android:id="@+id/communityFragment"
+        android:name="com.tablet.hid.ui.community.CommunityFragment"
+        android:label="@string/community_title"
+        tools:layout="@layout/fragment_community" />
 
     <fragment
         android:id="@+id/settingsFragment"
