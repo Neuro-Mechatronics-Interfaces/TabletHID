@@ -96,7 +96,7 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 ### UX & polish
 
 - [x] **Screen pinning** (`startLockTask()`) — optional advanced lock-in; toggle in Settings
-- [ ] **Settings fragment** — optional dedicated settings screen if the dialog becomes too dense
+- [x] **Settings fragment** — optional dedicated settings screen if the dialog becomes too dense
 - [x] **Onboarding screen** — shown once on first launch
 - [x] **Orientation lock** — System / Portrait / Landscape, accessible from Settings dialog and in-canvas status bar
 - [x] **Connection status chip** — persistent across all fragments
@@ -128,18 +128,22 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 ## Future Tech / Phase 4
 
 ### Improved Gestures
-- [ ] **A "hold" gesture (e.g., double-tap and hold)** - latches a mouse button pressed until the user taps again. Useful for long drags without maintaining continuous finger contact. Could be a toggle within the dynamic zone config or a dedicated gesture zone.
+- [x] **A "hold" gesture (e.g., double-tap and hold)** - latches a mouse button pressed until the user taps again. Useful for long drags without maintaining continuous finger contact. Could be a toggle within the dynamic zone config or a dedicated gesture zone.
 
-- [ ] **Sensitivity adjuster** - A zone or button that, while held, applies a temporary sensitivity divisor (e.g., 0.25×) for fine cursor placement — analogous to a "sniper button" on gaming mice. Could be a static zone in Touch Mouse mode or a macro button on the Gamepad layout.
+- [x] **Sensitivity adjuster** - A zone or button that, while held, applies a temporary sensitivity divisor (e.g., 0.25×) for fine cursor placement — analogous to a "sniper button" on gaming mice. Could be a static zone in Touch Mouse mode or a macro button on the Gamepad layout.
 
 ### Haptics
-- [ ] **Vibrotactile feedback** - Short vibration pulses via `Vibrator`/`VibrationEffect` when pressing gamepad buttons (A, B, X, Y, LB, RB, triggers). Configurable intensity (off / light / medium / strong) per profile. Care needed to keep vibration latency low and not disturb button state.
+- [x] **Vibrotactile feedback** - Short vibration pulses via `Vibrator`/`VibrationEffect` when pressing gamepad buttons (A, B, X, Y, LB, RB, triggers). Configurable intensity (off / light / medium / strong) per profile. Care needed to keep vibration latency low and not disturb button state.
 
 ### Customization 
-- [ ] **Keyboard shortcut launcher panel** - A scrollable grid of user-defined or preset keyboard shortcuts (Ctrl+Z, Ctrl+C, Win+D, Alt+F4, etc.) accessible as a side-panel or overlay within Touch Mouse mode. Each button sends one `sendKeyboardReport` call. Could reuse the existing macro button infrastructure.
+- [x] **Keyboard shortcut launcher panel** - A scrollable grid of user-defined or preset keyboard shortcuts (Ctrl+Z, Ctrl+C, Win+D, Alt+F4, etc.) accessible as a side-panel or overlay within Touch Mouse mode. Each button sends one `sendKeyboardReport` call. Could reuse the existing macro button infrastructure.
 
-- [ ] **Custom button icons or labels** - Allow users to rename any gamepad button (e.g., relabel A/B/X/Y for a specific game) or pick from a small icon library. Stored per profile. Purely cosmetic; no HID report changes.
+- [x] **Custom button icons or labels** - Allow users to rename any gamepad button (e.g., relabel A/B/X/Y for a specific game) or pick from a small icon library. Stored per profile. Purely cosmetic; no HID report changes.
 
-- [ ] **App home screen shortcuts** - Android app shortcuts (`shortcuts.xml`) that launch directly into Touch Mouse or Gamepad mode with a specific profile, bypassing the Home fragment. Users long-press the launcher icon to pick a shortcut. Shortcut list could be auto-generated from the saved profile list.
+- [x] **App home screen shortcuts** - Android app shortcuts (`shortcuts.xml`) that launch directly into Touch Mouse or Gamepad mode with a specific profile, bypassing the Home fragment. Users long-press the launcher icon to pick a shortcut. Shortcut list could be auto-generated from the saved profile list.
 
-- [ ] **Android home screen widget** - A resizable `AppWidgetProvider` widget that shows connection status (device name + connected/idle) and provides a single Reconnect or Disconnect button, without opening the full app. Complements the Quick Settings tile for users who prefer widgets.
+- [x] **Android home screen widget** - A resizable `AppWidgetProvider` widget that shows connection status (device name + connected/idle) and provides a single Reconnect or Disconnect button, without opening the full app. Complements the Quick Settings tile for users who prefer widgets.
+
+- [x] **Ability to reposition/resize keyboard macro buttons** - Should work the same way as the Gamepad, with persistence tied to the current user profile. 
+
+- [x] **Change "Discoverable" / "Connect" persistence** - Home screen now shows connection status card with Make Discoverable and Reconnect actions; device name editable from home; mode cards navigate directly to control mode when already connected. Tutorial remains for first-time pairing but is no longer required for reconnect. 

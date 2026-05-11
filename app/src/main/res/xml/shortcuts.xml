@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="touch_mouse"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_touch_mouse_short"
+        android:shortcutLongLabel="@string/shortcut_touch_mouse_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.tablet.hid"
+            android:targetClass="com.tablet.hid.MainActivity">
+            <extra android:name="start_mode" android:value="touch_mouse" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="gamepad"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_gamepad_short"
+        android:shortcutLongLabel="@string/shortcut_gamepad_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.tablet.hid"
+            android:targetClass="com.tablet.hid.MainActivity">
+            <extra android:name="start_mode" android:value="gamepad" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

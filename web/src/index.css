@@ -305,6 +305,24 @@ body {
 .step-desc { color: var(--text-muted); font-size: .9rem; line-height: 1.7; }
 .step-desc b { color: var(--text); font-weight: 600; }
 
+/* ── Pairing video section ── */
+.video-section { margin-bottom: 48px; scroll-margin-top: 24px; }
+.video-section h2 {
+  font-size: 1.15rem; font-weight: 700; margin-bottom: 14px;
+}
+.video-player {
+  width: 100%; max-width: 900px; display: block;
+  border-radius: 14px; border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.video-placeholder {
+  width: 100%; max-width: 900px;
+  aspect-ratio: 16 / 9;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 14px; border: 1px dashed var(--border);
+  color: var(--text-light); font-size: .9rem;
+}
+
 @media (max-width: 700px) {
   .walkthrough-step, .walkthrough-step.reverse { flex-direction: column; gap: 16px; }
   .step-shots img { height: 280px; }

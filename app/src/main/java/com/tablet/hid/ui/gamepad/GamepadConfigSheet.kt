@@ -25,6 +25,7 @@ import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.model.KeyboardMacroPresets
 import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.TriggerDragAxis
+import com.tablet.hid.model.VibrationIntensity
 import com.tablet.hid.ui.macro.CustomMacroEditorDialog
 import com.tablet.hid.databinding.SheetGamepadConfigBinding
 import java.io.File
@@ -79,6 +80,24 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
             if (initialising) return@setOnCheckedChangeListener
             pushButtonConfig { it.copy(enabled = on) }
         }
+
+        // ── Custom label ─────────────────────────────────────────────────
+        b.etButtonLabel.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (initialising) return
+                val key = buttonKey(selectedIndex)
+                val text = s?.toString()?.trim() ?: ""
+                val c = viewModel.gamepadConfig.value
+                val updated = if (text.isBlank()) {
+                    c.copy(customButtonLabels = c.customButtonLabels - key)
+                } else {
+                    c.copy(customButtonLabels = c.customButtonLabels + (key to text))
+                }
+                viewModel.updateGamepadConfig(updated)
+            }
+        })
 
         // ── Joystick enabled ─────────────────────────────────────────────
         b.switchLeftEnabled.setOnCheckedChangeListener { _, on ->
@@ -234,6 +253,20 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
             onEditLayoutRequested?.invoke() // refresh positions in fragment
         }
 
+        // ── Haptic feedback ──────────────────────────────────────────────
+        b.toggleVibration.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (initialising || !isChecked) return@addOnButtonCheckedListener
+            val intensity = when (checkedId) {
+                R.id.btnVibLight  -> VibrationIntensity.LIGHT
+                R.id.btnVibMedium -> VibrationIntensity.MEDIUM
+                R.id.btnVibStrong -> VibrationIntensity.STRONG
+                else              -> VibrationIntensity.OFF
+            }
+            viewModel.updateGamepadConfig(
+                viewModel.gamepadConfig.value.copy(vibrationIntensity = intensity)
+            )
+        }
+
         // ── DEV section ──────────────────────────────────────────────────
         b.groupDev.isVisible = BuildConfig.DEV_MODE
         if (BuildConfig.DEV_MODE) {
@@ -311,6 +344,12 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
         b.toggleMacroDefaults.check(
             if (cfg.macroHostDefaults == MacroHostDefaults.MAC) R.id.btnMacroMac else R.id.btnMacroWindows
         )
+        b.toggleVibration.check(when (cfg.vibrationIntensity) {
+            VibrationIntensity.LIGHT  -> R.id.btnVibLight
+            VibrationIntensity.MEDIUM -> R.id.btnVibMedium
+            VibrationIntensity.STRONG -> R.id.btnVibStrong
+            VibrationIntensity.OFF    -> R.id.btnVibOff
+        })
         b.switchLeftEnabled.isChecked  = cfg.leftJoystick.enabled
         b.groupLeftJoystick.isVisible  = cfg.leftJoystick.enabled
         b.switchRightEnabled.isChecked = cfg.rightJoystick.enabled
@@ -325,6 +364,8 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
 
     private fun applyButtonUi(cfg: ButtonConfig) {
         initialising = true
+        val existingLabel = viewModel.gamepadConfig.value.customButtonLabels[buttonKey(selectedIndex)] ?: ""
+        b.etButtonLabel.setText(existingLabel)
         b.switchButtonEnabled.isChecked = cfg.enabled
         b.toggleBehavior.check(
             if (cfg.behavior == ClickBehavior.MOMENTARY) R.id.btnMomentary else R.id.btnLatching
@@ -348,6 +389,14 @@ class GamepadConfigSheet : BottomSheetDialogFragment() {
             })
         }
         initialising = false
+    }
+
+    private fun buttonKey(index: Int): String = when (index) {
+        0  -> "a";    1  -> "b";   2  -> "x";   3  -> "y"
+        4  -> "lb";   5  -> "rb";  6  -> "lt";  7  -> "rt"
+        8  -> "back"; 9  -> "start"
+        10 -> "dup";  11 -> "ddown"; 12 -> "dleft"; 13 -> "dright"
+        else -> "a"
     }
 
     /** Read current button config at [index] from the config data class. */

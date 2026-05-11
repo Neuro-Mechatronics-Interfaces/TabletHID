@@ -282,26 +282,19 @@
         app:layout_constraintEnd_toEndOf="@id/btnX"
         android:layout_marginTop="4dp" />
 
-    <!-- Edit mode banner — overlays top of screen, visible only during layout editing -->
-    <HorizontalScrollView
-        android:id="@+id/macroScroll"
+    <!-- Full-canvas overlay for freely positionable macro buttons -->
+    <FrameLayout
+        android:id="@+id/macroOverlay"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
-        android:layout_marginBottom="8dp"
-        android:fillViewport="false"
-        android:visibility="gone"
+        android:layout_height="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintTop_toBottomOf="@id/statusBar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <LinearLayout
-            android:id="@+id/macroButtonRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
-
-    </HorizontalScrollView>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/editModeBanner"
@@ -323,7 +316,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Edit — drag to move · pinch to resize (H/V independently)"
+            android:text="Edit — drag to move · pinch to resize · tap for precise controls"
             android:textColor="#FFDD88"
             android:textSize="11sp" />
 

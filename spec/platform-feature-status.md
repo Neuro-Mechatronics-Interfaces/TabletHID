@@ -19,8 +19,8 @@ This spec tracks the Android implementation in `app/` and the iOS equivalent in 
 | Act as HID peripheral | Implemented with `BluetoothHidDevice` | Experimental BLE HID transport added via expanded `00001812-...` service UUID; needs physical-device validation |
 | Combined mouse + gamepad + keyboard descriptor | Implemented with Report ID 1, 2, and 3 in one registration; BLE path exposes all three Report characteristics | Descriptor/report builders ported and exposed through experimental HID-over-GATT Report characteristics |
 | Discoverable pairing flow | Implemented with 120-second discoverable request and configurable Bluetooth name | Experimental `CBPeripheralManager` advertising with configurable local name |
-| Reconnect bonded host | Implemented by cached Bluetooth address and `BluetoothHidDevice.connect()` | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising |
-| Disconnect / unbond | Implemented | Disconnect resets local state only |
+| Reconnect bonded host | Implemented; BLE GATT server kept open across disconnect so Windows can reconnect via cached handles without re-pairing; `disconnect()` no longer tears down GATT server | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising |
+| Disconnect / unbond | Implemented; `disconnect()` keeps GATT server alive for re-use; `disconnectAndUnbond()` does a full teardown | Disconnect resets local state only |
 | Foreground service | Implemented; `connectedDevice` foreground service type; connection survives Home press and screen-off | TODO |
 | Persistent notification | Implemented via foreground service; shows connection state text and Disconnect action when connected | TODO |
 | Auto-reconnect on launch | Implemented; opt-in toggle in Settings; reconnects to last paired device using `HidForegroundService` on app open | TODO |
@@ -53,8 +53,9 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Home mode selection | Implemented | Implemented |
 | Built-in profiles | Default, Access Basic, Access Advanced | Ported |
 | Custom profiles | Add custom profile, persist key/name | Initial add/select support |
-| Setup / tutorial | Windows and macOS pairing instructions | Placeholder setup screen with platform limitation note |
-| Enter control mode after connect | Implemented | Allowed in simulator/development even when transport is unavailable |
+| Setup / tutorial | Windows and macOS pairing instructions; Tutorial required only for first-time pairing — reconnect and direct-to-mode navigation available from Home screen | Placeholder setup screen with platform limitation note |
+| Home screen connection card | Implemented; LED status indicator, Make Discoverable and Reconnect buttons, editable device-name chip; mode cards navigate directly to control mode when already connected | TODO |
+| Enter control mode after connect | Implemented; direct nav actions bypass Tutorial when already connected | Allowed in simulator/development even when transport is unavailable |
 
 ## Touch Mouse
 
@@ -98,22 +99,31 @@ Relevant Apple docs currently point app developers toward Core Bluetooth BLE cen
 | Pinch-to-resize controls | Implemented; Android gamepad widgets have no maximum scale cap | TODO |
 | Persist layout | Implemented | Config persistence ported; layout editing TODO |
 | Multiple presets | Built-in plus custom profiles | Built-in plus custom profiles |
-| Keyboard macro buttons | Implemented with Windows/Mac preset sets on Android Touch Mouse and Gamepad layouts; custom macro editor (`CustomMacroEditorDialog`) allows adding arbitrary modifier+key combinations | TODO |
+| Keyboard macro buttons | Implemented with Windows/Mac preset sets on Android Touch Mouse and Gamepad layouts; custom macro editor (`CustomMacroEditorDialog`) allows adding arbitrary modifier+key combinations; each button stores `layoutOffsetX/Y/scaleX/Y` persisted per profile | TODO |
+| Macro button repositioning | Implemented; Touch Mouse: "Edit Macro Layout" button in config sheet enters drag+pinch edit mode with a banner and Done button; Gamepad: included in existing Edit Layout mode; offsets and scale saved per profile | TODO |
 | Visual press feedback | Implemented | Initial press styling |
 | Rumble | TODO | TODO |
+| Vibrotactile feedback | Implemented; `HapticFeedback.vibrate()` fires on button/D-pad `ACTION_DOWN`; intensity (Off/Light/Medium/Strong) persisted per profile via `GamepadConfigStore`; toggle group in `GamepadConfigSheet` | TODO |
+| Custom button labels | Implemented; `customButtonLabels: Map<String, String>` in `GamepadConfig`; persisted as `label_<key>` strings per profile; `GamepadConfigSheet` shows an inline EditText per selected button; `GamepadFragment.applyConfig()` applies labels with fallback to defaults | TODO |
+| Sensitivity adjuster (sniper zone) | Implemented in Touch Mouse mode; static drag-to-set zone labeled "S"; while held, divides the movement scale by 2×/4×/8× (configurable); persisted per profile; drawn in teal on overlay | TODO |
+| Drag-lock gesture (double-tap-and-hold) | Implemented in Touch mode; second tap held ≥ 220 ms latches left button; first lift keeps latch for drag; tap with minimal movement releases; short second tap still fires double-click | TODO |
+| Keyboard shortcut launcher panel | Implemented; keyboard icon button in Touch Mouse status bar (visible when macros are configured) toggles a right-side scrollable panel showing all macro buttons in a vertical list; reuses macro button config | TODO |
+| App home screen shortcuts | Implemented; static `shortcuts.xml` with Touch Mouse and Gamepad entries; `singleTop` MainActivity; `pendingStartMode` in ViewModel consumed by `HomeFragment` to bypass mode card selection | TODO |
+| Home screen widget | Implemented; `HidWidgetProvider` shows connection status and Reconnect/Disconnect button; `HidWidgetState` SharedPrefs updated by ViewModel on each state change; Reconnect triggers foreground service reconnect and opens app; Disconnect sends service intent | TODO |
 
 ## Settings & App Controls
 
 | Feature | Android status | iOS status |
 | --- | --- | --- |
 | Appearance / dark mode | System / Light / Dark; applied via `AppCompatDelegate` | System / Light / Dark; gear icon on Home opens `AppSettingsView`; drives `preferredColorScheme` |
-| Configurable peripheral name | Settings dialog stores the name; `HidManager` uses it for adapter rename and SDP registration on new pair | `AppSettingsView` stores the name; `ExperimentalBLEHIDTransport` uses it for BLE local-name advertising |
-| Large Text | Settings dialog stores preference; activity context applies enlarged font scale after recreate | `AppSettingsView` stores preference; SwiftUI root applies accessibility dynamic type |
-| High Contrast | Settings dialog stores preference; activity applies high-contrast Material theme after recreate | `AppSettingsView` stores preference; SwiftUI root applies stronger contrast and primary tint |
-| Session logging | Toggle in Settings dialog; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
-| Orientation lock | System / Portrait / Landscape; Settings dialog + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
+| Configurable peripheral name | Settings screen stores the name; `HidManager` uses it for adapter rename and SDP registration on new pair | `AppSettingsView` stores the name; `ExperimentalBLEHIDTransport` uses it for BLE local-name advertising |
+| Large Text | Settings screen stores preference; activity context applies enlarged font scale after recreate | `AppSettingsView` stores preference; SwiftUI root applies accessibility dynamic type |
+| High Contrast | Settings screen stores preference; activity applies high-contrast Material theme after recreate | `AppSettingsView` stores preference; SwiftUI root applies stronger contrast and primary tint |
+| Session logging | Toggle in Settings screen; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
+| Orientation lock | System / Portrait / Landscape; Settings screen + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
 | Connection status chip | Implemented via ActionBar subtitle in `MainActivity`; visible on Home and Tutorial screens; shows empty (Idle), Starting, Waiting, Connecting, Connected, and Error states | TODO |
-| Screen pinning | Implemented; opt-in toggle in Settings; `startLockTask()` called in `GamepadFragment` and `TouchMouseFragment` `onResume()` | TODO |
+| Screen pinning | Implemented; opt-in toggle in Settings screen; `startLockTask()` called in `GamepadFragment` and `TouchMouseFragment` `onResume()` | TODO |
+| Settings screen | Implemented as `SettingsFragment` in nav graph; replaces the programmatic dialog; navigated to via ActionBar Settings menu item from any screen | TODO |
 | Known host management | Rename / forget host; last 10 hosts stored | Rename / forget host; list stored in `UserDefaults` |
 | Multi-profile support | Built-in + custom profiles; profile-namespaced config storage | Built-in + custom profiles; profile-namespaced `UserDefaults` keys |
 

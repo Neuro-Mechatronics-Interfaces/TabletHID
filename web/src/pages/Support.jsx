@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 import imgLanding          from '../../img/Landing - Android.png';
 import imgMousePairing     from '../../img/Mouse Pairing - Android.png';
@@ -170,6 +171,12 @@ function LogInstructions({ platform }) {
 function IosWalkthrough() {
   return (
     <>
+      {/* ── Pairing video ── */}
+      <div id="pairing-video" className="video-section">
+        <h2>Pairing walkthrough</h2>
+        <div className="video-placeholder">iOS / macOS pairing video coming soon.</div>
+      </div>
+
       <div className="walkthrough-block">
         <div className="walkthrough-block-label">Getting started</div>
 
@@ -251,6 +258,16 @@ function IosWalkthrough() {
 function AndroidWalkthrough() {
   return (
     <>
+      {/* ── Pairing video ── */}
+      <div id="pairing-video" className="video-section">
+        <h2>Pairing walkthrough</h2>
+        {/* MKV plays in Chrome/Firefox/Edge. Convert to MP4 for Safari support. */}
+        <video className="video-player" controls preload="metadata">
+          <source src="/vid/Android Pairing.mkv" type="video/x-matroska" />
+          Your browser does not support this video format. Download it directly instead.
+        </video>
+      </div>
+
       {/* ── Getting started ── */}
       <div className="walkthrough-block">
         <div className="walkthrough-block-label">Getting started</div>
@@ -383,7 +400,15 @@ function AndroidWalkthrough() {
 
 export default function Support() {
   const { platform } = useParams();
+  const { hash } = useLocation();
   const tab = platform === 'ios' ? 'ios' : platform === 'android' ? 'android' : 'common';
+
+  // React Router doesn't scroll to hash anchors automatically on client-side nav.
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [hash, tab]);
 
   return (
     <div className="page">

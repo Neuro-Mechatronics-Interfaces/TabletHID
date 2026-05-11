@@ -4,14 +4,11 @@ import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import com.google.android.material.button.MaterialButton
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -25,7 +22,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.bluetooth.BleHidManager
-import com.tablet.hid.bluetooth.HidReportDescriptors
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_A
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_B
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_BACK
@@ -34,26 +30,11 @@ import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_RB
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_START
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_X
 import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_Y
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_E
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_N
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_NE
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_NW
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_NONE
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_S
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_SE
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_SW
-import com.tablet.hid.bluetooth.HidReportDescriptors.HAT_W
 import com.tablet.hid.databinding.FragmentGamepadBinding
-import androidx.core.content.ContextCompat
-import com.tablet.hid.model.ButtonConfig
-import com.tablet.hid.model.ClickBehavior
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickSide
-import com.tablet.hid.model.TriggerDragAxis
 import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.OrientationStore
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class GamepadFragment : Fragment() {
@@ -63,34 +44,9 @@ class GamepadFragment : Fragment() {
 
     private val viewModel: HidViewModel by activityViewModels()
 
-    // ── Gamepad axis/hat state ───────────────────────────────────────────────
-    private var leftX = 0; private var leftY = 0
-    private var rightX = 0; private var rightY = 0
-    private var leftTrigger = 0; private var rightTrigger = 0
-    private var hat = HAT_NONE
-
-    private var dUp = false; private var dDown = false
-    private var dLeft = false; private var dRight = false
-
-    // ── Button state (latching + momentary) ──────────────────────────────────
-    private val latchedBits = mutableSetOf<Int>()
-    private val momentaryBits = mutableSetOf<Int>()
-
-    // ── Turbo ────────────────────────────────────────────────────────────────
-    private val turboJobs = mutableMapOf<Int, Job>()
-
-    // ── Edit-mode ────────────────────────────────────────────────────────────
-    private var editMode = false
-
-    // ── Visual: base colors per button ──────────────────────────────────────
-    private val baseColor = mapOf(
-        BTN_A to 0xFF22C55E.toInt(), BTN_B to 0xFFEF4444.toInt(),
-        BTN_X to 0xFF3B82F6.toInt(), BTN_Y to 0xFFF5C518.toInt(),
-    )
-    private val activeColor = mapOf(
-        BTN_A to 0xFF86EFAC.toInt(), BTN_B to 0xFFFCA5A5.toInt(),
-        BTN_X to 0xFF93C5FD.toInt(), BTN_Y to 0xFFFFE082.toInt(),
-    )
+    private lateinit var stateManager: GamepadStateManager
+    private lateinit var editController: GamepadEditController
+    private lateinit var inputController: GamepadInputController
 
     // ── Immersive mode ───────────────────────────────────────────────────────
 
@@ -127,7 +83,7 @@ class GamepadFragment : Fragment() {
 
     private val backPressCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
-            if (editMode) { exitEditMode(); return }
+            if (editController.editMode) { editController.exitEditMode(); return }
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.exit_mode_title)
                 .setMessage(R.string.exit_mode_message)
@@ -158,26 +114,72 @@ class GamepadFragment : Fragment() {
             OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
 
+        stateManager = GamepadStateManager(
+            viewModel = viewModel,
+            lifecycleOwner = viewLifecycleOwner,
+            config = { viewModel.gamepadConfig.value },
+            buttonViews = {
+                mapOf(
+                    BTN_A     to binding.btnA,
+                    BTN_B     to binding.btnB,
+                    BTN_X     to binding.btnX,
+                    BTN_Y     to binding.btnY,
+                    BTN_LB    to binding.btnLb,
+                    BTN_RB    to binding.btnRb,
+                    BTN_BACK  to binding.btnBack,
+                    BTN_START to binding.btnStart,
+                )
+            },
+        )
+
+        editController = GamepadEditController(
+            binding = binding,
+            viewModel = viewModel,
+            resources = resources,
+            fragmentManager = childFragmentManager,
+            onEditStateChanged = { _ ->
+                inputController.setupButtons()
+                inputController.setupDpad()
+                applyConfig(viewModel.gamepadConfig.value)
+            },
+        )
+
+        inputController = GamepadInputController(
+            binding = binding,
+            viewModel = viewModel,
+            resources = resources,
+            state = stateManager,
+        )
+
         binding.btnOrientationLock.setOnClickListener { cycleOrientationLock() }
         updateOrientationIcon()
 
-        setupJoysticks()
-        setupButtons()
-        setupDpad()
+        inputController.setupJoysticks()
+        inputController.setupButtons()
+        inputController.setupDpad()
 
         binding.btnSettings.setOnClickListener { showConfigSheet() }
-        binding.btnEditDone.setOnClickListener { exitEditMode() }
-        binding.btnSingleJoystickSide.setOnClickListener { toggleSingleJoystickOutputSide() }
+        binding.btnEditDone.setOnClickListener { editController.exitEditMode() }
+        binding.btnSingleJoystickSide.setOnClickListener { inputController.toggleSingleJoystickOutputSide() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    val connected = state is BleHidManager.State.Connected
-                    binding.ledStatus.backgroundTintList = ColorStateList.valueOf(
-                        if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
-                    )
-                    binding.textConnStatus.text =
-                        if (connected) "Connected" else "Disconnected"
+                    val ledColor = when (state) {
+                        is BleHidManager.State.Connected -> Color.parseColor("#4CAF50")
+                        is BleHidManager.State.Idle,
+                        is BleHidManager.State.Error     -> Color.parseColor("#F44336")
+                        else                             -> Color.parseColor("#FF9800")
+                    }
+                    binding.ledStatus.backgroundTintList = ColorStateList.valueOf(ledColor)
+                    binding.textConnStatus.text = when (state) {
+                        is BleHidManager.State.Connected          -> getString(R.string.status_connected)
+                        is BleHidManager.State.Registering        -> getString(R.string.home_status_connecting)
+                        is BleHidManager.State.WaitingForConnection -> getString(R.string.home_status_waiting)
+                        is BleHidManager.State.Reconnecting       -> getString(R.string.tutorial_status_reconnecting, state.deviceName)
+                        is BleHidManager.State.Error              -> getString(R.string.status_disconnected)
+                        is BleHidManager.State.Idle               -> getString(R.string.status_disconnected)
+                    }
                 }
             }
         }
@@ -215,6 +217,23 @@ class GamepadFragment : Fragment() {
         binding.dpadLeft.applyLayout(cfg.dpadLeft.offsetX, cfg.dpadLeft.offsetY, cfg.dpadLeft.scaleX, cfg.dpadLeft.scaleY); binding.dpadLeft.applyEnabled(cfg.dpadLeft.enabled)
         binding.dpadRight.applyLayout(cfg.dpadRight.offsetX, cfg.dpadRight.offsetY, cfg.dpadRight.scaleX, cfg.dpadRight.scaleY); binding.dpadRight.applyEnabled(cfg.dpadRight.enabled)
 
+        fun label(key: String, default: String) =
+            cfg.customButtonLabels[key]?.takeIf { it.isNotBlank() } ?: default
+        binding.btnA.text     = label("a",     "A")
+        binding.btnB.text     = label("b",     "B")
+        binding.btnX.text     = label("x",     "X")
+        binding.btnY.text     = label("y",     "Y")
+        binding.btnLb.text    = label("lb",    "LB")
+        binding.btnRb.text    = label("rb",    "RB")
+        binding.btnLt.text    = label("lt",    "LT")
+        binding.btnRt.text    = label("rt",    "RT")
+        binding.btnBack.text  = label("back",  "Back")
+        binding.btnStart.text = label("start", "Start")
+        binding.dpadUp.text    = label("dup",   "▲")
+        binding.dpadDown.text  = label("ddown", "▼")
+        binding.dpadLeft.text  = label("dleft", "◀")
+        binding.dpadRight.text = label("dright","▶")
+
         binding.leftJoystick.applyLayout(cfg.leftJoystick.offsetX, cfg.leftJoystick.offsetY, cfg.leftJoystick.scaleX, cfg.leftJoystick.scaleY)
         binding.leftJoystick.applyEnabled(cfg.leftJoystick.enabled)
         binding.rightJoystick.applyLayout(cfg.rightJoystick.offsetX, cfg.rightJoystick.offsetY, cfg.rightJoystick.scaleX, cfg.rightJoystick.scaleY)
@@ -223,508 +242,30 @@ class GamepadFragment : Fragment() {
             if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled && cfg.leftJoystick.enabled) View.VISIBLE else View.GONE
         binding.btnSingleJoystickSide.text =
             if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) "L" else "R"
-        renderMacroButtons(cfg)
+        editController.renderMacroButtons(cfg)
 
         binding.leftJoystick.deadzone  = cfg.leftJoystick.deadzone
         binding.leftJoystick.gain      = cfg.leftJoystick.gain
         binding.rightJoystick.deadzone = cfg.rightJoystick.deadzone
         binding.rightJoystick.gain     = cfg.rightJoystick.gain
 
-        if (!cfg.leftJoystick.enabled && (leftX != 0 || leftY != 0)) { leftX = 0; leftY = 0; sendReport() }
-        if ((cfg.singleJoystickMode || !cfg.rightJoystick.enabled) && (rightX != 0 || rightY != 0)) { rightX = 0; rightY = 0; sendReport() }
+        if (!cfg.leftJoystick.enabled && (stateManager.leftX != 0 || stateManager.leftY != 0)) {
+            stateManager.leftX = 0; stateManager.leftY = 0; stateManager.sendReport()
+        }
+        if ((cfg.singleJoystickMode || !cfg.rightJoystick.enabled) && (stateManager.rightX != 0 || stateManager.rightY != 0)) {
+            stateManager.rightX = 0; stateManager.rightY = 0; stateManager.sendReport()
+        }
     }
 
     // ── Config sheet ─────────────────────────────────────────────────────────
 
     private fun showConfigSheet() {
         GamepadConfigSheet().apply {
-            onEditLayoutRequested = { enterEditMode() }
+            onEditLayoutRequested = { editController.enterEditMode() }
         }.show(childFragmentManager, "gpConfig")
     }
 
-    // ── Edit mode (drag to reposition, pinch to resize independently H/V) ────
-
-    private fun enterEditMode() {
-        editMode = true
-        binding.editModeBanner.visibility = View.VISIBLE
-
-        fun attach(v: View, getB: (GamepadConfig) -> ButtonConfig,
-                   setB: (GamepadConfig, ButtonConfig) -> GamepadConfig) =
-            v.setOnTouchListener(editTouchListener(v,
-                getConfig = { getB(viewModel.gamepadConfig.value) },
-                saveConfig = { bc -> viewModel.updateGamepadConfig(setB(viewModel.gamepadConfig.value, bc)) }
-            ))
-
-        fun attachJoy(v: View, getJ: (GamepadConfig) -> com.tablet.hid.model.JoystickConfig,
-                      setJ: (GamepadConfig, com.tablet.hid.model.JoystickConfig) -> GamepadConfig) =
-            v.setOnTouchListener(editJoyListener(v,
-                getConfig = { getJ(viewModel.gamepadConfig.value) },
-                saveConfig = { jc -> viewModel.updateGamepadConfig(setJ(viewModel.gamepadConfig.value, jc)) }
-            ))
-
-        attach(binding.btnA,      { it.btnA },     { c, b -> c.copy(btnA = b) })
-        attach(binding.btnB,      { it.btnB },     { c, b -> c.copy(btnB = b) })
-        attach(binding.btnX,      { it.btnX },     { c, b -> c.copy(btnX = b) })
-        attach(binding.btnY,      { it.btnY },     { c, b -> c.copy(btnY = b) })
-        attach(binding.btnLb,     { it.btnLb },    { c, b -> c.copy(btnLb = b) })
-        attach(binding.btnRb,     { it.btnRb },    { c, b -> c.copy(btnRb = b) })
-        attach(binding.btnLt,     { it.btnLt },    { c, b -> c.copy(btnLt = b) })
-        attach(binding.btnRt,     { it.btnRt },    { c, b -> c.copy(btnRt = b) })
-        attach(binding.btnBack,   { it.btnBack },  { c, b -> c.copy(btnBack = b) })
-        attach(binding.btnStart,  { it.btnStart }, { c, b -> c.copy(btnStart = b) })
-        attach(binding.dpadUp,    { it.dpadUp },   { c, b -> c.copy(dpadUp = b) })
-        attach(binding.dpadDown,  { it.dpadDown }, { c, b -> c.copy(dpadDown = b) })
-        attach(binding.dpadLeft,  { it.dpadLeft }, { c, b -> c.copy(dpadLeft = b) })
-        attach(binding.dpadRight, { it.dpadRight },{ c, b -> c.copy(dpadRight = b) })
-        attachJoy(binding.leftJoystick,  { it.leftJoystick },  { c, j -> c.copy(leftJoystick = j) })
-        attachJoy(binding.rightJoystick, { it.rightJoystick }, { c, j -> c.copy(rightJoystick = j) })
-
-        allButtonViews().forEach { it.alpha = 0.6f }
-    }
-
-    private fun exitEditMode() {
-        editMode = false
-        binding.editModeBanner.visibility = View.GONE
-        setupButtons()
-        setupDpad()
-        binding.leftJoystick.setOnTouchListener(null)
-        binding.rightJoystick.setOnTouchListener(null)
-        allButtonViews().forEach { it.alpha = 1f }
-        applyConfig(viewModel.gamepadConfig.value)
-    }
-
-    @Suppress("ClickableViewAccessibility")
-    private fun editTouchListener(
-        view: View,
-        getConfig: () -> ButtonConfig,
-        saveConfig: (ButtonConfig) -> Unit,
-    ): View.OnTouchListener {
-        var lastSpanX = 1f; var lastSpanY = 1f
-        val scaleDetector = ScaleGestureDetector(requireContext(),
-            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                override fun onScaleBegin(d: ScaleGestureDetector): Boolean {
-                    lastSpanX = d.currentSpanX.coerceAtLeast(1f)
-                    lastSpanY = d.currentSpanY.coerceAtLeast(1f)
-                    return true
-                }
-                override fun onScale(d: ScaleGestureDetector): Boolean {
-                    val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
-                    val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.3f)
-                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.3f)
-                    lastSpanX = d.currentSpanX.coerceAtLeast(1f)
-                    lastSpanY = d.currentSpanY.coerceAtLeast(1f)
-                    return true
-                }
-                override fun onScaleEnd(d: ScaleGestureDetector) {
-                    val density = resources.displayMetrics.density
-                    saveConfig(getConfig().copy(
-                        scaleX  = view.scaleX,
-                        scaleY  = view.scaleY,
-                        offsetX = view.translationX / density,
-                        offsetY = view.translationY / density,
-                    ))
-                }
-            })
-        var lastRawX = 0f; var lastRawY = 0f
-        return View.OnTouchListener { _, event ->
-            scaleDetector.onTouchEvent(event)
-            if (scaleDetector.isInProgress) return@OnTouchListener true
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> { lastRawX = event.rawX; lastRawY = event.rawY }
-                MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
-                    lastRawX = event.rawX; lastRawY = event.rawY
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val density = resources.displayMetrics.density
-                    saveConfig(getConfig().copy(
-                        offsetX = view.translationX / density,
-                        offsetY = view.translationY / density,
-                        scaleX  = view.scaleX,
-                        scaleY  = view.scaleY,
-                    ))
-                }
-            }
-            true
-        }
-    }
-
-    @Suppress("ClickableViewAccessibility")
-    private fun editJoyListener(
-        view: View,
-        getConfig: () -> com.tablet.hid.model.JoystickConfig,
-        saveConfig: (com.tablet.hid.model.JoystickConfig) -> Unit,
-    ): View.OnTouchListener {
-        var lastSpanX = 1f; var lastSpanY = 1f
-        val scaleDetector = ScaleGestureDetector(requireContext(),
-            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                override fun onScaleBegin(d: ScaleGestureDetector): Boolean {
-                    lastSpanX = d.currentSpanX.coerceAtLeast(1f)
-                    lastSpanY = d.currentSpanY.coerceAtLeast(1f)
-                    return true
-                }
-                override fun onScale(d: ScaleGestureDetector): Boolean {
-                    val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
-                    val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.4f)
-                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.4f)
-                    lastSpanX = d.currentSpanX.coerceAtLeast(1f)
-                    lastSpanY = d.currentSpanY.coerceAtLeast(1f)
-                    return true
-                }
-                override fun onScaleEnd(d: ScaleGestureDetector) {
-                    val density = resources.displayMetrics.density
-                    saveConfig(getConfig().copy(
-                        scaleX  = view.scaleX,
-                        scaleY  = view.scaleY,
-                        offsetX = view.translationX / density,
-                        offsetY = view.translationY / density,
-                    ))
-                }
-            })
-        var lastRawX = 0f; var lastRawY = 0f
-        return View.OnTouchListener { _, event ->
-            scaleDetector.onTouchEvent(event)
-            if (scaleDetector.isInProgress) return@OnTouchListener true
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> { lastRawX = event.rawX; lastRawY = event.rawY }
-                MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
-                    lastRawX = event.rawX; lastRawY = event.rawY
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val density = resources.displayMetrics.density
-                    saveConfig(getConfig().copy(
-                        offsetX = view.translationX / density,
-                        offsetY = view.translationY / density,
-                        scaleX  = view.scaleX,
-                        scaleY  = view.scaleY,
-                    ))
-                }
-            }
-            true
-        }
-    }
-
-    private fun allButtonViews(): List<View> = listOf(
-        binding.btnA, binding.btnB, binding.btnX, binding.btnY,
-        binding.btnLb, binding.btnRb, binding.btnLt, binding.btnRt,
-        binding.btnBack, binding.btnStart,
-        binding.dpadUp, binding.dpadDown, binding.dpadLeft, binding.dpadRight,
-        binding.leftJoystick, binding.rightJoystick,
-        binding.btnSingleJoystickSide,
-    )
-
-    private fun renderMacroButtons(cfg: GamepadConfig) {
-        binding.macroButtonRow.removeAllViews()
-        binding.macroScroll.visibility = if (cfg.macroButtons.isNotEmpty()) View.VISIBLE else View.GONE
-        cfg.macroButtons.forEach { macro ->
-            val button = MaterialButton(requireContext()).apply {
-                text = macro.label
-                minHeight = resources.getDimensionPixelSize(R.dimen.macro_button_height)
-                minWidth = 0
-                setPadding(18, 0, 18, 0)
-                setOnTouchListener { _, event ->
-                    when (event.actionMasked) {
-                        MotionEvent.ACTION_DOWN -> {
-                            viewModel.sendKeyboardReport(macro.modifiers, macro.keyUsages)
-                            true
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            viewModel.sendKeyboardReport()
-                            true
-                        }
-                        else -> false
-                    }
-                }
-            }
-            val margin = (8 * resources.displayMetrics.density).toInt()
-            binding.macroButtonRow.addView(
-                button,
-                ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                ).apply { marginEnd = margin },
-            )
-        }
-    }
-
-    // ── Joysticks ─────────────────────────────────────────────────────────────
-
-    private fun setupJoysticks() {
-        binding.leftJoystick.listener = JoystickView.JoystickListener { nx, ny ->
-            leftX = (nx * 32767).toInt(); leftY = (ny * 32767).toInt(); sendReport()
-        }
-        binding.rightJoystick.listener = JoystickView.JoystickListener { nx, ny ->
-            rightX = (nx * 32767).toInt(); rightY = (ny * 32767).toInt(); sendReport()
-        }
-    }
-
-    private fun toggleSingleJoystickOutputSide() {
-        val cfg = viewModel.gamepadConfig.value
-        if (!cfg.singleJoystickMode) return
-        val next = if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) JoystickSide.RIGHT else JoystickSide.LEFT
-        viewModel.updateGamepadConfig(cfg.copy(singleJoystickOutputSide = next))
-        sendReport()
-    }
-
-    // ── Face / shoulder / trigger buttons ────────────────────────────────────
-
-    private fun setupButtons() {
-        val cfg = viewModel.gamepadConfig.value
-        configuredButton(binding.btnA,    BTN_A,    cfg.btnA,    binding.btnA)
-        configuredButton(binding.btnB,    BTN_B,    cfg.btnB,    binding.btnB)
-        configuredButton(binding.btnX,    BTN_X,    cfg.btnX,    binding.btnX)
-        configuredButton(binding.btnY,    BTN_Y,    cfg.btnY,    binding.btnY)
-        configuredButton(binding.btnLb,   BTN_LB,   cfg.btnLb,   binding.btnLb)
-        configuredButton(binding.btnRb,   BTN_RB,   cfg.btnRb,   binding.btnRb)
-        configuredButton(binding.btnBack, BTN_BACK, cfg.btnBack, binding.btnBack)
-        configuredButton(binding.btnStart,BTN_START,cfg.btnStart,binding.btnStart)
-
-        triggerButton(binding.btnLt, cfg.btnLt, isLeft = true)
-        triggerButton(binding.btnRt, cfg.btnRt, isLeft = false)
-    }
-
-    @Suppress("ClickableViewAccessibility")
-    private fun configuredButton(v: View, bit: Int, cfg: ButtonConfig, indicator: View) {
-        v.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    when (cfg.behavior) {
-                        ClickBehavior.MOMENTARY -> {
-                            if (cfg.turbo) startTurbo(bit, cfg)
-                            else { momentaryBits.add(bit); setVisualActive(indicator, bit, true) }
-                        }
-                        ClickBehavior.LATCHING -> {
-                            if (latchedBits.contains(bit)) {
-                                latchedBits.remove(bit)
-                                turboJobs.remove(bit)?.cancel()
-                                setVisualActive(indicator, bit, false)
-                            } else {
-                                latchedBits.add(bit)
-                                if (cfg.turbo) startTurbo(bit, cfg)
-                                else setVisualActive(indicator, bit, true)
-                            }
-                        }
-                    }
-                    sendReport(); true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (cfg.behavior == ClickBehavior.MOMENTARY) {
-                        turboJobs.remove(bit)?.cancel()
-                        momentaryBits.remove(bit)
-                        setVisualActive(indicator, bit, false)
-                        sendReport()
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    @Suppress("ClickableViewAccessibility")
-    private fun triggerButton(v: View, cfg: ButtonConfig, isLeft: Boolean) {
-        var startX = 0f; var startY = 0f
-        v.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    startX = event.rawX; startY = event.rawY
-                    if (cfg.behavior == ClickBehavior.LATCHING) {
-                        val on = if (isLeft) leftTrigger == 0 else rightTrigger == 0
-                        val trigVal = if (on) 255 else 0
-                        if (isLeft) leftTrigger = trigVal else rightTrigger = trigVal
-                        setTriggerLevel(v, trigVal / 255f)
-                    } else {
-                        if (isLeft) leftTrigger = 255 else rightTrigger = 255
-                        setTriggerLevel(v, 1f)
-                    }
-                    sendReport(); true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (cfg.behavior == ClickBehavior.MOMENTARY) {
-                        val travelPx = cfg.triggerTravelDp * resources.displayMetrics.density
-                        val delta = when (cfg.triggerAxis) {
-                            TriggerDragAxis.UP    -> startY - event.rawY
-                            TriggerDragAxis.DOWN  -> event.rawY - startY
-                            TriggerDragAxis.LEFT  -> startX - event.rawX
-                            TriggerDragAxis.RIGHT -> event.rawX - startX
-                        }
-                        val ratio = (delta.coerceAtLeast(0f) / travelPx).coerceIn(0f, 1f)
-                        val trigVal = (255 * (1f - ratio)).toInt()
-                        if (isLeft) leftTrigger = trigVal else rightTrigger = trigVal
-                        setTriggerLevel(v, trigVal / 255f)
-                        sendReport()
-                    }
-                    true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (cfg.behavior == ClickBehavior.MOMENTARY) {
-                        if (isLeft) leftTrigger = 0 else rightTrigger = 0
-                        setTriggerLevel(v, 0f)
-                        sendReport()
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    // ── D-pad ─────────────────────────────────────────────────────────────────
-
-    private fun setupDpad() {
-        dpadButton(binding.dpadUp,    { d -> dUp    = d; updateHat() })
-        dpadButton(binding.dpadDown,  { d -> dDown  = d; updateHat() })
-        dpadButton(binding.dpadLeft,  { d -> dLeft  = d; updateHat() })
-        dpadButton(binding.dpadRight, { d -> dRight = d; updateHat() })
-    }
-
-    @Suppress("ClickableViewAccessibility")
-    private fun dpadButton(v: View, onChanged: (Boolean) -> Unit) {
-        v.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    setTriggerLevel(v, 1f); onChanged(true); true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    setTriggerLevel(v, 0f); onChanged(false); true
-                }
-                else -> false
-            }
-        }
-    }
-
-    private fun updateHat() {
-        hat = when {
-            dUp && dRight  -> HAT_NE; dDown && dRight -> HAT_SE
-            dDown && dLeft -> HAT_SW; dUp && dLeft    -> HAT_NW
-            dUp            -> HAT_N;  dRight          -> HAT_E
-            dDown          -> HAT_S;  dLeft           -> HAT_W
-            else           -> HAT_NONE
-        }
-        sendReport()
-    }
-
-    // ── Turbo ─────────────────────────────────────────────────────────────────
-
-    private fun startTurbo(bit: Int, cfg: ButtonConfig) {
-        turboJobs[bit]?.cancel()
-        turboJobs[bit] = viewLifecycleOwner.lifecycleScope.launch {
-            val indicator = buttonViewForBit(bit) ?: return@launch
-            while (true) {
-                momentaryBits.add(bit)
-                setVisualActive(indicator, bit, true)
-                sendReport()
-                delay(cfg.turboDurationMs.toLong())
-                momentaryBits.remove(bit)
-                setVisualActive(indicator, bit, false)
-                sendReport()
-                delay(cfg.turboIntervalMs.toLong())
-            }
-        }
-    }
-
-    private fun buttonViewForBit(bit: Int): View? = when (bit) {
-        BTN_A     -> binding.btnA;    BTN_B    -> binding.btnB
-        BTN_X     -> binding.btnX;    BTN_Y    -> binding.btnY
-        BTN_LB    -> binding.btnLb;   BTN_RB   -> binding.btnRb
-        BTN_BACK  -> binding.btnBack; BTN_START -> binding.btnStart
-        else -> null
-    }
-
-    // ── Visual feedback ──────────────────────────────────────────────────────
-
-    private fun setVisualActive(v: View, bit: Int, active: Boolean) {
-        val color = if (active) activeColor[bit] ?: Color.argb(0xFF, 255, 255, 255)
-                    else        baseColor[bit]   ?: Color.argb(0x33, 255, 255, 255)
-        v.backgroundTintList = ColorStateList.valueOf(color)
-    }
-
-    /** Interpolates the button tint alpha from dim (0x33) at level 0 to bright (0xFF) at level 1. */
-    private fun setTriggerLevel(v: View, level: Float) {
-        val alpha = (0x33 + ((0xFF - 0x33) * level)).toInt().coerceIn(0x33, 0xFF)
-        v.backgroundTintList = ColorStateList.valueOf(Color.argb(alpha, 255, 255, 255))
-    }
-
-    // ── Report dispatch ──────────────────────────────────────────────────────
-
-    private fun sendReport() {
-        var bits = 0
-        momentaryBits.forEach { bits = bits or (1 shl it) }
-        latchedBits.forEach   { bits = bits or (1 shl it) }
-        val cfg = viewModel.gamepadConfig.value
-        bits = bits and enabledButtonMask(cfg)
-
-        val reportHat = enabledHat(cfg)
-        val reportLeftX: Int
-        val reportLeftY: Int
-        val reportRightX: Int
-        val reportRightY: Int
-        if (cfg.singleJoystickMode) {
-            val activeX = if (cfg.leftJoystick.enabled) leftX else 0
-            val activeY = if (cfg.leftJoystick.enabled) leftY else 0
-            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) {
-                reportLeftX = activeX
-                reportLeftY = activeY
-                reportRightX = 0
-                reportRightY = 0
-            } else {
-                reportLeftX = 0
-                reportLeftY = 0
-                reportRightX = activeX
-                reportRightY = activeY
-            }
-        } else {
-            reportLeftX = if (cfg.leftJoystick.enabled) leftX else 0
-            reportLeftY = if (cfg.leftJoystick.enabled) leftY else 0
-            reportRightX = if (cfg.rightJoystick.enabled) rightX else 0
-            reportRightY = if (cfg.rightJoystick.enabled) rightY else 0
-        }
-        viewModel.sendGamepadReport(
-            leftX = reportLeftX, leftY = reportLeftY,
-            rightX = reportRightX, rightY = reportRightY,
-            leftTrigger = if (cfg.btnLt.enabled) leftTrigger else 0,
-            rightTrigger = if (cfg.btnRt.enabled) rightTrigger else 0,
-            buttons = bits, hat = reportHat
-        )
-    }
-
     // ── Orientation lock ─────────────────────────────────────────────────────
-
-    private fun enabledButtonMask(cfg: GamepadConfig): Int {
-        var mask = 0
-        if (cfg.btnA.enabled) mask = mask or (1 shl BTN_A)
-        if (cfg.btnB.enabled) mask = mask or (1 shl BTN_B)
-        if (cfg.btnX.enabled) mask = mask or (1 shl BTN_X)
-        if (cfg.btnY.enabled) mask = mask or (1 shl BTN_Y)
-        if (cfg.btnLb.enabled) mask = mask or (1 shl BTN_LB)
-        if (cfg.btnRb.enabled) mask = mask or (1 shl BTN_RB)
-        if (cfg.btnBack.enabled) mask = mask or (1 shl BTN_BACK)
-        if (cfg.btnStart.enabled) mask = mask or (1 shl BTN_START)
-        return mask
-    }
-
-    private fun enabledHat(cfg: GamepadConfig): Int {
-        val up = dUp && cfg.dpadUp.enabled
-        val down = dDown && cfg.dpadDown.enabled
-        val left = dLeft && cfg.dpadLeft.enabled
-        val right = dRight && cfg.dpadRight.enabled
-        return when {
-            up && right -> HAT_NE
-            down && right -> HAT_SE
-            down && left -> HAT_SW
-            up && left -> HAT_NW
-            up -> HAT_N
-            right -> HAT_E
-            down -> HAT_S
-            left -> HAT_W
-            else -> HAT_NONE
-        }
-    }
 
     private fun cycleOrientationLock() {
         val next = (OrientationStore.get(requireContext()) + 1) % 3
@@ -744,8 +285,7 @@ class GamepadFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        turboJobs.values.forEach { it.cancel() }
-        turboJobs.clear()
+        stateManager.reset()
         requireActivity().requestedOrientation =
             OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
         _binding = null

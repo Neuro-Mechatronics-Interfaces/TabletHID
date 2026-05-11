@@ -10,6 +10,10 @@ data class KeyboardMacroButtonConfig(
     val label: String,
     val modifiers: Int,
     val keyUsages: List<Int>,
+    val layoutOffsetX: Float = 0f,
+    val layoutOffsetY: Float = 0f,
+    val layoutScaleX: Float = 1f,
+    val layoutScaleY: Float = 1f,
 )
 
 object KeyboardMacroPresets {
@@ -83,6 +87,12 @@ data class TouchMouseConfig(
         staticLeft = 0.75f, staticTop = 0.75f, staticRight = 1f, staticBottom = 1f,
         dynamicOffsetX = +0.15f // (default) — right of primary pointer
     ),
+    val sniperEnabled: Boolean = false,
+    val sniperLeft: Float = 0.35f,
+    val sniperTop: Float = 0.88f,
+    val sniperRight: Float = 0.65f,
+    val sniperBottom: Float = 1.0f,
+    val sniperDivisor: Float = 4f,
     val macroHostDefaults: MacroHostDefaults = MacroHostDefaults.WINDOWS,
     val macroButtons: List<KeyboardMacroButtonConfig> = emptyList(),
 )

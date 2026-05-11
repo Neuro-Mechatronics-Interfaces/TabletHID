@@ -1,8 +1,6 @@
 package com.tablet.hid.ui.tutorial
 
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
-
 import android.os.Bundle
 import android.text.Html
 import android.text.InputType
@@ -77,7 +75,6 @@ class TutorialFragment : Fragment() {
         return binding.root
     }
 
-    @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -115,7 +112,7 @@ class TutorialFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    updateUi(state, mode)
+                    updateUi(state)
                     // Refresh the host list in case a connection updated btName.
                     if (state is BleHidManager.State.Connected) {
                         bondedHosts = findBondedHosts()
@@ -147,17 +144,18 @@ class TutorialFragment : Fragment() {
             mode == DeviceMode.GAMEPAD     && isWindows  -> R.array.instructions_windows_gamepad
             else                                          -> R.array.instructions_macos_gamepad
         }
+        val name = peripheralName()
         pairRows = inflateSteps(
             binding.instructionsList,
             resources.getStringArray(arrayId)
-                .map { it.replace(AppearanceStore.DEFAULT_DEVICE_NAME, peripheralName()) }
+                .map { String.format(java.util.Locale.ROOT, it, name) }
         ) { i ->
-            when {
-                i == 0 -> {
+            when (i) {
+                0 -> {
                     activateColumn(ActiveColumn.PAIR)
                     startPairFlow(mode)
                 }
-                i == pairRows.size - 1 -> if (binding.btnEnterMode.isEnabled) navigateToMode(mode)
+                else -> if (i == pairRows.size - 1 && binding.btnEnterMode.isEnabled) navigateToMode(mode)
             }
         }
 
@@ -273,7 +271,7 @@ class TutorialFragment : Fragment() {
             val sr = StepRow(
                 root      = row,
                 highlight = row.findViewById(R.id.stepHighlight),
-                badge     = row.findViewById<TextView>(R.id.stepBadge).also { it.text = (i + 1).toString() },
+                badge     = row.findViewById<TextView>(R.id.stepBadge).also { it.text = String.format(java.util.Locale.ROOT, "%d", i + 1) },
                 text      = row.findViewById<TextView>(R.id.stepText).also {
                     it.text = Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY)
                 }
@@ -304,7 +302,7 @@ class TutorialFragment : Fragment() {
 
     // ── State → UI ───────────────────────────────────────────────────────────
 
-    private fun updateUi(state: BleHidManager.State, mode: DeviceMode) {
+    private fun updateUi(state: BleHidManager.State) {
         val (statusText, enterEnabled) = when (state) {
             is BleHidManager.State.Idle ->
                 getString(R.string.tutorial_status_idle) to false
@@ -315,8 +313,7 @@ class TutorialFragment : Fragment() {
             is BleHidManager.State.WaitingForConnection ->
                 getString(R.string.tutorial_status_waiting, peripheralName()) to false
             is BleHidManager.State.Connected ->
-                getString(R.string.tutorial_status_connected,
-                    state.device.name ?: state.device.address) to true
+                getString(R.string.tutorial_status_connected, state.deviceName) to true
             is BleHidManager.State.Error ->
                 getString(R.string.tutorial_status_error, state.message) to false
         }

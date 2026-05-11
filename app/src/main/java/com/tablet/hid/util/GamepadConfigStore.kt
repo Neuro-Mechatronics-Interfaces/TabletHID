@@ -12,6 +12,7 @@ import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.model.MacroHostDefaults
 import com.tablet.hid.model.Profile
 import com.tablet.hid.model.TriggerDragAxis
+import com.tablet.hid.model.VibrationIntensity
 
 object GamepadConfigStore {
 
@@ -42,6 +43,11 @@ object GamepadConfigStore {
         p.putString("single_joystick_output_side", config.singleJoystickOutputSide.name)
         p.putString("macro_host_defaults", config.macroHostDefaults.name)
         macros(p, config.macroButtons)
+        p.putString("vibration_intensity", config.vibrationIntensity.name)
+        BUTTON_LABEL_KEYS.forEach { key ->
+            val label = config.customButtonLabels[key]
+            if (label != null) p.putString("label_$key", label) else p.remove("label_$key")
+        }
         p.apply()
     }
 
@@ -75,6 +81,8 @@ object GamepadConfigStore {
             singleJoystickOutputSide = joystickSide(p.getString("single_joystick_output_side", null)),
             macroHostDefaults = macroHostDefaults(p.getString("macro_host_defaults", null)),
             macroButtons = macros(p),
+            vibrationIntensity = vibrationIntensity(p.getString("vibration_intensity", null)),
+            customButtonLabels = loadLabelMap(p),
         )
     }
 
@@ -153,6 +161,8 @@ object GamepadConfigStore {
                 singleJoystickOutputSide = joystickSide(p.getString("single_joystick_output_side", null)),
                 macroHostDefaults = macroHostDefaults(p.getString("macro_host_defaults", null)),
                 macroButtons = macros(p),
+                vibrationIntensity = vibrationIntensity(p.getString("vibration_intensity", null)),
+                customButtonLabels = loadLabelMap(p),
             )
         } catch (_: Exception) { null }
     }
@@ -216,6 +226,9 @@ object GamepadConfigStore {
     private fun macroHostDefaults(value: String?): MacroHostDefaults =
         runCatching { MacroHostDefaults.valueOf(value ?: "") }.getOrDefault(MacroHostDefaults.WINDOWS)
 
+    private fun vibrationIntensity(value: String?): VibrationIntensity =
+        runCatching { VibrationIntensity.valueOf(value ?: "") }.getOrDefault(VibrationIntensity.OFF)
+
     private fun macros(p: SharedPreferences.Editor, macros: List<KeyboardMacroButtonConfig>) {
         p.putInt("macro_count", macros.size)
         macros.forEachIndexed { index, macro ->
@@ -223,8 +236,23 @@ object GamepadConfigStore {
             p.putString("${k}_label", macro.label)
             p.putInt("${k}_modifiers", macro.modifiers)
             p.putString("${k}_keys", macro.keyUsages.joinToString(","))
+            p.putFloat("${k}_lox", macro.layoutOffsetX)
+            p.putFloat("${k}_loy", macro.layoutOffsetY)
+            p.putFloat("${k}_lsx", macro.layoutScaleX)
+            p.putFloat("${k}_lsy", macro.layoutScaleY)
         }
     }
+
+    val BUTTON_LABEL_KEYS = listOf(
+        "a", "b", "x", "y", "lb", "rb", "lt", "rt", "back", "start",
+        "dup", "ddown", "dleft", "dright"
+    )
+
+    private fun loadLabelMap(p: SharedPreferences): Map<String, String> =
+        BUTTON_LABEL_KEYS.mapNotNull { key ->
+            val v = p.getString("label_$key", null)
+            if (!v.isNullOrBlank()) key to v else null
+        }.toMap()
 
     private fun macros(p: SharedPreferences): List<KeyboardMacroButtonConfig> {
         val count = p.getInt("macro_count", 0)
@@ -238,6 +266,10 @@ object GamepadConfigStore {
                     ?.split(',')
                     ?.mapNotNull { it.toIntOrNull() }
                     ?: emptyList(),
+                layoutOffsetX = p.getFloat("${k}_lox", 0f),
+                layoutOffsetY = p.getFloat("${k}_loy", 0f),
+                layoutScaleX  = p.getFloat("${k}_lsx", 1f),
+                layoutScaleY  = p.getFloat("${k}_lsy", 1f),
             )
         }.filter { it.label.isNotBlank() && it.keyUsages.isNotEmpty() }
     }

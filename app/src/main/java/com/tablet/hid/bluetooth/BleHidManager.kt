@@ -50,7 +50,7 @@ class BleHidManager(private val context: Context) {
         object Registering : State()
         object WaitingForConnection : State()
         data class Reconnecting(val deviceName: String) : State()
-        data class Connected(val device: BluetoothDevice, val mode: DeviceMode) : State()
+        data class Connected(val device: BluetoothDevice, val mode: DeviceMode, val deviceName: String) : State()
         data class Error(val message: String) : State()
     }
 
@@ -69,6 +69,11 @@ class BleHidManager(private val context: Context) {
 
     // Sequential service-add queue — Android only allows one addService() in flight.
     private val serviceQueue = ArrayDeque<BluetoothGattService>()
+
+    // Value stores keyed by the characteristic/descriptor object — replaces the deprecated
+    // .value getter/setter on BluetoothGattCharacteristic and BluetoothGattDescriptor (API 33).
+    private val charValues = HashMap<BluetoothGattCharacteristic, ByteArray>()
+    private val descValues = HashMap<BluetoothGattDescriptor, ByteArray>()
 
     // -------------------------------------------------------------------------
     // Public API (mirrors HidManager interface)
@@ -89,7 +94,35 @@ class BleHidManager(private val context: Context) {
         try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (e: Exception) {
             Log.w(TAG, "setName: ${e.message}")
         }
-        startGattServer()
+        // For a specific reconnect target, reuse the open GATT server so the host can
+        // reconnect via cached handles without re-pairing.  For a fresh-pair flow
+        // (reconnectTarget == null), always rebuild the server so there is no stale
+        // bonding or CCCD state from a previous session.
+        if (reconnectTarget != null && gattServer != null) {
+            startAdvertising()
+        } else {
+            // Fresh-pair flow: remove Android-side bonds for all previously-seen HID hosts.
+            // If the host removed its pairing but Android still has the LTK, Android will try
+            // to re-use the old key instead of accepting a fresh SMP exchange — the host gets
+            // "incorrect PIN or Passkey" and no pairing dialog ever appears on the tablet.
+            removeStaleBonds(adapter)
+            startGattServer()
+        }
+    }
+
+    private fun removeStaleBonds(adapter: android.bluetooth.BluetoothAdapter) {
+        val known = HidHostStore.getAll(context).map { it.address }.toSet()
+        adapter.bondedDevices?.forEach { device ->
+            if (device.address in known) {
+                try {
+                    @Suppress("DiscouragedPrivateApi")
+                    device.javaClass.getMethod("removeBond").invoke(device)
+                    Log.d(TAG, "removeBond: ${device.address}")
+                } catch (e: Exception) {
+                    Log.w(TAG, "removeBond failed for ${device.address}: ${e.message}")
+                }
+            }
+        }
     }
 
     fun reconnect(mode: DeviceMode, host: HidHost) {
@@ -101,7 +134,7 @@ class BleHidManager(private val context: Context) {
         activeMode = mode
         _state.value = State.Reconnecting(host.displayName)
         try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (_: Exception) {}
-        startGattServer()
+        if (gattServer != null) startAdvertising() else startGattServer()
     }
 
     fun forgetDevice(host: HidHost) {
@@ -118,21 +151,39 @@ class BleHidManager(private val context: Context) {
 
     fun disconnect() {
         stopAdvertising()
+        // Set Idle before cancelConnection so the onConnectionStateChange callback sees
+        // state=Idle and does not restart advertising.
+        _state.value = State.Idle
+        connectedDevice?.let {
+            try { gattServer?.cancelConnection(it) } catch (_: Exception) {}
+        }
+        connectedDevice = null
+        // Keep the GATT server open so the same service/characteristic handles are presented
+        // on the next connection. Windows caches these handles after first pairing; tearing
+        // down the server forces a full re-pair instead of a simple reconnect.
+    }
+
+    fun disconnectAndUnbond() {
+        stopAdvertising()
+        _state.value = State.Idle
         connectedDevice?.let {
             try { gattServer?.cancelConnection(it) } catch (_: Exception) {}
         }
         connectedDevice = null
         closeGattServer()
-        _state.value = State.Idle
-    }
-
-    fun disconnectAndUnbond() {
-        disconnect()
         HidPrefs.clearLastDevice(context)
         activeMode = null
     }
 
-    fun cleanup() = disconnect()
+    fun cleanup() {
+        stopAdvertising()
+        _state.value = State.Idle
+        connectedDevice?.let {
+            try { gattServer?.cancelConnection(it) } catch (_: Exception) {}
+        }
+        connectedDevice = null
+        closeGattServer()
+    }
 
     // -------------------------------------------------------------------------
     // Report sending
@@ -182,17 +233,17 @@ class BleHidManager(private val context: Context) {
         mouseReportChar = buildReportChar().also { char ->
             char.addDescriptor(BluetoothGattDescriptor(
                 UUID_REPORT_REF, BluetoothGattDescriptor.PERMISSION_READ
-            ).also { it.value = byteArrayOf(HidReportDescriptors.REPORT_ID_MOUSE, 0x01) })
+            ).also { descValues[it] = byteArrayOf(HidReportDescriptors.REPORT_ID_MOUSE, 0x01) })
         }
         gamepadReportChar = buildReportChar().also { char ->
             char.addDescriptor(BluetoothGattDescriptor(
                 UUID_REPORT_REF, BluetoothGattDescriptor.PERMISSION_READ
-            ).also { it.value = byteArrayOf(HidReportDescriptors.REPORT_ID_GAMEPAD, 0x01) })
+            ).also { descValues[it] = byteArrayOf(HidReportDescriptors.REPORT_ID_GAMEPAD, 0x01) })
         }
         keyboardReportChar = buildReportChar().also { char ->
             char.addDescriptor(BluetoothGattDescriptor(
                 UUID_REPORT_REF, BluetoothGattDescriptor.PERMISSION_READ
-            ).also { it.value = byteArrayOf(HidReportDescriptors.REPORT_ID_KEYBOARD, 0x01) })
+            ).also { descValues[it] = byteArrayOf(HidReportDescriptors.REPORT_ID_KEYBOARD, 0x01) })
         }
 
         serviceQueue.clear()
@@ -220,14 +271,14 @@ class BleHidManager(private val context: Context) {
             UUID_MANUF_NAME,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
-        ).also { it.value = "NML".toByteArray() })
+        ).also { charValues[it] = "NML".toByteArray() })
         svc.addCharacteristic(BluetoothGattCharacteristic(
             UUID_PNP_ID,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         ).also {
             // Source=USB (0x02), VID=0x045E (Microsoft), PID=0x02FD, Version=0x0110
-            it.value = byteArrayOf(0x02, 0x5E, 0x04, 0xFD.toByte(), 0x02, 0x10, 0x01)
+            charValues[it] = byteArrayOf(0x02, 0x5E, 0x04, 0xFD.toByte(), 0x02, 0x10, 0x01)
         })
         return svc
     }
@@ -241,20 +292,20 @@ class BleHidManager(private val context: Context) {
                     BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
             BluetoothGattCharacteristic.PERMISSION_READ or
                     BluetoothGattCharacteristic.PERMISSION_WRITE
-        ).also { it.value = byteArrayOf(0x01) })
+        ).also { charValues[it] = byteArrayOf(0x01) })
 
         svc.addCharacteristic(BluetoothGattCharacteristic(
             UUID_REPORT_MAP,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
-        ).also { it.value = HidReportDescriptors.COMBINED_REPORT_DESCRIPTOR })
+        ).also { charValues[it] = HidReportDescriptors.COMBINED_REPORT_DESCRIPTOR })
 
         // HID 1.11, country=0, flags=normallyConnectable|wakeup
         svc.addCharacteristic(BluetoothGattCharacteristic(
             UUID_HID_INFO,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
-        ).also { it.value = byteArrayOf(0x11, 0x01, 0x00, 0x02) })
+        ).also { charValues[it] = byteArrayOf(0x11, 0x01, 0x00, 0x02) })
 
         svc.addCharacteristic(BluetoothGattCharacteristic(
             UUID_HID_CTRL,
@@ -273,14 +324,13 @@ class BleHidManager(private val context: Context) {
             UUID_REPORT,
             BluetoothGattCharacteristic.PROPERTY_READ or
                     BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-            BluetoothGattCharacteristic.PERMISSION_READ or
-                    BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED
+            BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED
         )
         char.addDescriptor(BluetoothGattDescriptor(
             UUID_CCCD,
             BluetoothGattDescriptor.PERMISSION_READ or
                     BluetoothGattDescriptor.PERMISSION_WRITE
-        ).also { it.value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE })
+        ).also { descValues[it] = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE })
         return char
     }
 
@@ -289,6 +339,7 @@ class BleHidManager(private val context: Context) {
     // -------------------------------------------------------------------------
 
     private fun startAdvertising() {
+        stopAdvertising()   // always cancel any existing session before registering a new one
         val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
         val advertiser = adapter?.bluetoothLeAdvertiser ?: run {
             _state.value = State.Error("BLE advertising not supported on this device.")
@@ -360,13 +411,21 @@ class BleHidManager(private val context: Context) {
                         btName     = device.name ?: "",
                         lastSeenMs = System.currentTimeMillis()
                     ))
-                    _state.value = State.Connected(device, activeMode!!)
+                    // If the host is not yet bonded, send an SMP Security Request so Windows
+                    // initiates the full pairing handshake and both sides show the PIN dialog.
+                    // Without this, Android's BLE stack silently handles (or drops) the host's
+                    // bonding attempt and the pairing dialog never appears.
+                    if (device.bondState == BluetoothDevice.BOND_NONE) {
+                        device.createBond()
+                    }
+                    _state.value = State.Connected(device, activeMode!!, device.name ?: device.address)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     if (connectedDevice?.address == device.address) {
                         connectedDevice = null
                     }
                     // Re-advertise unless disconnect() was called explicitly (state=Idle).
+                    // Keep the existing GATT server open — only restart advertising.
                     if (_state.value !is State.Idle) {
                         Log.d(TAG, "Disconnected — re-advertising for reconnection")
                         _state.value = State.WaitingForConnection
@@ -380,7 +439,7 @@ class BleHidManager(private val context: Context) {
             device: BluetoothDevice, requestId: Int, offset: Int,
             characteristic: BluetoothGattCharacteristic
         ) {
-            val value = characteristic.value ?: ByteArray(0)
+            val value = charValues[characteristic] ?: ByteArray(0)
             val slice = if (offset < value.size) value.copyOfRange(offset, value.size) else ByteArray(0)
             gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, slice)
         }
@@ -389,7 +448,7 @@ class BleHidManager(private val context: Context) {
             device: BluetoothDevice, requestId: Int, offset: Int,
             descriptor: BluetoothGattDescriptor
         ) {
-            val value = descriptor.value ?: ByteArray(0)
+            val value = descValues[descriptor] ?: ByteArray(0)
             val slice = if (offset < value.size) value.copyOfRange(offset, value.size) else ByteArray(0)
             gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, slice)
         }
@@ -401,7 +460,7 @@ class BleHidManager(private val context: Context) {
             offset: Int, value: ByteArray
         ) {
             if (descriptor.uuid == UUID_CCCD) {
-                descriptor.value = value
+                descValues[descriptor] = value
                 Log.d(TAG, "CCCD write: char=${descriptor.characteristic?.uuid} " +
                         "value=${value.contentToString()} device=${device.address}")
             }
@@ -416,7 +475,7 @@ class BleHidManager(private val context: Context) {
             preparedWrite: Boolean, responseNeeded: Boolean,
             offset: Int, value: ByteArray
         ) {
-            characteristic.value = value
+            charValues[characteristic] = value
             if (responseNeeded) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
@@ -445,5 +504,7 @@ class BleHidManager(private val context: Context) {
         gamepadReportChar = null
         keyboardReportChar = null
         serviceQueue.clear()
+        charValues.clear()
+        descValues.clear()
     }
 }

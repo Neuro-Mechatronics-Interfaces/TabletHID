@@ -49,6 +49,18 @@
             app:iconSize="24dp"
             app:iconTint="@android:color/white" />
 
+        <!-- Shortcut launcher panel toggle -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShortcutPanel"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="Keyboard shortcuts"
+            android:visibility="gone"
+            app:icon="@drawable/ic_keyboard"
+            app:iconSize="24dp"
+            app:iconTint="@android:color/white" />
+
         <!-- Settings (config drawer) button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSettings"
@@ -93,25 +105,85 @@
         app:layout_constraintTop_toBottomOf="@id/statusBar"
         app:layout_constraintVertical_bias="0.35" />
 
-    <HorizontalScrollView
-        android:id="@+id/macroScroll"
+    <!-- Full-canvas overlay for freely positionable macro buttons -->
+    <FrameLayout
+        android:id="@+id/macroOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintTop_toBottomOf="@id/statusBar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Macro layout edit banner — visible only during macro layout editing -->
+    <LinearLayout
+        android:id="@+id/macroEditBanner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
-        android:layout_marginBottom="12dp"
-        android:fillViewport="false"
+        android:orientation="horizontal"
+        android:background="#EE0D0D1A"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/macro_edit_layout_hint"
+            android:textColor="#FFDD88"
+            android:textSize="11sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMacroEditDone"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:minHeight="36dp"
+            android:text="Done" />
+
+    </LinearLayout>
+
+    <!-- Keyboard shortcut panel — right-side overlay, toggled by the keyboard button -->
+    <LinearLayout
+        android:id="@+id/shortcutPanel"
+        android:layout_width="190dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:background="#D91a1a1a"
+        android:clickable="true"
+        android:focusable="true"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/statusBar">
 
-        <LinearLayout
-            android:id="@+id/macroButtonRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" />
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="8dp">
 
-    </HorizontalScrollView>
+            <LinearLayout
+                android:id="@+id/shortcutPanelList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
 
     <!--
         Zone-edit overlay panel — sits at the top of the surface area.

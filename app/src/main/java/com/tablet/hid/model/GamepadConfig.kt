@@ -4,6 +4,8 @@ enum class TriggerDragAxis { UP, DOWN, LEFT, RIGHT }
 
 enum class JoystickSide { LEFT, RIGHT }
 
+enum class VibrationIntensity { OFF, LIGHT, MEDIUM, STRONG }
+
 data class ButtonConfig(
     val enabled: Boolean = true,
     val behavior: ClickBehavior = ClickBehavior.MOMENTARY,
@@ -51,4 +53,6 @@ data class GamepadConfig(
     val singleJoystickOutputSide: JoystickSide = JoystickSide.LEFT,
     val macroHostDefaults: MacroHostDefaults = MacroHostDefaults.WINDOWS,
     val macroButtons: List<KeyboardMacroButtonConfig> = emptyList(),
+    val vibrationIntensity: VibrationIntensity = VibrationIntensity.OFF,
+    val customButtonLabels: Map<String, String> = emptyMap(),
 )

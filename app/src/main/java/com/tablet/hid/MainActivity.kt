@@ -9,22 +9,13 @@ import android.content.res.Configuration
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.ScrollView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -33,16 +24,12 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.divider.MaterialDivider
 import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.ActivityMainBinding
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidHostStore
 import com.tablet.hid.util.HidPrefs
-import com.tablet.hid.util.LoggingStore
-import com.tablet.hid.util.OrientationStore
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -100,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+        applyPendingStartMode(intent)
         checkAndRequestPermissions()
 
         lifecycleScope.launch {
@@ -117,7 +105,7 @@ class MainActivity : AppCompatActivity() {
         is BleHidManager.State.WaitingForConnection -> "Waiting for connection"
         is BleHidManager.State.Reconnecting        -> "Connecting to ${state.deviceName}"
         is BleHidManager.State.Connected           ->
-            "Connected · ${state.device.name ?: state.device.address}"
+            "Connected · ${state.deviceName}"
         is BleHidManager.State.Error               -> "Error: ${state.message}"
     }
 
@@ -128,189 +116,27 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_settings) {
-            showSettingsDialog()
+            val navController = findNavController(R.id.nav_host_fragment_content_main)
+            if (navController.currentDestination?.id != R.id.settingsFragment) {
+                navController.navigate(R.id.action_global_to_settings)
+            }
             return true
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private fun showSettingsDialog() {
-        val dp = resources.displayMetrics.density
-        val dp4  = (4  * dp).toInt()
-        val dp8  = (8  * dp).toInt()
-        val dp12 = (12 * dp).toInt()
-        val dp16 = (16 * dp).toInt()
-
-        var selectedAppearance = AppearanceStore.get(this)
-        val originalLargeText = AppearanceStore.isLargeText(this)
-        val originalHighContrast = AppearanceStore.isHighContrast(this)
-
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp16, dp4, dp16, 0)
-        }
-
-        // ── Bluetooth ───────────────────────────────────────────────────────────
-        root.addView(sectionLabel("Bluetooth", dp16, dp8))
-
-        val deviceNameEdit = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or
-                InputType.TYPE_TEXT_FLAG_CAP_WORDS or
-                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-            hint = AppearanceStore.DEFAULT_DEVICE_NAME
-            setSingleLine(true)
-            maxEms = 32
-            setText(AppearanceStore.getDeviceName(this@MainActivity))
-        }
-        root.addView(deviceNameEdit)
-
-        root.addView(hintText(
-            "Hosts will see this name when pairing. Changes apply the next time you prepare a new Bluetooth connection.",
-            dp4, dp12
-        ))
-
-        val autoReconnectCheck = CheckBox(this).apply {
-            setText(R.string.setting_auto_reconnect)
-            isChecked = HidPrefs.isAutoReconnectEnabled(this@MainActivity)
-        }
-        root.addView(autoReconnectCheck)
-
-        root.addView(MaterialDivider(this).apply {
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp8; lp.bottomMargin = dp4
-            layoutParams = lp
-        })
-
-        // ── Appearance ─────────────────────────────────────────────────────────
-        root.addView(sectionLabel("Appearance", dp8, dp8))
-
-        val radioGroup = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
-        listOf("System default", "Light", "Dark").forEachIndexed { i, label ->
-            radioGroup.addView(RadioButton(this).apply {
-                text = label; id = i; isChecked = (i == selectedAppearance)
-            })
-        }
-        radioGroup.setOnCheckedChangeListener { _, id -> selectedAppearance = id }
-        root.addView(radioGroup)
-
-        val largeTextCheck = CheckBox(this).apply {
-            text = "Large Text"
-            isChecked = originalLargeText
-        }
-        root.addView(largeTextCheck)
-
-        val highContrastCheck = CheckBox(this).apply {
-            text = "High Contrast"
-            isChecked = originalHighContrast
-        }
-        root.addView(highContrastCheck)
-
-        // ── Divider ────────────────────────────────────────────────────────────
-        root.addView(MaterialDivider(this).apply {
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp16; lp.bottomMargin = dp4
-            layoutParams = lp
-        })
-
-        // ── Session Logging ────────────────────────────────────────────────────
-        root.addView(sectionLabel("Session Logging", dp8, dp8))
-
-        val loggingCheck = CheckBox(this).apply {
-            text = "Enable local session logging"
-            isChecked = LoggingStore.isEnabled(this@MainActivity)
-        }
-        root.addView(loggingCheck)
-
-        root.addView(hintText(
-            "On each connection a .config snapshot and a timestamped .log of all" +
-            " HID events are written to:\n${LoggingStore.sessionDirDisplayPath(this)}",
-            dp4, dp16
-        ))
-
-        // ── Divider ────────────────────────────────────────────────────────────
-        root.addView(MaterialDivider(this).apply {
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp16; lp.bottomMargin = dp4
-            layoutParams = lp
-        })
-
-        // ── Orientation Lock ───────────────────────────────────────────────────
-        root.addView(sectionLabel("Orientation Lock", dp8, dp8))
-
-        var selectedOrientation = OrientationStore.get(this)
-        val orientationGroup = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
-        listOf("System default", "Portrait", "Landscape").forEachIndexed { i, label ->
-            orientationGroup.addView(RadioButton(this).apply {
-                text = label; id = i; isChecked = (i == selectedOrientation)
-            })
-        }
-        orientationGroup.setOnCheckedChangeListener { _, id -> selectedOrientation = id }
-        root.addView(orientationGroup)
-
-        root.addView(hintText(
-            "Locks screen rotation for Touch Mouse and Gamepad canvas views.",
-            dp4, dp12
-        ))
-
-        val screenPinningCheck = CheckBox(this).apply {
-            setText(R.string.setting_screen_pinning)
-            isChecked = HidPrefs.isScreenPinningEnabled(this@MainActivity)
-        }
-        root.addView(screenPinningCheck)
-
-        root.addView(hintText(
-            "When enabled, entering Gamepad or Touch Mouse mode pins the app to the screen. " +
-            "Long-press Back + Recent to unpin.",
-            dp4, dp16
-        ))
-
-        // ── Build dialog ───────────────────────────────────────────────────────
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Settings")
-            .setView(ScrollView(this).apply { addView(root) })
-            .setPositiveButton("Apply") { _, _ ->
-                AppearanceStore.setDeviceName(this, deviceNameEdit.text.toString())
-                HidPrefs.setAutoReconnectEnabled(this, autoReconnectCheck.isChecked)
-                AppearanceStore.set(this, selectedAppearance)
-                AppCompatDelegate.setDefaultNightMode(AppearanceStore.toNightMode(selectedAppearance))
-                AppearanceStore.setLargeText(this, largeTextCheck.isChecked)
-                AppearanceStore.setHighContrast(this, highContrastCheck.isChecked)
-                val enabled = loggingCheck.isChecked
-                LoggingStore.setEnabled(this, enabled)
-                viewModel.setLoggingEnabled(enabled)
-                OrientationStore.set(this, selectedOrientation)
-                requestedOrientation = OrientationStore.toActivityOrientation(selectedOrientation)
-                HidPrefs.setScreenPinningEnabled(this, screenPinningCheck.isChecked)
-                if (
-                    largeTextCheck.isChecked != originalLargeText ||
-                    highContrastCheck.isChecked != originalHighContrast
-                ) {
-                    recreate()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        applyPendingStartMode(intent)
     }
 
-    private fun sectionLabel(text: String, topPad: Int, bottomPad: Int) = TextView(this).apply {
-        this.text = text
-        setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall)
-        setPadding(0, topPad, 0, bottomPad)
-    }
-
-    private fun hintText(text: String, topPad: Int, bottomPad: Int) = TextView(this).apply {
-        this.text = text
-        setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall)
-        setPadding(0, topPad, 0, bottomPad)
+    private fun applyPendingStartMode(intent: Intent?) {
+        intent?.getStringExtra("start_mode")?.let { viewModel.pendingStartMode = it }
+        if (intent?.getBooleanExtra("widget_reconnect", false) == true) {
+            val lastAddress = HidPrefs.getLastDeviceAddress(this) ?: return
+            viewModel.startServiceForMode(this, DeviceMode.TOUCH_MOUSE, lastAddress)
+            viewModel.pendingStartMode = "touch_mouse"
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

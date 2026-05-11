@@ -1,5 +1,7 @@
 package com.tablet.hid.ui.home
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +11,7 @@ import android.view.ContextThemeWrapper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -19,10 +22,12 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.chip.Chip
 import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
+import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.FragmentHomeBinding
 import com.tablet.hid.model.DeviceMode
 import com.tablet.hid.model.Profile
 import com.tablet.hid.util.AppearanceStore
+import com.tablet.hid.util.HidPrefs
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -51,17 +56,41 @@ class HomeFragment : Fragment() {
             return
         }
 
+        // Handle home-screen shortcut — bypass mode card selection
+        viewModel.pendingStartMode?.let { mode ->
+            viewModel.pendingStartMode = null
+            val deviceMode = when (mode) {
+                "touch_mouse" -> DeviceMode.TOUCH_MOUSE
+                "gamepad"     -> DeviceMode.GAMEPAD
+                else          -> null
+            }
+            if (deviceMode != null) {
+                navigateToTutorial(deviceMode)
+                return
+            }
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updatePadding(bottom = bars.bottom)
             insets
         }
 
-        viewModel.disconnect()
-
         // ── Mode cards ──────────────────────────────────────────────────────
-        binding.cardTouchMouse.setOnClickListener { navigateToTutorial(DeviceMode.TOUCH_MOUSE) }
-        binding.cardGamepad.setOnClickListener    { navigateToTutorial(DeviceMode.GAMEPAD) }
+        binding.cardTouchMouse.setOnClickListener { onModeTapped(DeviceMode.TOUCH_MOUSE) }
+        binding.cardGamepad.setOnClickListener    { onModeTapped(DeviceMode.GAMEPAD) }
+
+        // ── Connection card ──────────────────────────────────────────────────
+        updateDeviceNameChip()
+        binding.chipDeviceName.setOnClickListener { showEditNameDialog() }
+
+        binding.btnHomeDiscoverable.setOnClickListener {
+            viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE)
+        }
+        binding.btnHomeReconnect.setOnClickListener {
+            val addr = HidPrefs.getLastDeviceAddress(requireContext()) ?: return@setOnClickListener
+            viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE, addr)
+        }
 
         // ── Add profile button ───────────────────────────────────────────────
         binding.btnAddProfile.setOnClickListener { showAddProfileDialog() }
@@ -72,6 +101,13 @@ class HomeFragment : Fragment() {
             val chipId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
             val profile = profileForChipId(chipId) ?: return@setOnCheckedStateChangeListener
             if (profile != viewModel.activeProfile.value) viewModel.setProfile(profile)
+        }
+
+        // ── Observe connection state ─────────────────────────────────────────
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect { state -> updateConnectionUi(state) }
+            }
         }
 
         // ── Observe profile state and rebuild chip row ───────────────────────
@@ -87,6 +123,86 @@ class HomeFragment : Fragment() {
                 viewModel.activeProfile.collect { profile ->
                     setCheckedChip(profile)
                 }
+            }
+        }
+    }
+
+    // ── Connection card ──────────────────────────────────────────────────────────
+
+    private fun updateConnectionUi(state: BleHidManager.State) {
+        val connected = state is BleHidManager.State.Connected
+        val idle = state is BleHidManager.State.Idle || state is BleHidManager.State.Error
+        val lastAddr = HidPrefs.getLastDeviceAddress(requireContext())
+
+        binding.homeLedStatus.backgroundTintList = ColorStateList.valueOf(
+            if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
+        )
+        binding.homeConnStatus.text = when (state) {
+            is BleHidManager.State.Idle            -> getString(R.string.status_disconnected)
+            is BleHidManager.State.Registering     -> getString(R.string.home_status_connecting)
+            is BleHidManager.State.WaitingForConnection -> getString(R.string.home_status_waiting)
+            is BleHidManager.State.Reconnecting    -> getString(R.string.tutorial_status_reconnecting, state.deviceName)
+            is BleHidManager.State.Connected       -> getString(R.string.status_connected)
+            is BleHidManager.State.Error           -> getString(R.string.tutorial_status_error, state.message)
+        }
+
+        // Show Discoverable when idle; hide when active
+        binding.btnHomeDiscoverable.isVisible = idle
+        // Show Reconnect only when idle and there is a last device
+        binding.btnHomeReconnect.isVisible = idle && lastAddr != null
+    }
+
+    private fun updateDeviceNameChip() {
+        binding.chipDeviceName.text = AppearanceStore.getDeviceName(requireContext())
+    }
+
+    private fun showEditNameDialog() {
+        val input = EditText(requireContext()).apply {
+            setText(AppearanceStore.getDeviceName(requireContext()))
+            hint = getString(R.string.onboarding_p4_hint)
+            setSingleLine()
+            setPadding(48, 24, 48, 8)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Device name")
+            .setView(input)
+            .setPositiveButton(R.string.btn_save) { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) {
+                    AppearanceStore.setDeviceName(requireContext(), name)
+                    updateDeviceNameChip()
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    // ── Mode card navigation ─────────────────────────────────────────────────────
+
+    private fun onModeTapped(mode: DeviceMode) {
+        val state = viewModel.state.value
+        val directAction = when (mode) {
+            DeviceMode.TOUCH_MOUSE -> R.id.action_home_to_touchMouse
+            DeviceMode.GAMEPAD     -> R.id.action_home_to_gamepad
+        }
+        when (state) {
+            is BleHidManager.State.Connected -> {
+                findNavController().navigate(directAction)
+            }
+            is BleHidManager.State.Idle, is BleHidManager.State.Error -> {
+                val lastAddr = HidPrefs.getLastDeviceAddress(requireContext())
+                if (lastAddr != null) {
+                    // Reconnect to known device and enter the mode directly
+                    viewModel.startServiceForMode(requireContext(), mode, lastAddr)
+                    findNavController().navigate(directAction)
+                } else {
+                    // No prior pairing — guide through Tutorial
+                    navigateToTutorial(mode)
+                }
+            }
+            else -> {
+                // Already connecting/reconnecting — enter the mode directly
+                findNavController().navigate(directAction)
             }
         }
     }

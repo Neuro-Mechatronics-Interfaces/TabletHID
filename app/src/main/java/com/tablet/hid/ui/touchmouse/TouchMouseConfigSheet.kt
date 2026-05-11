@@ -34,6 +34,8 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
     var onZoneEditRequested: ((isLeft: Boolean) -> Unit)? = null
     var onSubRegionEditRequested: ((isLeft: Boolean, keyboardModifiers: Int) -> Unit)? = null
     var onCalibrationRequested: (() -> Unit)? = null
+    var onSniperEditRequested: (() -> Unit)? = null
+    var onMacroEditRequested: (() -> Unit)? = null
 
     // True while we are programmatically initialising controls (avoids feedback loops)
     private var initialising = false
@@ -60,6 +62,10 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 rebuildMacroList(updated.macroButtons)
             }
             dialog.show(parentFragmentManager, "custom_macro")
+        }
+        binding.btnEditMacroLayout.setOnClickListener {
+            onMacroEditRequested?.invoke()
+            dismiss()
         }
     }
 
@@ -91,6 +97,16 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
 
         applyButtonConfig(cfg.leftButton, isLeft = true)
         applyButtonConfig(cfg.rightButton, isLeft = false)
+
+        binding.switchSniperZone.isChecked = cfg.sniperEnabled
+        binding.groupSniperConfig.isVisible = cfg.sniperEnabled
+        binding.toggleSniperDivisor.check(
+            when (cfg.sniperDivisor) {
+                2f   -> R.id.btnSniper2x
+                8f   -> R.id.btnSniper8x
+                else -> R.id.btnSniper4x
+            }
+        )
 
         initialising = false
     }
@@ -159,6 +175,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 "${it.modifiers}:${it.keyUsages.joinToString(",")}"
             }
             viewModel.updateTouchMouseConfig(prev.copy(macroHostDefaults = host, macroButtons = merged))
+            rebuildMacroList(merged)
         }
 
         binding.btnClearMacros.setOnClickListener {
@@ -281,6 +298,22 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         binding.sliderRightOffsetX.addOnChangeListener(rightSliderListener)
         binding.sliderRightOffsetY.addOnChangeListener(rightSliderListener)
         binding.sliderRightRadius.addOnChangeListener(rightSliderListener)
+
+        // ── Sniper zone ──────────────────────────────────────────────────
+        binding.switchSniperZone.setOnCheckedChangeListener { _, checked ->
+            binding.groupSniperConfig.isVisible = checked
+            if (!initialising) pushConfig()
+        }
+
+        binding.toggleSniperDivisor.addOnButtonCheckedListener { _, _, isChecked ->
+            if (!isChecked || initialising) return@addOnButtonCheckedListener
+            pushConfig()
+        }
+
+        binding.btnSetSniperZone.setOnClickListener {
+            dismiss()
+            onSniperEditRequested?.invoke()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -331,6 +364,7 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
 
     private fun rebuildMacroList(macros: List<KeyboardMacroButtonConfig>) {
         binding.macroList.removeAllViews()
+        binding.btnEditMacroLayout.isVisible = macros.isNotEmpty()
         val dp = resources.displayMetrics.density
         macros.forEachIndexed { index, macro ->
             val row = LinearLayout(requireContext()).apply {
@@ -383,6 +417,11 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
         val rightBehavior = if (binding.toggleRightBehavior.checkedButtonId == R.id.btnRightMomentary)
             ClickBehavior.MOMENTARY else ClickBehavior.LATCHING
 
+        val sniperDivisor = when (binding.toggleSniperDivisor.checkedButtonId) {
+            R.id.btnSniper2x -> 2f
+            R.id.btnSniper8x -> 8f
+            else             -> 4f
+        }
         val newConfig = TouchMouseConfig(
             mode = mode,
             sensitivity = binding.sliderSensitivity.value.toInt(),
@@ -408,6 +447,12 @@ class TouchMouseConfigSheet : BottomSheetDialogFragment() {
                 dynamicOffsetY = binding.sliderRightOffsetY.value,
                 dynamicRadius = binding.sliderRightRadius.value
             ),
+            sniperEnabled = binding.switchSniperZone.isChecked,
+            sniperLeft    = prev.sniperLeft,
+            sniperTop     = prev.sniperTop,
+            sniperRight   = prev.sniperRight,
+            sniperBottom  = prev.sniperBottom,
+            sniperDivisor = sniperDivisor,
             macroHostDefaults = if (binding.toggleMacroDefaults.checkedButtonId == R.id.btnMacroMac) {
                 MacroHostDefaults.MAC
             } else {

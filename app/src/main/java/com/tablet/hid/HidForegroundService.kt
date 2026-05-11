@@ -30,7 +30,10 @@ class HidForegroundService : Service() {
         const val EXTRA_MODE = "extra_mode"
         const val EXTRA_ADDRESS = "extra_address"
         const val ACTION_DISCONNECT = "com.tablet.hid.ACTION_DISCONNECT"
+        const val ACTION_WIDGET_DISCONNECT = "com.tablet.hid.ACTION_WIDGET_DISCONNECT"
         private const val ACTION_STOP = "com.tablet.hid.ACTION_STOP_SERVICE"
+
+        @Volatile var isRunning = false
 
         fun startIntent(context: Context, mode: DeviceMode, reconnectAddress: String? = null): Intent =
             Intent(context, HidForegroundService::class.java).apply {
@@ -40,20 +43,20 @@ class HidForegroundService : Service() {
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private lateinit var hidManager: BleHidManager
+    private val hidManager get() = (applicationContext as TabletHidApplication).hidManager
 
     private val disconnectReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_DISCONNECT -> hidManager.disconnect()
-                ACTION_STOP -> stopSelf()
+                ACTION_STOP -> { hidManager.disconnect(); stopSelf() }
             }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        hidManager = BleHidManager(applicationContext)
+        isRunning = true
         val filter = IntentFilter(ACTION_DISCONNECT).apply { addAction(ACTION_STOP) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(disconnectReceiver, filter, RECEIVER_NOT_EXPORTED)
@@ -65,6 +68,10 @@ class HidForegroundService : Service() {
 
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_WIDGET_DISCONNECT) {
+            hidManager.disconnect()
+            return START_NOT_STICKY
+        }
         val modeName = intent?.getStringExtra(EXTRA_MODE) ?: DeviceMode.TOUCH_MOUSE.name
         val mode = runCatching { DeviceMode.valueOf(modeName) }.getOrDefault(DeviceMode.TOUCH_MOUSE)
         val address = intent?.getStringExtra(EXTRA_ADDRESS)
@@ -89,8 +96,10 @@ class HidForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        isRunning = false
         scope.cancel()
-        hidManager.cleanup()
+        // Don't cleanup the shared hidManager here — HidViewModel.onCleared() handles
+        // disconnection when the app exits. Explicit disconnect comes via ACTION_STOP.
         unregisterReceiver(disconnectReceiver)
         super.onDestroy()
     }
@@ -109,7 +118,7 @@ class HidForegroundService : Service() {
             is BleHidManager.State.WaitingForConnection -> "Waiting for connection"
             is BleHidManager.State.Reconnecting -> "Reconnecting to ${state.deviceName}"
             is BleHidManager.State.Connected ->
-                "Connected to ${state.device.name ?: state.device.address}"
+                "Connected to ${state.deviceName}"
             is BleHidManager.State.Error -> "Error: ${state.message}"
         }
 

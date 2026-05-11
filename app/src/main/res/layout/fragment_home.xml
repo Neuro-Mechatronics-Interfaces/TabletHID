@@ -30,6 +30,89 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textAlignment="center" />
 
+        <!-- ── Connection card ────────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Status row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <View
+                        android:id="@+id/homeLedStatus"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/shape_led"
+                        android:backgroundTint="#F44336" />
+
+                    <TextView
+                        android:id="@+id/homeConnStatus"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/status_disconnected"
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                    <!-- Device name chip — tappable to edit -->
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipDeviceName"
+                        style="@style/Widget.Material3.Chip.Assist"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxWidth="160dp"
+                        app:chipIcon="@drawable/ic_settings"
+                        app:chipIconSize="16dp"
+                        android:ellipsize="end"
+                        android:singleLine="true" />
+
+                </LinearLayout>
+
+                <!-- Action buttons row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="end">
+
+                    <Button
+                        android:id="@+id/btnHomeReconnect"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/btn_reconnect_short"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/btnHomeDiscoverable"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_make_discoverable" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ── Accessibility profile selector ─────────────────────────────── -->
         <TextView
             android:layout_width="wrap_content"

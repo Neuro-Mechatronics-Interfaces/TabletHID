@@ -2,6 +2,12 @@
     <string name="app_name">TabletHID</string>
     <string name="action_settings">Settings</string>
 
+    <!-- App shortcut labels (long-press launcher icon) -->
+    <string name="shortcut_touch_mouse_short">Touch Mouse</string>
+    <string name="shortcut_touch_mouse_long">Touch Mouse Mode</string>
+    <string name="shortcut_gamepad_short">Gamepad</string>
+    <string name="shortcut_gamepad_long">Gamepad Mode</string>
+
     <!-- Navigation labels -->
     <string name="label_home">TabletHID</string>
     <string name="label_tutorial">Setup</string>
@@ -37,28 +43,28 @@
     <string-array name="instructions_windows_mouse">
         <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
         <item>On your Windows PC, open &lt;b&gt;Settings → Bluetooth &amp; devices → Add device&lt;/b&gt;.</item>
-        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear.</item>
+        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;%1$s&lt;/b&gt; to appear.</item>
         <item>Click it to pair — no PIN required.</item>
         <item>Once connected, tap &lt;b&gt;Enter Touch Mouse&lt;/b&gt; below.</item>
     </string-array>
     <string-array name="instructions_windows_gamepad">
         <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
         <item>On your Windows PC, open &lt;b&gt;Settings → Bluetooth &amp; devices → Add device&lt;/b&gt;.</item>
-        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear.</item>
+        <item>Choose &lt;b&gt;Bluetooth&lt;/b&gt; and wait for &lt;b&gt;%1$s&lt;/b&gt; to appear.</item>
         <item>Click it to pair — no PIN required.</item>
         <item>Once connected, tap &lt;b&gt;Enter Gamepad&lt;/b&gt; below.</item>
     </string-array>
     <string-array name="instructions_macos_mouse">
         <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
         <item>On your Mac, open &lt;b&gt;System Settings → Bluetooth&lt;/b&gt;.</item>
-        <item>Wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear in the device list.</item>
+        <item>Wait for &lt;b&gt;%1$s&lt;/b&gt; to appear in the device list.</item>
         <item>Click &lt;b&gt;Connect&lt;/b&gt; — no PIN required.</item>
         <item>Once connected, tap &lt;b&gt;Enter Touch Mouse&lt;/b&gt; below.</item>
     </string-array>
     <string-array name="instructions_macos_gamepad">
         <item>Tap &lt;b&gt;Make Discoverable&lt;/b&gt; below.</item>
         <item>On your Mac, open &lt;b&gt;System Settings → Bluetooth&lt;/b&gt;.</item>
-        <item>Wait for &lt;b&gt;TabletHID&lt;/b&gt; to appear in the device list.</item>
+        <item>Wait for &lt;b&gt;%1$s&lt;/b&gt; to appear in the device list.</item>
         <item>Click &lt;b&gt;Connect&lt;/b&gt; — no PIN required.</item>
         <item>Once connected, tap &lt;b&gt;Enter Gamepad&lt;/b&gt; below.</item>
     </string-array>
@@ -69,6 +75,9 @@
     <string name="right_click_zone_label">RIGHT CLICK ZONE — hold here to activate right-click</string>
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
+    <string name="btn_reconnect_short">Reconnect</string>
+    <string name="home_status_waiting">Discoverable — waiting for host…</string>
+    <string name="home_status_connecting">Connecting…</string>
     <string name="btn_switch_mode">Switch Mode</string>
     <string name="btn_disconnect">Disconnect</string>
 
@@ -159,7 +168,14 @@
     <string name="calibrate_hint_left">Step 2 of 3 — Keep pointer finger down, then place your left-click finger where it feels comfortable</string>
     <string name="calibrate_hint_right">Step 3 of 3 — Keep both fingers down, then place your right-click finger where it feels comfortable</string>
 
+    <!-- Home screen widget -->
+    <string name="widget_description">Shows TabletHID connection status with a quick Reconnect or Disconnect action</string>
+    <string name="widget_reconnect">Reconnect</string>
+
     <!-- Custom macro editor -->
+    <string name="macro_edit_layout_hint">Edit — drag to move · pinch to resize · tap for precise controls</string>
+    <string name="layout_reset_default">Reset to Default</string>
+    <string name="macro_edit_layout_btn">Edit Macro Layout</string>
     <string name="macro_add_custom">Add custom macro…</string>
     <string name="macro_editor_title">New Macro Button</string>
     <string name="macro_editor_label_hint">Button label</string>

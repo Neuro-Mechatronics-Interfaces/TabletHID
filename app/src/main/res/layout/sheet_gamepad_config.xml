@@ -63,6 +63,24 @@
             android:checked="true"
             android:text="Enable this control" />
 
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilButtonLabel"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="12dp"
+            android:hint="Custom label (leave blank for default)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etButtonLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionDone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -498,6 +516,62 @@
             android:layout_marginStart="16dp"
             android:layout_marginBottom="4dp"
             android:text="Reset to defaults" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginVertical="12dp"
+            android:background="?attr/colorOutline" />
+
+        <!-- ── Haptic Feedback ───────────────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="8dp"
+            android:text="Haptic Feedback"
+            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggleVibration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="12dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <Button
+                android:id="@+id/btnVibOff"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Off" />
+
+            <Button
+                android:id="@+id/btnVibLight"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Light" />
+
+            <Button
+                android:id="@+id/btnVibMedium"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Medium" />
+
+            <Button
+                android:id="@+id/btnVibStrong"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Strong" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <!-- ── DEV section (visible only when BuildConfig.DEV_MODE) ───── -->
         <LinearLayout

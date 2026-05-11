@@ -34,6 +34,12 @@ class TouchZoneOverlayView @JvmOverloads constructor(
     var editingLeft: Boolean? = null
         set(value) { field = value; invalidate() }
 
+    var editingSniper: Boolean = false
+        set(value) { field = value; invalidate() }
+
+    var sniperActive: Boolean = false
+        set(value) { if (field != value) { field = value; invalidate() } }
+
     var editDragStart: PointF? = null
     var editDragEnd: PointF? = null
         set(value) { field = value; invalidate() }
@@ -66,6 +72,8 @@ class TouchZoneOverlayView @JvmOverloads constructor(
         val LEFT_ACTIVE = Color.argb(215,   0, 190, 255)
         val RIGHT_IDLE   = Color.argb(100, 255, 120,  20)
         val RIGHT_ACTIVE = Color.argb(215, 255, 170,   0)
+        val SNIPER_IDLE   = Color.argb(100,   0, 190, 120)
+        val SNIPER_ACTIVE = Color.argb(215,   0, 230, 140)
         // Touch-mode right-click zone colour
         private val RC_IDLE   = Color.argb(26,  255,  68, 68)
         private val RC_ACTIVE = Color.argb(80,  255,  68, 68)
@@ -91,6 +99,15 @@ class TouchZoneOverlayView @JvmOverloads constructor(
     fun hitTestRight(x: Float, y: Float): Boolean {
         val btn = config?.rightButton ?: return false
         return btn.enabled && hitTest(btn, x, y)
+    }
+
+    fun hitTestSniper(x: Float, y: Float): Boolean {
+        val cfg = config ?: return false
+        if (!cfg.sniperEnabled) return false
+        return RectF(
+            cfg.sniperLeft * width, cfg.sniperTop * height,
+            cfg.sniperRight * width, cfg.sniperBottom * height
+        ).contains(x, y)
     }
 
     fun hitTestButtonBits(x: Float, y: Float): Int {
@@ -224,6 +241,7 @@ class TouchZoneOverlayView @JvmOverloads constructor(
                 if (cfg.sharedDynamicZone && hasDynamicZones(cfg)) drawSharedDynamicZone(canvas, cfg)
                 drawSubRegions(canvas, cfg.leftButton, LEFT_ACTIVE)
                 drawSubRegions(canvas, cfg.rightButton, RIGHT_ACTIVE)
+                if (cfg.sniperEnabled) drawSniperZone(canvas, cfg)
             }
         }
 
@@ -236,14 +254,22 @@ class TouchZoneOverlayView @JvmOverloads constructor(
             minOf(start.x, end.x), minOf(start.y, end.y),
             maxOf(start.x, end.x), maxOf(start.y, end.y)
         )
-        editFillPaint.color = if (editing) Color.argb(55, 30, 140, 255) else Color.argb(55, 255, 120, 20)
-        editStrokePaint.color = if (editing) LEFT_ACTIVE else RIGHT_ACTIVE
+        editFillPaint.color = when {
+            editingSniper -> Color.argb(55, 0, 190, 120)
+            editing       -> Color.argb(55, 30, 140, 255)
+            else          -> Color.argb(55, 255, 120, 20)
+        }
+        editStrokePaint.color = when {
+            editingSniper -> SNIPER_ACTIVE
+            editing       -> LEFT_ACTIVE
+            else          -> RIGHT_ACTIVE
+        }
         canvas.drawRoundRect(rect, 16f, 16f, editFillPaint)
         canvas.drawRoundRect(rect, 16f, 16f, editStrokePaint)
         if (rect.width() > 32f && rect.height() > 32f) {
             labelPaint.textSize = minOf(rect.width(), rect.height()) * 0.32f
             canvas.drawText(
-                if (editing) "L" else "R",
+                when { editingSniper -> "S"; editing -> "L"; else -> "R" },
                 rect.centerX(), rect.centerY() + labelPaint.textSize * 0.38f,
                 labelPaint
             )
@@ -306,6 +332,18 @@ class TouchZoneOverlayView @JvmOverloads constructor(
         canvas.drawCircle(cx, cy, r, strokePaint)
         labelPaint.textSize = r * 0.56f
         canvas.drawText(sharedDynamicLabel(cfg), cx, cy + labelPaint.textSize * 0.38f, labelPaint)
+    }
+
+    private fun drawSniperZone(canvas: Canvas, cfg: TouchMouseConfig) {
+        val rect = RectF(
+            cfg.sniperLeft * width, cfg.sniperTop * height,
+            cfg.sniperRight * width, cfg.sniperBottom * height
+        )
+        fillPaint.color = if (sniperActive) SNIPER_ACTIVE else SNIPER_IDLE
+        canvas.drawRoundRect(rect, 20f, 20f, fillPaint)
+        canvas.drawRoundRect(rect, 20f, 20f, strokePaint)
+        labelPaint.textSize = minOf(rect.width(), rect.height()) * 0.35f
+        canvas.drawText("S", rect.centerX(), rect.centerY() + labelPaint.textSize * 0.38f, labelPaint)
     }
 
     private fun drawSubRegions(canvas: Canvas, btn: ButtonZoneConfig, color: Int) {

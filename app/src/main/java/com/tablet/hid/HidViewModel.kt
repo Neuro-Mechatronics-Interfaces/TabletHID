@@ -1,9 +1,12 @@
 package com.tablet.hid
 
+import android.Manifest
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +23,7 @@ import com.tablet.hid.util.LoggingStore
 import com.tablet.hid.util.ProfileStore
 import com.tablet.hid.util.SessionLogger
 import com.tablet.hid.util.TouchMouseConfigStore
+import com.tablet.hid.widget.HidWidgetState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,13 +34,16 @@ import kotlinx.coroutines.launch
 
 class HidViewModel(app: Application) : AndroidViewModel(app) {
 
-    val hidManager = BleHidManager(app)
+    val hidManager: BleHidManager = (app as TabletHidApplication).hidManager
     val state: StateFlow<BleHidManager.State> = hidManager.state
+
+    // Set by MainActivity when the app is launched via a home-screen shortcut.
+    var pendingStartMode: String? = null
 
     // ── Session logging ──────────────────────────────────────────────────────────
 
     private val _loggingEnabled = MutableStateFlow(LoggingStore.isEnabled(app))
-    val loggingEnabled: StateFlow<Boolean> = _loggingEnabled.asStateFlow()
+
 
     private var sessionLogger: SessionLogger? = null
 
@@ -95,6 +102,20 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
                 } else if (s !is BleHidManager.State.Connected) {
                     endSession()
                 }
+                val ctx: Context = getApplication()
+                if (ActivityCompat.checkSelfPermission(
+                        ctx,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return@collect
+                }
+                when (s) {
+                    is BleHidManager.State.Connected ->
+                        HidWidgetState.update(ctx, true, s.deviceName)
+                    else ->
+                        HidWidgetState.update(ctx, false, null)
+                }
             }
         }
     }
@@ -134,8 +155,6 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
     // ── Known hosts ──────────────────────────────────────────────────────────────
 
     private val _knownHosts = MutableStateFlow(HidHostStore.getAll(app))
-    val knownHosts: StateFlow<List<HidHost>> = _knownHosts.asStateFlow()
-
     private fun refreshHosts() {
         _knownHosts.value = HidHostStore.getAll(getApplication())
     }
@@ -202,8 +221,6 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         refreshHosts()
     }
 
-    fun disconnectAndUnbond() = hidManager.disconnectAndUnbond()
-
     fun sendMouseReport(buttons: Int, dx: Float = 0f, dy: Float = 0f, wheel: Int = 0, hwheel: Int = 0) {
         val buttonsChanged: Boolean
         synchronized(mouseLock) {
@@ -242,12 +259,9 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         ContextCompat.startForegroundService(context, intent)
     }
 
-    fun stopService(context: Context) {
-        context.stopService(Intent(context, HidForegroundService::class.java))
-    }
-
     override fun onCleared() {
         endSession()
-        hidManager.cleanup()
+        // Disconnect only when no background service is keeping the connection alive.
+        if (!HidForegroundService.isRunning) hidManager.disconnect()
     }
 }

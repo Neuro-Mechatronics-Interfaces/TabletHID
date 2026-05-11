@@ -28,6 +28,12 @@ object TouchMouseConfigStore {
             putFloat("shared_dynamic_ox", config.sharedDynamicOffsetX)
             putFloat("shared_dynamic_oy", config.sharedDynamicOffsetY)
             putFloat("shared_dynamic_radius", config.sharedDynamicRadius)
+            putBoolean("sniper_enabled", config.sniperEnabled)
+            putFloat("sniper_left",    config.sniperLeft)
+            putFloat("sniper_top",     config.sniperTop)
+            putFloat("sniper_right",   config.sniperRight)
+            putFloat("sniper_bottom",  config.sniperBottom)
+            putFloat("sniper_divisor", config.sniperDivisor)
             putString("macro_host_defaults", config.macroHostDefaults.name)
             saveMacros(this, config.macroButtons)
             saveButton(this, "l", config.leftButton)
@@ -54,6 +60,12 @@ object TouchMouseConfigStore {
             sharedDynamicRadius = prefs.getFloat("shared_dynamic_radius", defaults.sharedDynamicRadius),
             leftButton   = loadButton(prefs, "l", defaults.leftButton),
             rightButton  = loadButton(prefs, "r", defaults.rightButton),
+            sniperEnabled = prefs.getBoolean("sniper_enabled", defaults.sniperEnabled),
+            sniperLeft    = prefs.getFloat("sniper_left",    defaults.sniperLeft),
+            sniperTop     = prefs.getFloat("sniper_top",     defaults.sniperTop),
+            sniperRight   = prefs.getFloat("sniper_right",   defaults.sniperRight),
+            sniperBottom  = prefs.getFloat("sniper_bottom",  defaults.sniperBottom),
+            sniperDivisor = prefs.getFloat("sniper_divisor", defaults.sniperDivisor),
             macroHostDefaults = enumValueOrDefault(
                 prefs.getString("macro_host_defaults", null),
                 defaults.macroHostDefaults,
@@ -109,6 +121,12 @@ object TouchMouseConfigStore {
                 sharedDynamicRadius = p.getFloat("shared_dynamic_radius", defaults.sharedDynamicRadius),
                 leftButton   = loadButton(p, "l", defaults.leftButton),
                 rightButton  = loadButton(p, "r", defaults.rightButton),
+                sniperEnabled = p.getBoolean("sniper_enabled", defaults.sniperEnabled),
+                sniperLeft    = p.getFloat("sniper_left",    defaults.sniperLeft),
+                sniperTop     = p.getFloat("sniper_top",     defaults.sniperTop),
+                sniperRight   = p.getFloat("sniper_right",   defaults.sniperRight),
+                sniperBottom  = p.getFloat("sniper_bottom",  defaults.sniperBottom),
+                sniperDivisor = p.getFloat("sniper_divisor", defaults.sniperDivisor),
                 macroHostDefaults = enumValueOrDefault(
                     p.getString("macro_host_defaults", null),
                     defaults.macroHostDefaults,
@@ -222,6 +240,10 @@ object TouchMouseConfigStore {
             editor.putString("${prefix}_label", macro.label)
             editor.putInt("${prefix}_modifiers", macro.modifiers)
             editor.putString("${prefix}_keys", macro.keyUsages.joinToString(","))
+            editor.putFloat("${prefix}_lox", macro.layoutOffsetX)
+            editor.putFloat("${prefix}_loy", macro.layoutOffsetY)
+            editor.putFloat("${prefix}_lsx", macro.layoutScaleX)
+            editor.putFloat("${prefix}_lsy", macro.layoutScaleY)
         }
     }
 
@@ -241,6 +263,10 @@ object TouchMouseConfigStore {
                     ?.split(',')
                     ?.mapNotNull { it.toIntOrNull() }
                     ?: default.keyUsages,
+                layoutOffsetX = prefs.getFloat("${prefix}_lox", default.layoutOffsetX),
+                layoutOffsetY = prefs.getFloat("${prefix}_loy", default.layoutOffsetY),
+                layoutScaleX  = prefs.getFloat("${prefix}_lsx", default.layoutScaleX),
+                layoutScaleY  = prefs.getFloat("${prefix}_lsy", default.layoutScaleY),
             )
         }.filter { it.label.isNotBlank() && it.keyUsages.isNotEmpty() }
     }
