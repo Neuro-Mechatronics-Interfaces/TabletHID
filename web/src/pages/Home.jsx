@@ -55,15 +55,25 @@ function AndroidLogo() {
 const PLAY_OPT_IN_KEY = 'play_tester_optin';
 const PLAY_TESTING_URL = 'https://play.google.com/apps/testing/com.tablet.hid';
 const PLAY_STORE_URL   = 'https://play.google.com/store/apps/details?id=com.tablet.hid';
+const TESTFLIGHT_OPT_IN_KEY = 'testflight_tester_optin';
+const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ZeFCbt44';
 
 export default function Home() {
-  const [hasOptedIn, setHasOptedIn] = useState(
+  const [hasAndroidOptedIn, setHasAndroidOptedIn] = useState(
     () => localStorage.getItem(PLAY_OPT_IN_KEY) === 'true'
   );
+  const [hasIosOptedIn, setHasIosOptedIn] = useState(
+    () => localStorage.getItem(TESTFLIGHT_OPT_IN_KEY) === 'true'
+  );
 
-  function handleJoinBeta() {
+  function handleJoinAndroidBeta() {
     localStorage.setItem(PLAY_OPT_IN_KEY, 'true');
-    setHasOptedIn(true);
+    setHasAndroidOptedIn(true);
+  }
+
+  function handleJoinIosBeta() {
+    localStorage.setItem(TESTFLIGHT_OPT_IN_KEY, 'true');
+    setHasIosOptedIn(true);
   }
 
   return (
@@ -80,24 +90,37 @@ export default function Home() {
           <a href="https://github.com/Neuro-Mechatronics-Interfaces/TabletHID" className="btn btn-outline" target="_blank" rel="noreferrer">View on GitHub</a>
         </div>
         <div className="platform-badges">
-          <a href="https://apps.apple.com/app/tablethid/id6766346670" className="badge">
-            <AppleLogo />
-            App Store — iOS
-          </a>
+          {/* iOS: TestFlight opt-in while App Store listing is unavailable */}
+          <div className="badge-group">
+            <a
+              href={TESTFLIGHT_URL}
+              className={`badge${hasIosOptedIn ? ' badge-muted' : ''}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={handleJoinIosBeta}
+            >
+              <AppleLogo />
+              {hasIosOptedIn ? 'Joined TestFlight ✓' : 'Join iOS TestFlight'}
+            </a>
+            <span className="badge badge-locked" aria-label="App Store install is not available yet">
+              <AppleLogo />
+              App Store — not available yet
+            </span>
+          </div>
 
           {/* Android: two-step opt-in flow */}
           <div className="badge-group">
             <a
               href={PLAY_TESTING_URL}
-              className={`badge${hasOptedIn ? ' badge-muted' : ''}`}
+              className={`badge${hasAndroidOptedIn ? ' badge-muted' : ''}`}
               target="_blank"
               rel="noreferrer"
-              onClick={handleJoinBeta}
+              onClick={handleJoinAndroidBeta}
             >
               <AndroidLogo />
-              {hasOptedIn ? 'Joined Beta ✓' : 'Join Android Beta'}
+              {hasAndroidOptedIn ? 'Joined Beta ✓' : 'Join Android Beta'}
             </a>
-            {hasOptedIn ? (
+            {hasAndroidOptedIn ? (
               <a
                 href={PLAY_STORE_URL}
                 className="badge badge-primary"
