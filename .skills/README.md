@@ -8,6 +8,7 @@ Use these notes to assign focused sub-agents without re-reading the whole repo. 
 - [iOS HID/Parity Implementation](ios-hid-parity.md): SwiftUI parity work, experimental BLE HID transport, report descriptor parity, iOS validation limits.
 - [Website/Spec/TODO Documentation Upkeep](docs-spec-todo.md): Status matrix, TODO hygiene, website copy review, user-facing docs.
 - [Verification/Release Validation](verification-release.md): Build/test/manual validation passes for Android, iOS, website, HID pairing, and release readiness.
+- [Bug Investigation](bug-investigation.md): Specialist sub-agent roles for each bug category in `BUGFIXES.md` — HID descriptor, BLE transport, touch input, gamepad UI, config persistence, host compatibility, Android platform, iOS platform.
 
 ## Shared Ground Rules
 

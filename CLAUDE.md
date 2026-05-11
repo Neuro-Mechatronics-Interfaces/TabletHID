@@ -36,6 +36,7 @@ Use this completion checklist before finishing feature work:
 - Code is implemented.
 - Relevant tests or manual validation notes are complete.
 - `spec/platform-feature-status.md` reflects the final state on every affected platform.
+- If a config data class changed (`GamepadConfig`, `ButtonConfig`, `JoystickConfig`, `TouchMouseConfig`, `ButtonZoneConfig`, `TouchMouseSubRegionConfig`, `KeyboardMacroButtonConfig`, or iOS equivalents): `spec/server-schema.md` is updated per the agent workflow in that file.
 - `README.md`, `TODO.md`, `ios/README.md`, or other project docs are updated if their claims changed.
 - Website docs under `web/` are reviewed using the workflow below.
 
@@ -109,6 +110,41 @@ When `web/` changes:
 - Run `npm run build` from `web/` before finishing.
 - For layout or screenshot-heavy changes, also run `npm run dev` and inspect the affected route in a browser when possible.
 - Do not commit generated `web/dist/` output unless the repository already tracks it for deployment.
+
+## Using BUGFIXES.md
+
+`BUGFIXES.md` is the bug tracker. It sits alongside `TODO.md` in the planning pipeline but follows a different workflow because bugs require diagnosis before a fix can be scoped.
+
+### Filing a bug
+
+When the user reports a bug, add an entry to the **Active bugs** section of `BUGFIXES.md` using the template at the top of that file. Fill in as many fields as you can from what the user described, then ask for any missing **Diagnostic data** (logcat, report bytes, descriptor hex, host-side screenshots) before investigating.
+
+### Investigating a bug
+
+1. Read the full bug entry.
+2. Match the **Category** field to the corresponding specialist section in `.skills/bug-investigation.md`.
+3. Read every file listed under "Read first" for that category — do not hypothesise before reading the source.
+4. Write your root-cause explanation under **Investigation** in the bug entry, citing file paths and line numbers.
+5. Implement the fix, then fill in **Resolution** with what changed and whether re-pairing is required.
+
+### Choosing the right specialist
+
+| Category | Trigger | Key domain knowledge needed |
+| --- | --- | --- |
+| **HID Descriptor** | Wrong axis direction, swapped sticks, button index off, triggers not analog | HID 1.11 spec, Usage Pages/IDs, axis byte order, Logical Min/Max polarity |
+| **BLE Transport** | Pairing fails, "incorrect PIN", GATT errors, not discovered | SMP bonding, `createBond()`, stale LTK, GATT server lifecycle |
+| **Touch Input** | Zone miss, wrong pointer, drift, dynamic follower jump | `MotionEvent` pointer routing, accumulation, hit-test order |
+| **Gamepad UI** | Widget off-screen, edit mode broken, trigger travel wrong | Fractional layout coords, overlay lifecycle, trigger float→byte mapping |
+| **Config Persistence** | Profile not saved, wrong defaults, reset fails | Profile-namespaced keys, `__saved` sentinel, raw resource defaults |
+| **Host Compatibility** | Works on Windows but not macOS, Steam-specific, axis differs by host | Windows XInput vs HID, macOS IOHIDDevice open requirement |
+| **Android Platform** | Permission crash, service killed, orientation ignored | AndroidManifest, foreground service, API-level quirks |
+| **iOS Platform** | CBPeripheralManager error, background disconnect | Core Bluetooth peripheral mode, HoG entitlements |
+
+### After fixing
+
+- Move the entry from **Active bugs** to **Resolved bugs** in `BUGFIXES.md`.
+- Update `spec/platform-feature-status.md` if the bug revealed a status that was wrong.
+- Note whether the fix requires the host to forget and re-pair (applies to any HID descriptor or BLE transport change).
 
 ## Build Coordination
 

@@ -1,0 +1,315 @@
+# TabletHID Server Schema
+
+Canonical contract for the community config-sharing backend. This document is the source of truth for the D1 database schema, the API route contract, and the canonical JSON representation of each config type.
+
+**Any change to a config data class on any platform must be reflected here before shipping.**  
+See [Agent workflow](#agent-workflow) for the required steps.
+
+---
+
+## Worker location
+
+Source lives in `cf-worker/`. It is a Hono-based Cloudflare Worker bound to a D1 database named `TABLETHID_DB`.
+
+---
+
+## API routes
+
+All routes are prefixed `/api/:version/`. Current production version: **v1**.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/api/v1/configs` | List configs with optional filters |
+| `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` |
+| `POST` | `/api/v1/configs` | Upload a config |
+
+### GET /api/v1/configs — query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `mode` | `touch_mouse` \| `gamepad` | Filter by control mode |
+| `platform` | `android` \| `ios` | Filter by source platform |
+| `tags` | comma-separated strings | Filter configs that include all listed tags |
+| `sort` | `recent` (default) \| `popular` | Sort order |
+| `limit` | integer, default 20, max 100 | Page size |
+| `offset` | integer, default 0 | Pagination offset |
+
+Response:
+```json
+{
+  "configs": [ { ...ConfigRecord } ],
+  "total": 42
+}
+```
+
+### GET /api/v1/configs/:id
+
+Response: full `ConfigRecord`. Returns 404 if not found.
+
+### POST /api/v1/configs
+
+Request body (JSON):
+
+| Field | Required | Type | Notes |
+|-------|----------|------|-------|
+| `platform` | yes | `"android"` \| `"ios"` | |
+| `mode` | yes | `"touch_mouse"` \| `"gamepad"` | |
+| `profile_name` | yes | string, max 80 chars | |
+| `config_json` | yes | object | Must match the canonical schema for `mode` + `schema_version` |
+| `description` | no | string, max 400 chars | |
+| `tags` | no | string[] | Max 8 tags, each max 32 chars |
+| `app_version` | no | string | e.g. `"1.2.0"` |
+| `device_name` | no | string, max 80 chars | Human-readable model name, e.g. `"Motorola Moto Stylus 5G (2022)"` |
+| `device_hw_id` | no | string, max 40 chars | Raw hardware identifier; iOS: `hw.machine` value e.g. `"iPhone15,2"`; Android: omit (model string is already specific) |
+| `device_os_version` | no | string, max 20 chars | OS version string: `"14"` (Android) or `"17.4"` (iOS) |
+| `device_os_api_level` | no | integer | Android API level e.g. `34`; `null` for iOS. Most useful field for diagnosing Android-specific quirks since it maps directly to feature availability |
+| `device_screen_width_px` | no | integer | Physical screen width in pixels at the time the config was saved |
+| `device_screen_height_px` | no | integer | Physical screen height in pixels |
+| `device_screen_density_dpi` | no | integer | Screen density (dots per inch) |
+| `device_screen_diagonal_in` | no | float | Computed diagonal in inches; helps browsers group configs by device class (phone / large phone / tablet) |
+
+The server derives `schema_version` from the API version path. v1 routes accept and return schema version 1 configs only. The server rejects uploads whose `config_json` fails schema validation.
+
+Response: `{ "id": "<uuid>" }` or a 4xx error with `{ "error": "..." }`.
+
+---
+
+## D1 database schema
+
+```sql
+-- Tracks applied schema migrations
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version     INTEGER PRIMARY KEY,
+  applied_at  TEXT    NOT NULL,   -- ISO 8601
+  description TEXT
+);
+
+-- One row per uploaded config
+CREATE TABLE IF NOT EXISTS configs (
+  id             TEXT    PRIMARY KEY,          -- UUID v4
+  schema_version INTEGER NOT NULL DEFAULT 1,
+  platform       TEXT    NOT NULL,             -- 'android' | 'ios'
+  mode           TEXT    NOT NULL,             -- 'touch_mouse' | 'gamepad'
+  profile_name   TEXT    NOT NULL,
+  description    TEXT,
+  tags           TEXT    NOT NULL DEFAULT '[]', -- JSON array of strings
+  app_version    TEXT,
+  config_json              TEXT    NOT NULL,   -- canonical JSON, see below
+  uploaded_at              TEXT    NOT NULL,   -- ISO 8601
+  download_count           INTEGER NOT NULL DEFAULT 0,
+  device_name               TEXT,              -- e.g. 'Motorola Moto Stylus 5G (2022)'
+  device_hw_id              TEXT,              -- iOS hw.machine e.g. 'iPhone15,2'; null for Android
+  device_os_version         TEXT,              -- '14' (Android) or '17.4' (iOS)
+  device_os_api_level       INTEGER,           -- Android API level e.g. 34; null for iOS
+  device_screen_width_px    INTEGER,
+  device_screen_height_px   INTEGER,
+  device_screen_density_dpi INTEGER,
+  device_screen_diagonal_in REAL,              -- computed inches; used to group by device class
+
+  CHECK (platform IN ('android', 'ios')),
+  CHECK (mode     IN ('touch_mouse', 'gamepad'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_configs_mode           ON configs (mode);
+CREATE INDEX IF NOT EXISTS idx_configs_platform       ON configs (platform);
+CREATE INDEX IF NOT EXISTS idx_configs_schema_version ON configs (schema_version);
+CREATE INDEX IF NOT EXISTS idx_configs_popular        ON configs (download_count DESC);
+CREATE INDEX IF NOT EXISTS idx_configs_recent         ON configs (uploaded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_configs_diagonal       ON configs (device_screen_diagonal_in);
+```
+
+---
+
+## Canonical JSON — schema version 1
+
+### Shared types
+
+**`ButtonConfig`**
+
+| Field | Type | Default | Notes |
+|-------|------|---------|-------|
+| `enabled` | boolean | `true` | |
+| `behavior` | `"MOMENTARY"` \| `"LATCHING"` | `"MOMENTARY"` | |
+| `turbo` | boolean | `false` | |
+| `turboDurationMs` | integer | `50` | |
+| `turboIntervalMs` | integer | `100` | |
+| `offsetX` | float | `0` | Fractional screen offset |
+| `offsetY` | float | `0` | |
+| `scaleX` | float | `1` | |
+| `scaleY` | float | `1` | |
+| `triggerTravelDp` | float | `150` | Triggers only (`lt`, `rt`) |
+| `triggerAxis` | `"UP"` \| `"DOWN"` \| `"LEFT"` \| `"RIGHT"` | `"UP"` | Triggers only |
+
+**`JoystickConfig`**
+
+| Field | Type | Default |
+|-------|------|---------|
+| `enabled` | boolean | `true` |
+| `deadzone` | float | `0.08` |
+| `gain` | float | `1.0` |
+| `offsetX` | float | `0` |
+| `offsetY` | float | `0` |
+| `scaleX` | float | `1` |
+| `scaleY` | float | `1` |
+
+**`KeyboardMacroButtonConfig`**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `label` | string | Display label, e.g. `"Alt+Tab"` |
+| `modifiers` | integer | HID modifier byte bitmask |
+| `keyUsages` | integer[] | HID key usage IDs |
+| `layoutOffsetX` | float | `0` |
+| `layoutOffsetY` | float | `0` |
+| `layoutScaleX` | float | `1` |
+| `layoutScaleY` | float | `1` |
+
+**`TouchMouseSubRegionConfig`**
+
+| Field | Type | Default | Notes |
+|-------|------|---------|-------|
+| `enabled` | boolean | `true` | |
+| `zoneType` | `"STATIC"` \| `"DYNAMIC"` | `"STATIC"` | |
+| `staticZone` | `{ left, top, right, bottom: float }` | all `0` | Fractional [0,1] screen coords |
+| `dynamicZone` | `{ offsetX, offsetY, radius: float }` | `0,0,0.07` | Fraction of min(w,h) |
+| `keyboardModifiers` | integer | `0` | HID modifier byte |
+| `alternateMouseButton` | `"LEFT"` \| `"RIGHT"` \| `"MIDDLE"` \| `null` | `null` | |
+
+**`ButtonZoneConfig`**
+
+| Field | Type | Default |
+|-------|------|---------|
+| `enabled` | boolean | `false` |
+| `zoneType` | `"STATIC"` \| `"DYNAMIC"` | `"STATIC"` |
+| `behavior` | `"MOMENTARY"` \| `"LATCHING"` | `"MOMENTARY"` |
+| `staticZone` | `{ left, top, right, bottom: float }` | varies by button |
+| `dynamicZone` | `{ offsetX, offsetY, radius: float }` | varies by button |
+| `subRegions` | `TouchMouseSubRegionConfig[]` | `[]` |
+
+---
+
+### mode: `touch_mouse`
+
+Top-level `config_json` object:
+
+| Field | Type | Default |
+|-------|------|---------|
+| `mode` | `"TOUCH"` \| `"MOUSE"` | `"TOUCH"` |
+| `sensitivity` | integer 1–10 | `5` |
+| `scrollEnabled` | boolean | `true` |
+| `invertScroll` | boolean | `false` |
+| `sharedDynamicZone` | boolean | `false` |
+| `sharedDynamic` | `{ offsetX, offsetY, radius: float }` | `{0, 0.18, 0.08}` |
+| `leftButton` | `ButtonZoneConfig` | left-side defaults |
+| `rightButton` | `ButtonZoneConfig` | right-side defaults |
+| `sniper` | `{ enabled: bool, zone: {left,top,right,bottom}, divisor: float }` | disabled |
+| `macroHostDefaults` | `"WINDOWS"` \| `"MAC"` | `"WINDOWS"` |
+| `macroButtons` | `KeyboardMacroButtonConfig[]` | `[]` |
+
+Example minimal upload:
+```json
+{
+  "mode": "TOUCH",
+  "sensitivity": 7,
+  "scrollEnabled": true,
+  "invertScroll": false,
+  "sharedDynamicZone": true,
+  "sharedDynamic": { "offsetX": 0, "offsetY": 0.2, "radius": 0.09 },
+  "leftButton": {
+    "enabled": true,
+    "zoneType": "DYNAMIC",
+    "behavior": "MOMENTARY",
+    "staticZone": { "left": 0, "top": 0.75, "right": 0.25, "bottom": 1 },
+    "dynamicZone": { "offsetX": -0.15, "offsetY": 0, "radius": 0.07 },
+    "subRegions": []
+  },
+  "rightButton": {
+    "enabled": true,
+    "zoneType": "DYNAMIC",
+    "behavior": "MOMENTARY",
+    "staticZone": { "left": 0.75, "top": 0.75, "right": 1, "bottom": 1 },
+    "dynamicZone": { "offsetX": 0.15, "offsetY": 0, "radius": 0.07 },
+    "subRegions": []
+  },
+  "sniper": { "enabled": false, "zone": { "left": 0.35, "top": 0.88, "right": 0.65, "bottom": 1 }, "divisor": 4 },
+  "macroHostDefaults": "WINDOWS",
+  "macroButtons": []
+}
+```
+
+---
+
+### mode: `gamepad`
+
+Top-level `config_json` object:
+
+| Field | Type | Default |
+|-------|------|---------|
+| `buttons` | object — see below | all defaults |
+| `leftJoystick` | `JoystickConfig` | defaults |
+| `rightJoystick` | `JoystickConfig` | defaults |
+| `singleJoystickMode` | boolean | `false` |
+| `singleJoystickSideToggleEnabled` | boolean | `false` |
+| `singleJoystickOutputSide` | `"LEFT"` \| `"RIGHT"` | `"LEFT"` |
+| `macroHostDefaults` | `"WINDOWS"` \| `"MAC"` | `"WINDOWS"` |
+| `macroButtons` | `KeyboardMacroButtonConfig[]` | `[]` |
+| `vibrationIntensity` | `"OFF"` \| `"LIGHT"` \| `"MEDIUM"` \| `"STRONG"` | `"OFF"` |
+| `customButtonLabels` | `{ [buttonKey]: string }` | `{}` |
+
+`buttons` keys: `a`, `b`, `x`, `y`, `lb`, `rb`, `lt`, `rt`, `back`, `start`, `dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight`.  
+Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and `triggerAxis`.
+
+---
+
+## Schema versioning rules
+
+### Two independent version axes
+
+| Axis | Where | Incremented when |
+|------|-------|-----------------|
+| **API version** | URL path `/api/v1/` | Request or response *shape* changes in a breaking way (field removed, type changed, route renamed) |
+| **Config schema version** | `schema_version` DB column | The `config_json` field set changes (field added, removed, renamed, or type changed) |
+
+**Additive, backward-compatible field additions** (new optional field with a default): bump `schema_version` only; no new API version needed. Old stored configs remain valid because the field is optional with a known default.
+
+**Breaking changes** (field removed, renamed, type changed): bump both `schema_version` and introduce a new API version. The old API version continues to serve old configs untransformed.
+
+### How to add a field (additive change)
+
+1. Add the field with a default value in the Kotlin/Swift data class.
+2. Increment `TOUCH_MOUSE_CONFIG_SCHEMA_VERSION` or `GAMEPAD_CONFIG_SCHEMA_VERSION` constant in the app (add this constant if it does not exist yet).
+3. Add a new row to [Schema version history](#schema-version-history) below.
+4. Add the field to the relevant table in this document.
+5. Update the Worker's validation function to accept the new field (treat it as optional for backward compatibility).
+6. No new API version required; no migration script required.
+
+### How to make a breaking change
+
+1. Introduce the change in the data class.
+2. Bump the schema version constant.
+3. Create a new API version (`/api/v2/`) in `cf-worker/`.
+4. The new Worker route validates against the new schema.
+5. The old `/api/v1/` route remains frozen and continues to serve existing v1 configs.
+6. Add a migration note in [Schema version history](#schema-version-history).
+7. Update apps to point at `/api/v2/`.
+
+### Schema version history
+
+| Schema version | API version | Date | Changes |
+|---------------|-------------|------|---------|
+| 1 | v1 | 2026-05 | Initial schema: `touch_mouse` and `gamepad` configs as defined above |
+
+---
+
+## Agent workflow
+
+Before finishing any task that touches a config data class:
+
+1. **Identify** which data class changed: `GamepadConfig`, `ButtonConfig`, `JoystickConfig`, `TouchMouseConfig`, `ButtonZoneConfig`, `TouchMouseSubRegionConfig`, `KeyboardMacroButtonConfig`, or their iOS equivalents.
+2. **Classify** the change: additive (new optional field) or breaking (removal, rename, type change).
+3. **Update this file**: add or modify the relevant field table, bump the schema version history row, and if breaking, note the new API version.
+4. **Update the Worker**: adjust the validation logic in `cf-worker/` for the new or removed field.
+5. **Do not** change `schema_version` in the DB column without a matching entry in schema version history above.
+6. **Do not** remove old API version handlers without a deprecation notice and a migration window.
+
+This workflow applies regardless of which platform made the config change. If Android adds a field that iOS doesn't yet support, the field must still be documented here with a note on iOS parity status.

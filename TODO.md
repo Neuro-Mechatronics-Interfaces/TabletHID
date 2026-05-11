@@ -158,4 +158,44 @@ The following items in `web/src/pages/Support.jsx` are factually wrong after rec
 
 - [x] **Ability to reposition/resize keyboard macro buttons** - Should work the same way as the Gamepad, with persistence tied to the current user profile. 
 
-- [x] **Change "Discoverable" / "Connect" persistence** - Home screen now shows connection status card with Make Discoverable and Reconnect actions; device name editable from home; mode cards navigate directly to control mode when already connected. Tutorial remains for first-time pairing but is no longer required for reconnect. 
+- [x] **Change "Discoverable" / "Connect" persistence** - Home screen now shows connection status card with Make Discoverable and Reconnect actions; device name editable from home; mode cards navigate directly to control mode when already connected. Tutorial remains for first-time pairing but is no longer required for reconnect.
+
+---
+
+## Phase 5 — Community Config Sharing
+
+Anonymous, opt-in config upload and browsing. No user accounts. Rate-limited by IP. Full schema contract in `spec/server-schema.md`.
+
+### Cloudflare Worker (`cf-worker/`)
+
+- [ ] **Scaffold Hono Worker** — initialise `cf-worker/` with Hono, D1 binding (`TABLETHID_DB`), and wrangler config
+- [ ] **D1 migration: initial schema** — `configs` table + `schema_migrations` table as defined in `spec/server-schema.md`; all indexes included
+- [ ] **`GET /api/v1/configs`** — list endpoint with `mode`, `platform`, `tags`, `sort`, `limit`, `offset` query params
+- [ ] **`GET /api/v1/configs/:id`** — fetch single config; increments `download_count`
+- [ ] **`POST /api/v1/configs`** — upload endpoint; validates `config_json` against canonical schema for the given `mode`; enforces field length limits; rejects unknown `mode` values
+- [ ] **Rate limiting** — Cloudflare built-in rate limiting on `POST` (e.g. 30 uploads per hour per IP); return 429 with `Retry-After` header
+- [ ] **Config schema validation** — Worker-side JSON validation for both `touch_mouse` and `gamepad` canonical schemas (v1); reject malformed uploads with a descriptive 400 error
+- [ ] **iOS device name resolution** — bundle a small `hw-machine-names.json` map (`iPhone15,2` → `"iPhone 14 Pro"`) in the Worker; resolve `device_hw_id` to a friendly name on upload and store the result in `device_name`
+
+### Android client
+
+- [ ] **Device metadata collection** — gather `Build.MODEL`, `Build.MANUFACTURER`, `Build.VERSION.RELEASE`, `Build.VERSION.SDK_INT`, and `DisplayMetrics` (`widthPixels`, `heightPixels`, `densityDpi`, `xdpi`, `ydpi`) at upload time; compute `device_screen_diagonal_in` from xdpi/ydpi
+- [ ] **Config serialiser** — serialize `GamepadConfig` and `TouchMouseConfig` to the canonical JSON format defined in `spec/server-schema.md` v1; deserialise incoming configs back to the appropriate data class
+- [ ] **Upload flow** — "Share this config" action on the profile/config screen; sends POST to `/api/v1/configs` with config + metadata; shows confirmation dialog with privacy disclosure before first upload (see Privacy section below)
+- [ ] **Browse & download UI** — scrollable list of community configs filterable by mode and platform; tapping a config shows details (device, profile name, description, download count) and a "Load into profile" action
+- [ ] **Load downloaded config** — deserialise fetched `config_json` and apply it to the current profile via the appropriate config store; confirm before overwriting existing config
+
+### iOS client
+
+- [ ] **Device metadata collection** — gather `UIDevice.current.model`, `UIDevice.current.systemVersion`, `UIScreen.main.nativeBounds`, `UIScreen.main.nativeScale`, and `sysctlbyname("hw.machine")` for `device_hw_id`; compute logical point dimensions from `nativeBounds / nativeScale`
+- [ ] **Config serialiser** — iOS equivalent of the Android canonical JSON serialiser/deserialiser for `spec/server-schema.md` v1 schemas; must produce identical JSON field names
+- [ ] **Upload flow** — same UX shape as Android: confirmation dialog with privacy disclosure, POST to `/api/v1/configs`
+- [ ] **Browse & download UI** — same feature set as Android; unified layout where practical given SwiftUI vs Compose difference
+
+### Privacy & store submissions
+
+- [ ] **Update `web/src/pages/Privacy.jsx`** — add Community Config Sharing section: what is uploaded, that it is opt-in and user-initiated, that uploads are public, that free-text fields should not contain personal information, and that Cloudflare processes request IPs for rate limiting under their own policy
+- [ ] **In-app upload consent dialog (Android)** — shown before every upload: lists exactly what will be sent (config data, profile name, device model, OS version, screen dimensions); warns against personal information in name/description fields
+- [ ] **In-app upload consent dialog (iOS)** — same content as Android dialog
+- [ ] **Google Play — Data Safety update** — declare User-generated content (optional, user-initiated) and App info/performance (app version); mark both as not used for tracking; update before shipping the upload feature
+- [ ] **App Store Connect — Privacy Nutrition Labels update** — declare User Content and Other Data; mark as not linked to user and not used for tracking; update before shipping the upload feature
