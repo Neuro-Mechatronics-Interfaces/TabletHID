@@ -286,7 +286,7 @@ function AndroidWalkthrough() {
 
         <Step tag="First pair" title="Connect to a new host" imgs={[imgMousePairing, imgTabletMousePairing]} compact reverse>
           From the Setup screen, tap <b>Make Discoverable (new pair)</b>. The tablet
-          advertises itself over Classic Bluetooth for up to 120 seconds. Switch the
+          advertises itself over Bluetooth LE for up to 120 seconds. Switch the
           toggle at the top between <b>Windows</b> and <b>macOS</b> — the numbered
           steps update to match your host OS.
           <br /><br />

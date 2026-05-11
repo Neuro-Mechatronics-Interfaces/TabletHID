@@ -3,7 +3,7 @@ export default function Privacy() {
     <div className="page-narrow">
       <div className="prose">
         <h1>Privacy Policy</h1>
-        <p className="lead">Last updated: May 2025</p>
+        <p className="lead">Last updated: May 2026</p>
 
         <h2>Overview</h2>
         <p>
@@ -32,10 +32,17 @@ export default function Privacy() {
           or any third party.
         </p>
         <p>
-          On Android, TabletHID requests <code>BLUETOOTH_CONNECT</code> and{' '}
-          <code>BLUETOOTH_SCAN</code> permissions solely to discover and connect to
-          your host computer. On iOS, the app requests Bluetooth access for the same
+          On Android, TabletHID requests <code>BLUETOOTH_ADVERTISE</code>,{' '}
+          <code>BLUETOOTH_CONNECT</code>, and <code>BLUETOOTH_SCAN</code> permissions
+          to broadcast the device as a Bluetooth LE peripheral and connect to your
+          host computer. On iOS, the app requests Bluetooth access for the same
           purpose.
+        </p>
+        <p>
+          On Android, a foreground service runs while the app is active to keep the
+          Bluetooth connection alive when the screen is off or the app is in the
+          background. This service displays a persistent notification for the duration
+          of the session and performs no network activity.
         </p>
 
         <h2>Local Storage</h2>
