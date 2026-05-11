@@ -44,6 +44,10 @@ const FAQS = {
       q: 'Can I switch between Touch Mouse and Gamepad without re-pairing?',
       a: 'On Android, yes: both modes share a single Bluetooth bond using a combined HID descriptor. On iOS, TabletHID exposes the same mouse/gamepad/keyboard report map through the experimental BLE HID transport, but host reconnect behavior still needs physical iPhone/iPad validation.',
     },
+    {
+      q: 'What does Community Configs send to the server?',
+      a: 'Browsing requests public config records. Applying a config fetches that public record by ID and increments its public download count. Uploading is optional and public: it sends the selected config JSON, profile name, description, tags, category, app version, device model or hardware identifier, OS version/API level, and screen size/density. There are no accounts, analytics, or advertising identifiers. Community listings are user-generated and may contain language we do not condone; we remove or correct inappropriate content when detected, but cannot guarantee every listing is clean.',
+    },
   ],
   ios: [
     {

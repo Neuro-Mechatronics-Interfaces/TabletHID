@@ -103,6 +103,9 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
             placeholder="e.g. 15"
           />
         </label>
+        <p className="cfg-opt-hint">
+          Shared configs are public. Do not include personal information or inappropriate language in text fields.
+        </p>
       </section>
 
       {isGamepad && config && (

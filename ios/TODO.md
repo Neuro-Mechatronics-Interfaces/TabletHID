@@ -118,7 +118,7 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 ## Phase 3 - TestFlight And App Store
 
 - [x] Confirm experimental BLE HID-over-GATT can pair with and control a Windows host from the Mac build.
-- [x] Add `PrivacyInfo.xcprivacy` for app-local `UserDefaults` usage and no declared data collection.
+- [x] Add `PrivacyInfo.xcprivacy` for app-local `UserDefaults` usage and optional Community Config collection disclosures.
 - [x] Add App Store/TestFlight release checklist in `ios/APP_STORE.md`.
 - [ ] Confirm the permanent bundle ID before creating the App Store Connect app record.
 - [x] Add complete AppIcon asset catalog.

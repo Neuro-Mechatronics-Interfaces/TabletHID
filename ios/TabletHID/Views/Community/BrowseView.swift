@@ -8,6 +8,7 @@ struct BrowseView: View {
     var body: some View {
         VStack(spacing: 0) {
             filterBar
+            contentNotice
             Divider()
             if viewModel.isLoading && viewModel.configs.isEmpty {
                 Spacer()
@@ -84,6 +85,16 @@ struct BrowseView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
+    }
+
+    private var contentNotice: some View {
+        Text("Community content is user-generated and may contain language we do not condone. We remove or correct inappropriate content when detected, but cannot guarantee every listing is clean.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
     }
 
     // MARK: - Config list

@@ -62,7 +62,7 @@ struct UploadSheet: View {
                 }
 
                 Section {
-                    Text("Uploads are public. Do not include personal information in the name or description.")
+                    Text("Uploads are public. This sends the selected config, profile name, description, tags, category, app version, device model/hardware identifier, OS version, and screen size/density. Do not include personal information in text fields. Community content is user-generated; inappropriate language may be removed when detected.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

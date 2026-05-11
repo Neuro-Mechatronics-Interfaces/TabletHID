@@ -195,8 +195,8 @@ Anonymous, opt-in config upload and browsing. No user accounts. Rate-limited by 
 
 ### Privacy & store submissions
 
-- [x] **Update `web/src/pages/Privacy.jsx`** — add Community Config Sharing section: what is uploaded, that it is opt-in and user-initiated, that uploads are public, that free-text fields should not contain personal information, and that Cloudflare processes request IPs for rate limiting under their own policy
-- [ ] **In-app upload consent dialog (Android)** — shown before every upload: lists exactly what will be sent (config data, profile name, device model, OS version, screen dimensions); warns against personal information in name/description fields
-- [x] **In-app upload consent dialog (iOS)** — same public-upload disclosure is shown in the upload sheet before submission.
+- [x] **Update `web/src/pages/Privacy.jsx`** — add Community Config Sharing section: what is uploaded, that apply/import increments public download count, that it is opt-in and user-initiated, that uploads are public, that free-text fields should not contain personal information, that user-generated public listings may contain inappropriate language until detected/corrected, and that Cloudflare processes request IPs for rate limiting under their own policy
+- [x] **In-app upload consent notice (Android)** — shown before every upload in the upload sheet: lists exactly what will be sent (config data, profile name, description/tags/category, app version, device model/hardware identifier, OS version/API level, screen dimensions/density); warns against personal information in text fields and notes user-generated content moderation limits
+- [x] **In-app upload consent notice (iOS)** — same public-upload disclosure is shown in the upload sheet before submission.
 - [ ] **Google Play — Data Safety update** — declare User-generated content (optional, user-initiated) and App info/performance (app version); mark both as not used for tracking; update before shipping the upload feature
-- [ ] **App Store Connect — Privacy Nutrition Labels update** — declare User Content and Other Data; mark as not linked to user and not used for tracking; update before shipping the upload feature
+- [ ] **App Store Connect — Privacy Nutrition Labels update** — declare Other User Content, Product Interaction, and Other Data Types; mark as not linked to user and not used for tracking; update before shipping the upload feature

@@ -112,6 +112,15 @@
 
         </LinearLayout>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/community_content_notice"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
         <!-- ── Config list ─────────────────────────────────────────────────── -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/browseRecyclerView"

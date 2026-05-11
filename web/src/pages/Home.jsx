@@ -202,6 +202,7 @@ export default function Home() {
                 <li>Browse by mode and platform</li>
                 <li>Import only layout, macros, behavior, or everything</li>
                 <li>Uploads are public and optional</li>
+                <li>User-generated descriptions may be moderated after posting</li>
                 <li>Available in Android and iOS builds when configured</li>
               </ul>
             </div>

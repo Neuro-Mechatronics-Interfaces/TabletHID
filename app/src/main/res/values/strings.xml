@@ -235,6 +235,7 @@
     <string name="community_mode_note_touch_mouse">This is a touch mouse config.</string>
     <string name="community_downloads">%1$d downloads</string>
     <string name="community_item_os_line">%1$s · %2$s&quot;</string>
+    <string name="community_content_notice">Community content is user-generated and may contain language we do not condone. We review and remove or correct inappropriate content when detected, but cannot guarantee every listing is clean.</string>
 
     <!-- Upload sheet -->
     <string name="community_upload_title">Share %1$s — %2$s publicly?</string>
@@ -244,7 +245,7 @@
     <string name="community_upload_category_hint">e.g. gaming, accessibility, productivity</string>
     <string name="community_upload_device">Device: %1$s</string>
     <string name="community_upload_os">OS: Android %1$s</string>
-    <string name="community_upload_privacy_notice">Uploads are public. Do not include personal information in the name or description.</string>
+    <string name="community_upload_privacy_notice">Uploads are public. This sends the selected config, profile name, description, tags, category, app version, device model/hardware identifier, OS version/API level, and screen size/density. Do not include personal information in text fields. Community content is user-generated; inappropriate language may be removed when detected.</string>
     <string name="community_btn_upload">Upload</string>
     <string name="community_upload_success">Uploaded! Others can now find your config.</string>
 

@@ -6,7 +6,7 @@ This checklist tracks the iOS project work needed before sending TabletHID to Te
 
 - BLE HID-over-GATT has been proven locally from the Mac build to a Windows host.
 - The iOS project builds for simulator and native macOS.
-- The app includes a privacy manifest declaring local `UserDefaults` use and no collected data.
+- The app includes a privacy manifest declaring local `UserDefaults` use and optional Community Config data collection for app functionality.
 - App Store assets, screenshots, review notes, and a physical iPhone/iPad TestFlight validation pass are still required.
 
 ## Project Settings
@@ -26,6 +26,7 @@ Before the first App Store Connect app record is created, decide whether to keep
 - [ ] Add a real app icon asset catalog (`AppIcon`) for iPhone/iPad.
 - [ ] Confirm Bluetooth permission copy is accurate in `NSBluetoothAlwaysUsageDescription`.
 - [ ] Generate a privacy report in Xcode and confirm it matches the App Store privacy answers.
+- [ ] Confirm App Store privacy answers disclose Other User Content, Product Interaction, and Other Data Types for optional Community Config uploads/imports; mark them not linked to the user and not used for tracking.
 - [ ] Archive with a generic iOS device destination or a physical iPhone/iPad selected.
 - [ ] Upload the archive to App Store Connect using Xcode Organizer.
 - [ ] Wait for build processing, then distribute through TestFlight first.
