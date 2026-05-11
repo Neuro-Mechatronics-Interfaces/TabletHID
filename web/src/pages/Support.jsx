@@ -173,8 +173,19 @@ function IosWalkthrough() {
     <>
       {/* ── Pairing video ── */}
       <div id="pairing-video" className="video-section">
-        <h2>Pairing walkthrough</h2>
-        <div className="video-placeholder">iOS pairing video coming soon.</div>
+        <h2>macOS pairing walkthrough (Touch Mouse &amp; Gamepad)</h2>
+        <video className="video-player" controls preload="metadata">
+          <source src="/vid/Mac Pairing.mov" type="video/quicktime" />
+          Your browser does not support this video format.
+        </video>
+      </div>
+
+      <div id="device-name-tutorial" className="video-section">
+        <h2>Setting your device name</h2>
+        <video className="video-player" controls preload="metadata">
+          <source src="/vid/Mac Tutorial.mov" type="video/quicktime" />
+          Your browser does not support this video format.
+        </video>
       </div>
 
       <div className="walkthrough-block">
