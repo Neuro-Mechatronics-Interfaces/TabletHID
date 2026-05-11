@@ -7,10 +7,12 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.tablet.hid.HidViewModel
 import com.tablet.hid.R
 import com.tablet.hid.databinding.SheetImportBinding
 import com.tablet.hid.model.CommunityConfigRecord
@@ -38,6 +40,8 @@ class ImportSheet : BottomSheetDialogFragment() {
 
     private var _binding: SheetImportBinding? = null
     private val binding get() = _binding!!
+
+    private val hidViewModel: HidViewModel by activityViewModels()
 
     private lateinit var record: CommunityConfigRecord
     private var targetProfile: Profile = Profile.DEFAULT
@@ -228,6 +232,12 @@ class ImportSheet : BottomSheetDialogFragment() {
             }
 
             if (result.isSuccess) {
+                // If the import targeted the currently active profile, push the saved config
+                // into the ViewModel so that GamepadFragment / TouchMouseFragment reflect the
+                // new layout immediately without requiring a navigate-away-and-back.
+                if (profile.key == hidViewModel.activeProfile.value.key) {
+                    hidViewModel.reloadActiveConfigs()
+                }
                 // Signal the parent fragment to show feedback on its own view, which
                 // stays visible after this sheet dismisses.
                 parentFragmentManager.setFragmentResult(

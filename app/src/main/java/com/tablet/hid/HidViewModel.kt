@@ -220,6 +220,13 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         GamepadConfigStore.save(getApplication(), config, _activeProfile.value)
     }
 
+    // Re-reads both configs from SharedPreferences for the currently active profile.
+    // Call this after an external write (e.g. community import) so observers stay in sync.
+    fun reloadActiveConfigs() {
+        _touchMouseConfig.value = TouchMouseConfigStore.load(getApplication(), _activeProfile.value)
+        _gamepadConfig.value    = GamepadConfigStore.load(getApplication(), _activeProfile.value)
+    }
+
     // ── HID operations ───────────────────────────────────────────────────────────
 
     fun initialize(mode: DeviceMode) = hidManager.initialize(mode)
