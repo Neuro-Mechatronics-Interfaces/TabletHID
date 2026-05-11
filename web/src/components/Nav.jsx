@@ -15,6 +15,7 @@ export default function Nav() {
         </NavLink>
         <div className="nav-links">
           <NavLink to="/" end className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Home</NavLink>
+          <NavLink to="/configs" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Configs</NavLink>
           <NavLink to="/support" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Support</NavLink>
           <NavLink to="/privacy" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Privacy</NavLink>
         </div>

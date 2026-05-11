@@ -16,6 +16,7 @@ const supportedRoutes = new Map([
   ['/support/ios', { name: 'support', scope: 'ios', platform: 'ios' }],
   ['/support/android', { name: 'support', scope: 'android', platform: 'android' }],
   ['/privacy', { name: 'privacy' }],
+  ['/configs', { name: 'configs' }],
 ]);
 
 function normalizeRoute(url) {
