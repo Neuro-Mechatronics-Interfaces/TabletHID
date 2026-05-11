@@ -44,6 +44,7 @@ object GamepadConfigSerializer {
         root.put("singleJoystickMode", config.singleJoystickMode)
         root.put("singleJoystickSideToggleEnabled", config.singleJoystickSideToggleEnabled)
         root.put("singleJoystickOutputSide", config.singleJoystickOutputSide.name)
+        buttons.put("singleJoystickToggle", buttonToJson(config.singleJoystickSideBtn))
         root.put("macroHostDefaults", config.macroHostDefaults.name)
         root.put("macroButtons", macrosToJson(config.macroButtons))
         root.put("vibrationIntensity", config.vibrationIntensity.name)
@@ -90,6 +91,7 @@ object GamepadConfigSerializer {
                 VibrationIntensity.OFF,
             ),
             customButtonLabels = labelsFromJson(json.optJSONObject("customButtonLabels")),
+            singleJoystickSideBtn = buttonFromJson(buttons.optJSONObject("singleJoystickToggle"), isTrigger = false),
         )
     }
 

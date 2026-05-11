@@ -243,6 +243,22 @@ class GamepadFragment : Fragment() {
             if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled && cfg.leftJoystick.enabled) View.VISIBLE else View.GONE
         binding.btnSingleJoystickSide.text =
             if (cfg.singleJoystickOutputSide == JoystickSide.LEFT) "L" else "R"
+        binding.btnSingleJoystickSide.applyLayout(
+            cfg.singleJoystickSideBtn.offsetX, cfg.singleJoystickSideBtn.offsetY,
+            cfg.singleJoystickSideBtn.scaleX,  cfg.singleJoystickSideBtn.scaleY,
+        )
+
+        // Tint the joystick ring to match the current output side when the toggle is active.
+        val joystickAccent = if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled) {
+            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT)
+                Color.parseColor("#886699FF")   // blue — outputting left stick
+            else
+                Color.parseColor("#88FFAA44")   // amber — outputting right stick
+        } else {
+            Color.parseColor("#66FFFFFF")
+        }
+        binding.leftJoystick.accentColor = joystickAccent
+
         editController.renderMacroButtons(cfg)
 
         binding.leftJoystick.deadzone  = cfg.leftJoystick.deadzone

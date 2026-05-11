@@ -474,4 +474,5 @@ private fun GamepadConfig.resetLayout(): GamepadConfig = copy(
     dpadUp = dpadUp.resetPos(), dpadDown = dpadDown.resetPos(),
     dpadLeft = dpadLeft.resetPos(), dpadRight = dpadRight.resetPos(),
     leftJoystick = leftJoystick.resetPos(), rightJoystick = rightJoystick.resetPos(),
+    singleJoystickSideBtn = singleJoystickSideBtn.resetPos(),
 )

@@ -55,4 +55,5 @@ data class GamepadConfig(
     val macroButtons: List<KeyboardMacroButtonConfig> = emptyList(),
     val vibrationIntensity: VibrationIntensity = VibrationIntensity.OFF,
     val customButtonLabels: Map<String, String> = emptyMap(),
+    val singleJoystickSideBtn: ButtonConfig = ButtonConfig(),
 )

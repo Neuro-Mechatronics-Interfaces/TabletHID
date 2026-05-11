@@ -31,6 +31,18 @@ class JoystickView @JvmOverloads constructor(
     /** Output multiplier applied after deadzone rescaling, clamped to ±1. */
     var gain: Float = 1f
 
+    /** Tints the outer ring and fill. Alpha of the ring color is used as-is;
+     *  fill alpha is half of ring alpha so the two layers stay distinct. */
+    var accentColor: Int = Color.parseColor("#66FFFFFF")
+        set(value) {
+            field = value
+            outerRingPaint.color = value
+            val halfAlpha = (Color.alpha(value) / 2).coerceIn(0, 255)
+            outerPaint.color = Color.argb(
+                halfAlpha, Color.red(value), Color.green(value), Color.blue(value))
+            invalidate()
+        }
+
     private var knobOffsetX = 0f
     private var knobOffsetY = 0f
     private var activePointerId = -1

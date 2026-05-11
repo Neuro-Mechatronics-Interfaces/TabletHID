@@ -70,6 +70,12 @@ class GamepadEditController(
         attachJoy(binding.leftJoystick,  "Left Stick",  { it.leftJoystick },  { c, j -> c.copy(leftJoystick = j) })
         attachJoy(binding.rightJoystick, "Right Stick", { it.rightJoystick }, { c, j -> c.copy(rightJoystick = j) })
 
+        if (binding.btnSingleJoystickSide.visibility == View.VISIBLE) {
+            attach(binding.btnSingleJoystickSide,
+                { it.singleJoystickSideBtn },
+                { c, b -> c.copy(singleJoystickSideBtn = b) })
+        }
+
         allButtonViews().forEach { it.alpha = 0.6f }
         attachMacroEditListeners()
     }
@@ -80,6 +86,7 @@ class GamepadEditController(
         binding.editModeBanner.visibility = View.GONE
         binding.leftJoystick.setOnTouchListener(null)
         binding.rightJoystick.setOnTouchListener(null)
+        binding.btnSingleJoystickSide.setOnTouchListener(null)
         allButtonViews().forEach { it.alpha = 1f }
         macroButtonViews.forEach { (button, macro) ->
             button.alpha = 1f
@@ -180,7 +187,12 @@ class GamepadEditController(
                 view.translationX = ox * density
                 view.translationY = oy * density
                 view.scaleX = sx; view.scaleY = sy
-                saveConfig(getConfig().copy(offsetX = ox, offsetY = oy, scaleX = sx, scaleY = sy))
+                clampTranslationToParent(view)
+                saveConfig(getConfig().copy(
+                    offsetX = view.translationX / density,
+                    offsetY = view.translationY / density,
+                    scaleX = sx, scaleY = sy,
+                ))
             }
         }.show(fragmentManager, "buttonLayout")
     }
@@ -203,7 +215,12 @@ class GamepadEditController(
                 view.translationX = ox * density
                 view.translationY = oy * density
                 view.scaleX = sx; view.scaleY = sy
-                saveConfig(getConfig().copy(offsetX = ox, offsetY = oy, scaleX = sx, scaleY = sy))
+                clampTranslationToParent(view)
+                saveConfig(getConfig().copy(
+                    offsetX = view.translationX / density,
+                    offsetY = view.translationY / density,
+                    scaleX = sx, scaleY = sy,
+                ))
             }
         }.show(fragmentManager, "buttonLayout")
     }
@@ -289,6 +306,7 @@ class GamepadEditController(
                 MotionEvent.ACTION_MOVE -> {
                     view.translationX += event.rawX - lastRawX
                     view.translationY += event.rawY - lastRawY
+                    clampTranslationToParent(view)
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -357,6 +375,7 @@ class GamepadEditController(
                 MotionEvent.ACTION_MOVE -> {
                     view.translationX += event.rawX - lastRawX
                     view.translationY += event.rawY - lastRawY
+                    clampTranslationToParent(view)
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -420,6 +439,7 @@ class GamepadEditController(
                 MotionEvent.ACTION_MOVE -> {
                     view.translationX += event.rawX - lastRawX
                     view.translationY += event.rawY - lastRawY
+                    clampTranslationToParent(view)
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -430,6 +450,19 @@ class GamepadEditController(
             }
             true
         }
+    }
+
+    /** Clamps view.translationX/Y so the scaled view stays entirely inside the root layout. */
+    private fun clampTranslationToParent(view: View) {
+        val pW = binding.root.width.toFloat()
+        val pH = binding.root.height.toFloat()
+        if (pW <= 0f || pH <= 0f) return
+        val halfW = view.width  * view.scaleX / 2f
+        val halfH = view.height * view.scaleY / 2f
+        val naturalCX = (view.left + view.right)  / 2f
+        val naturalCY = (view.top  + view.bottom) / 2f
+        view.translationX = view.translationX.coerceIn(halfW - naturalCX, pW - naturalCX - halfW)
+        view.translationY = view.translationY.coerceIn(halfH - naturalCY, pH - naturalCY - halfH)
     }
 
     @Suppress("ClickableViewAccessibility")
