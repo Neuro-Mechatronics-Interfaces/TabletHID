@@ -125,6 +125,18 @@ Use this root TODO as the product-wide backlog and Android implementation tracke
 
 ---
 
+## Website / Documentation fixes
+
+The following items in `web/src/pages/Support.jsx` are factually wrong after recent transport and pairing changes and need to be corrected:
+
+- [x] **General FAQ — "broadcasts for 120 seconds"**: BLE advertising uses `setTimeout(0)` (indefinite). Remove the 120-second claim; say the tablet advertises until it connects or you leave the Setup screen.
+- [x] **Android FAQ — "BLUETOOTH_CONNECT and BLUETOOTH_SCAN"**: Missing `BLUETOOTH_ADVERTISE`, which is required for BLE peripheral advertising on Android 12+.
+- [x] **Android FAQ — "BluetoothHidDevice profile (Android 9 / API 28+)"**: The app uses a BLE GATT server (`BleHidManager`), not the `BluetoothHidDevice` Classic BT profile. The answer and the profile requirement are both wrong.
+- [x] **Android FAQ — "Standard HID devices pair without a PIN. Dismiss the dialog"**: Since the `createBond()` fix, the app intentionally triggers a PIN/passkey pairing dialog on first connection. This answer now contradicts expected behaviour.
+- [x] **Android walkthrough "First pair" step — "no PIN is required"**: Same issue — pairing now involves a PIN confirmation prompt on both devices.
+
+---
+
 ## Future Tech / Phase 4
 
 ### Improved Gestures

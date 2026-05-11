@@ -30,7 +30,7 @@ const FAQS = {
   common: [
     {
       q: 'The host doesn\'t see TabletHID in its Bluetooth device list.',
-      a: 'Make sure you tapped "Make Discoverable" in the app first — the tablet only broadcasts for 120 seconds. On Windows, go to Settings → Bluetooth & devices → Add device → Bluetooth. On macOS, open System Settings → Bluetooth. If you\'ve previously paired, use the Reconnect button instead.',
+      a: 'Make sure you tapped "Make Discoverable" in the app first — the tablet advertises until it connects or you leave the Setup screen. On Windows, go to Settings → Bluetooth &amp; devices → Add device → Bluetooth. On macOS, open System Settings → Bluetooth. If you\'ve previously paired, use the Reconnect button instead.',
     },
     {
       q: 'I paired successfully but inputs aren\'t registering on the host.',
@@ -66,15 +66,15 @@ const FAQS = {
   android: [
     {
       q: 'The app shows "Bluetooth permission not granted".',
-      a: 'On Android 12+, TabletHID needs BLUETOOTH_CONNECT and BLUETOOTH_SCAN permissions. Go to Settings → Apps → TabletHID → Permissions → Nearby devices → Allow.',
+      a: 'On Android 12+, TabletHID needs BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT, and BLUETOOTH_SCAN permissions. Go to Settings → Apps → TabletHID → Permissions → Nearby devices → Allow.',
     },
     {
       q: 'My device says Bluetooth HID is not supported.',
-      a: 'TabletHID requires the BluetoothHidDevice profile (Android 9 / API 28+). Most Android tablets support it, but a handful of lower-end devices or custom ROMs omit it. Check your device specs for "HID Device profile" support.',
+      a: 'TabletHID uses a Bluetooth LE GATT server (not the Classic BT HID profile) and requires Android 10 / API 29 or later. If your device reports HID unsupported, check that Bluetooth LE peripheral mode is available — a small number of lower-end devices or heavily modified ROMs disable it.',
     },
     {
       q: 'Windows asks for a PIN when pairing.',
-      a: 'Standard HID devices pair without a PIN. If Windows prompts for one, dismiss the dialog, wait a moment, and try again. This sometimes happens on the very first pairing attempt.',
+      a: 'A PIN or passkey confirmation is expected on first pair — both Windows and the tablet will show a prompt at the same time. Confirm on both sides to complete bonding. If the prompt never appears on the tablet, tap "Make Discoverable" again to restart the flow.',
     },
     {
       q: 'The gamepad layout looks wrong or controls are off-screen.',
@@ -174,7 +174,7 @@ function IosWalkthrough() {
       {/* ── Pairing video ── */}
       <div id="pairing-video" className="video-section">
         <h2>Pairing walkthrough</h2>
-        <div className="video-placeholder">iOS / macOS pairing video coming soon.</div>
+        <div className="video-placeholder">iOS pairing video coming soon.</div>
       </div>
 
       <div className="walkthrough-block">
@@ -270,13 +270,29 @@ function IosWalkthrough() {
 function AndroidWalkthrough() {
   return (
     <>
-      {/* ── Pairing video ── */}
+      {/* ── Videos ── */}
       <div id="pairing-video" className="video-section">
-        <h2>Pairing walkthrough</h2>
+        <h2>Windows pairing walkthrough</h2>
         {/* MKV plays in Chrome/Firefox/Edge. Convert to MP4 for Safari support. */}
         <video className="video-player" controls preload="metadata">
           <source src="/vid/Android Pairing.mkv" type="video/x-matroska" />
-          Your browser does not support this video format. Download it directly instead.
+          Your browser does not support this video format.
+        </video>
+      </div>
+
+      <div id="mac-pairing-video" className="video-section">
+        <h2>macOS pairing walkthrough (Touch Mouse &amp; Gamepad)</h2>
+        <video className="video-player" controls preload="metadata">
+          <source src="/vid/Mac Pairing.mov" type="video/quicktime" />
+          Your browser does not support this video format.
+        </video>
+      </div>
+
+      <div id="device-name-tutorial" className="video-section">
+        <h2>Setting your device name</h2>
+        <video className="video-player" controls preload="metadata">
+          <source src="/vid/Mac Tutorial.mov" type="video/quicktime" />
+          Your browser does not support this video format.
         </video>
       </div>
 
@@ -298,15 +314,16 @@ function AndroidWalkthrough() {
 
         <Step tag="First pair" title="Connect to a new host" imgs={[imgMousePairing, imgTabletMousePairing]} compact reverse>
           From the Setup screen, tap <b>Make Discoverable (new pair)</b>. The tablet
-          advertises itself over Bluetooth LE for up to 120 seconds. Switch the
+          advertises itself over Bluetooth LE until a host connects. Switch the
           toggle at the top between <b>Windows</b> and <b>macOS</b> — the numbered
           steps update to match your host OS.
           <br /><br />
           On Windows, open <b>Settings → Bluetooth &amp; devices → Add device →
-          Bluetooth</b> and wait for <b>TabletHID</b> to appear. Click it to pair —
-          no PIN is required. The status bar at the top of the Setup screen will
-          confirm the connection, and the <b>Enter Touch Mouse</b> (or Enter Gamepad)
-          button becomes active.
+          Bluetooth</b> and wait for <b>TabletHID</b> to appear. Click it — both
+          the host and the tablet will show a PIN confirmation prompt at the same time.
+          Confirm on both sides to complete pairing. The status bar at the top of the
+          Setup screen will confirm the connection, and the <b>Enter Touch Mouse</b>{' '}
+          (or Enter Gamepad) button becomes active.
         </Step>
 
         <Step
