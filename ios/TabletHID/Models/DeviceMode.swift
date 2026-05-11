@@ -37,6 +37,9 @@ struct HIDHost: Codable, Equatable, Identifiable {
     var label: String {
         let a = alias?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !a.isEmpty { return a }
+        if displayName.hasPrefix("Host ") {
+            return "Unidentified host \(displayName.dropFirst(5))"
+        }
         return displayName.isEmpty ? String(identifier.prefix(8)) : displayName
     }
 
@@ -66,7 +69,7 @@ enum HIDConnectionState: Equatable {
         case .registering: "Preparing HID profile"
         case .reconnecting(_, let hostName): "Reconnecting to \(hostName)"
         case .waitingForConnection(_, let deviceName): "Waiting for \(deviceName)"
-        case .connected(_, let host): "Connected to \(host.displayName)"
+        case .connected(_, let host): "Connected to \(host.label)"
         case .unavailable: "Transport unavailable"
         case .error: "Error"
         }

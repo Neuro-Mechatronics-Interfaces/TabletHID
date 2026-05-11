@@ -3,6 +3,7 @@ import Foundation
 enum HIDTransportEvent {
     case waiting(DeviceMode)
     case reconnecting(mode: DeviceMode, hostName: String)
+    case pendingConnection(mode: DeviceMode, host: HIDHost)
     case connected(mode: DeviceMode, host: HIDHost)
     case disconnected(DeviceMode?)
     case unavailable(String)
@@ -15,9 +16,13 @@ protocol HIDTransport: AnyObject {
     var onEvent: ((HIDTransportEvent) -> Void)? { get set }
 
     func initialize(mode: DeviceMode, deviceName: String) throws
+    func startPairing(mode: DeviceMode, deviceName: String, excludingHostIDs: Set<String>) throws
     func reconnect(mode: DeviceMode, host: HIDHost, deviceName: String) throws
     func sendReport(id: UInt8, data: Data)
+    func approvePendingConnection(identifier: String)
+    func rejectPendingConnection(identifier: String)
     func disconnect()
+    func cancelConnection()
 }
 
 final class NoopHIDTransport: HIDTransport {
@@ -26,7 +31,11 @@ final class NoopHIDTransport: HIDTransport {
     var onEvent: ((HIDTransportEvent) -> Void)?
 
     func initialize(mode: DeviceMode, deviceName: String) throws {}
+    func startPairing(mode: DeviceMode, deviceName: String, excludingHostIDs: Set<String>) throws {}
     func reconnect(mode: DeviceMode, host: HIDHost, deviceName: String) throws {}
     func sendReport(id: UInt8, data: Data) {}
+    func approvePendingConnection(identifier: String) {}
+    func rejectPendingConnection(identifier: String) {}
     func disconnect() {}
+    func cancelConnection() {}
 }

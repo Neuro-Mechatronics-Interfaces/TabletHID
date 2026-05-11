@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct GamepadView: View {
     @EnvironmentObject private var appState: AppState
@@ -41,6 +44,24 @@ struct GamepadView: View {
                             .padding(.bottom, 28)
                     }
                     .padding(.top, metrics.padding)
+                }
+
+                if !cfg.macroButtons.isEmpty {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            KeyboardMacroPanel(macros: cfg.macroButtons) { macro, pressed in
+                                if pressed {
+                                    appState.sendKeyboardReport(modifiers: macro.modifiers, keyUsages: macro.keyUsages)
+                                } else {
+                                    appState.sendKeyboardReport()
+                                }
+                            }
+                            .padding(.trailing, metrics.padding)
+                            .padding(.bottom, metrics.padding)
+                        }
+                    }
                 }
             }
         }
@@ -149,10 +170,8 @@ struct GamepadView: View {
 
             HStack(alignment: .center, spacing: metrics.spacing) {
                 VStack(spacing: metrics.spacing) {
-                    Joystick(label: "L", size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
-                        leftStick = CGPoint(x: x, y: y)
-                        sendReport()
-                    }
+                    visibleJoystick(metrics)
+                    singleJoystickToggle(metrics)
                     dpad(metrics)
                 }
 
@@ -160,9 +179,11 @@ struct GamepadView: View {
 
                 VStack(spacing: metrics.spacing) {
                     faceButtons(metrics)
-                    Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
-                        rightStick = CGPoint(x: x, y: y)
-                        sendReport()
+                    if !cfg.singleJoystickMode {
+                        Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
+                            rightStick = CGPoint(x: x, y: y)
+                            sendReport()
+                        }
                     }
                 }
             }
@@ -174,11 +195,35 @@ struct GamepadView: View {
     private func leftControls(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.sectionSpacing) {
             shoulderControls(metrics, side: .left)
-            Joystick(label: "L", size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
-                leftStick = CGPoint(x: x, y: y)
-                sendReport()
-            }
+            visibleJoystick(metrics)
+            singleJoystickToggle(metrics)
             dpad(metrics)
+        }
+    }
+
+    private func visibleJoystick(_ metrics: GamepadMetrics) -> some View {
+        let side = cfg.singleJoystickMode ? cfg.singleJoystickOutputSide : .left
+        let label = side == .left ? "L" : "R"
+        return Joystick(label: label, size: metrics.joystickSize, config: cfg.leftJoystick) { x, y in
+                        leftStick = CGPoint(x: x, y: y)
+                        sendReport()
+        }
+    }
+
+    @ViewBuilder
+    private func singleJoystickToggle(_ metrics: GamepadMetrics) -> some View {
+        if cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled && cfg.leftJoystick.enabled {
+            Button {
+                var next = cfg
+                next.singleJoystickOutputSide = cfg.singleJoystickOutputSide == .left ? .right : .left
+                appState.updateGamepadConfig(next)
+                sendReport()
+            } label: {
+                Text(cfg.singleJoystickOutputSide == .left ? "L" : "R")
+                    .font(metrics.topBarFont.weight(.bold))
+                    .frame(width: 44, height: 34)
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -188,18 +233,18 @@ struct GamepadView: View {
         HStack(spacing: metrics.buttonSpacing) {
             switch side {
             case .left:
-                GamepadButton(label: "LT", size: metrics.buttonSize, config: cfg.btnLT) { pressed in
+                GamepadButton(label: label(for: "lt", fallback: "LT"), size: metrics.buttonSize, config: cfg.btnLT, vibration: .off) { pressed in
                     leftTrigger = pressed ? 255 : 0
                     sendReport()
                 }
-                GamepadButton(label: "LB", size: metrics.buttonSize, config: cfg.btnLB) { pressed in
+                GamepadButton(label: label(for: "lb", fallback: "LB"), size: metrics.buttonSize, config: cfg.btnLB, vibration: cfg.vibrationIntensity) { pressed in
                     setButton(.btnLB, pressed: pressed)
                 }
             case .right:
-                GamepadButton(label: "RB", size: metrics.buttonSize, config: cfg.btnRB) { pressed in
+                GamepadButton(label: label(for: "rb", fallback: "RB"), size: metrics.buttonSize, config: cfg.btnRB, vibration: cfg.vibrationIntensity) { pressed in
                     setButton(.btnRB, pressed: pressed)
                 }
-                GamepadButton(label: "RT", size: metrics.buttonSize, config: cfg.btnRT) { pressed in
+                GamepadButton(label: label(for: "rt", fallback: "RT"), size: metrics.buttonSize, config: cfg.btnRT, vibration: .off) { pressed in
                     rightTrigger = pressed ? 255 : 0
                     sendReport()
                 }
@@ -209,8 +254,8 @@ struct GamepadView: View {
 
     private func centerControls(_ metrics: GamepadMetrics) -> some View {
         HStack(spacing: metrics.buttonSpacing) {
-            GamepadButton(label: "Back",  size: metrics.buttonSize, config: cfg.btnBack)  { pressed in setButton(.btnBack,  pressed: pressed) }
-            GamepadButton(label: "Start", size: metrics.buttonSize, config: cfg.btnStart) { pressed in setButton(.btnStart, pressed: pressed) }
+            GamepadButton(label: label(for: "back", fallback: "Back"),  size: metrics.buttonSize, config: cfg.btnBack, vibration: cfg.vibrationIntensity)  { pressed in setButton(.btnBack,  pressed: pressed) }
+            GamepadButton(label: label(for: "start", fallback: "Start"), size: metrics.buttonSize, config: cfg.btnStart, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnStart, pressed: pressed) }
         }
     }
 
@@ -218,34 +263,40 @@ struct GamepadView: View {
         VStack(spacing: metrics.sectionSpacing) {
             shoulderControls(metrics, side: .right)
             faceButtons(metrics)
-            Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
-                rightStick = CGPoint(x: x, y: y)
-                sendReport()
+            if !cfg.singleJoystickMode {
+                Joystick(label: "R", size: metrics.joystickSize, config: cfg.rightJoystick) { x, y in
+                    rightStick = CGPoint(x: x, y: y)
+                    sendReport()
+                }
             }
         }
     }
 
     private func faceButtons(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: "Y", tint: .yellow, size: metrics.buttonSize, config: cfg.btnY) { pressed in setButton(.btnY, pressed: pressed) }
+            GamepadButton(label: label(for: "y", fallback: "Y"), tint: .yellow, size: metrics.buttonSize, config: cfg.btnY, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnY, pressed: pressed) }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: "X", tint: .blue,  size: metrics.buttonSize, config: cfg.btnX) { pressed in setButton(.btnX, pressed: pressed) }
-                GamepadButton(label: "B", tint: .red,   size: metrics.buttonSize, config: cfg.btnB) { pressed in setButton(.btnB, pressed: pressed) }
+                GamepadButton(label: label(for: "x", fallback: "X"), tint: .blue,  size: metrics.buttonSize, config: cfg.btnX, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnX, pressed: pressed) }
+                GamepadButton(label: label(for: "b", fallback: "B"), tint: .red,   size: metrics.buttonSize, config: cfg.btnB, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnB, pressed: pressed) }
             }
-            GamepadButton(label: "A", tint: .green, size: metrics.buttonSize, config: cfg.btnA) { pressed in setButton(.btnA, pressed: pressed) }
+            GamepadButton(label: label(for: "a", fallback: "A"), tint: .green, size: metrics.buttonSize, config: cfg.btnA, vibration: cfg.vibrationIntensity) { pressed in setButton(.btnA, pressed: pressed) }
         }
     }
 
     private func dpad(_ metrics: GamepadMetrics) -> some View {
         VStack(spacing: metrics.smallSpacing) {
-            GamepadButton(label: "Up",    size: metrics.buttonSize, config: cfg.dpadUp)    { pressed in dUp    = pressed; sendReport() }
+            GamepadButton(label: label(for: "dup", fallback: "Up"),    size: metrics.buttonSize, config: cfg.dpadUp, vibration: cfg.vibrationIntensity)    { pressed in dUp    = pressed; sendReport() }
             HStack(spacing: metrics.crossSpacing) {
-                GamepadButton(label: "Left",  size: metrics.buttonSize, config: cfg.dpadLeft)  { pressed in dLeft  = pressed; sendReport() }
-                GamepadButton(label: "Right", size: metrics.buttonSize, config: cfg.dpadRight) { pressed in dRight = pressed; sendReport() }
+                GamepadButton(label: label(for: "dleft", fallback: "Left"),  size: metrics.buttonSize, config: cfg.dpadLeft, vibration: cfg.vibrationIntensity)  { pressed in dLeft  = pressed; sendReport() }
+                GamepadButton(label: label(for: "dright", fallback: "Right"), size: metrics.buttonSize, config: cfg.dpadRight, vibration: cfg.vibrationIntensity) { pressed in dRight = pressed; sendReport() }
             }
-            GamepadButton(label: "Down",  size: metrics.buttonSize, config: cfg.dpadDown)  { pressed in dDown  = pressed; sendReport() }
+            GamepadButton(label: label(for: "ddown", fallback: "Down"),  size: metrics.buttonSize, config: cfg.dpadDown, vibration: cfg.vibrationIntensity)  { pressed in dDown  = pressed; sendReport() }
         }
         .font(.caption)
+    }
+
+    private func label(for key: String, fallback: String) -> String {
+        cfg.customButtonLabels[key]?.nilIfBlank ?? fallback
     }
 
     private func setButton(_ bit: GamepadButtonBit, pressed: Bool) {
@@ -258,11 +309,25 @@ struct GamepadView: View {
     }
 
     private func sendReport() {
+        let reportLeftStick: CGPoint
+        let reportRightStick: CGPoint
+        if cfg.singleJoystickMode {
+            if cfg.singleJoystickOutputSide == .left {
+                reportLeftStick = leftStick
+                reportRightStick = .zero
+            } else {
+                reportLeftStick = .zero
+                reportRightStick = leftStick
+            }
+        } else {
+            reportLeftStick = leftStick
+            reportRightStick = rightStick
+        }
         appState.sendGamepadReport(
-            leftX: Int(leftStick.x * 32767),
-            leftY: Int(leftStick.y * 32767),
-            rightX: Int(rightStick.x * 32767),
-            rightY: Int(rightStick.y * 32767),
+            leftX: Int(reportLeftStick.x * 32767),
+            leftY: Int(reportLeftStick.y * 32767),
+            rightX: Int(reportRightStick.x * 32767),
+            rightY: Int(reportRightStick.y * 32767),
             leftTrigger: leftTrigger,
             rightTrigger: rightTrigger,
             buttons: buttonBits,
@@ -349,6 +414,7 @@ struct GamepadButton: View {
     var tint: Color = .gray
     var size = CGSize(width: 68, height: 52)
     var config: ButtonConfig = ButtonConfig()
+    var vibration: VibrationIntensity = .off
     let onChanged: (Bool) -> Void
 
     @State private var pressed = false
@@ -373,6 +439,7 @@ struct GamepadButton: View {
                         guard !pressed else { return }
                         pressed = true
                         if config.behavior != .latching {
+                            playHaptic()
                             onChanged(true)
                             if config.turbo { startTurbo() }
                         }
@@ -382,6 +449,7 @@ struct GamepadButton: View {
                         pressed = false
                         if config.behavior == .latching {
                             latched.toggle()
+                            if latched { playHaptic() }
                             onChanged(latched)
                         } else {
                             onChanged(false)
@@ -414,6 +482,74 @@ struct GamepadButton: View {
     private func stopTurbo() {
         turboTask?.cancel()
         turboTask = nil
+    }
+
+    private func playHaptic() {
+        #if canImport(UIKit)
+        switch vibration {
+        case .off:
+            return
+        case .light:
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case .medium:
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        case .strong:
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
+        #endif
+    }
+}
+
+struct KeyboardMacroPanel: View {
+    let macros: [KeyboardMacroButtonConfig]
+    let onChanged: (KeyboardMacroButtonConfig, Bool) -> Void
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            ForEach(macros) { macro in
+                KeyboardMacroButton(macro: macro, onChanged: onChanged)
+            }
+        }
+        .padding(10)
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+private struct KeyboardMacroButton: View {
+    let macro: KeyboardMacroButtonConfig
+    let onChanged: (KeyboardMacroButtonConfig, Bool) -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        Text(macro.label)
+            .font(.callout.weight(.semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .frame(minWidth: 84, minHeight: 42)
+            .padding(.horizontal, 10)
+            .background(pressed ? Color.accentColor.opacity(0.85) : Color.secondary.opacity(0.22))
+            .foregroundStyle(pressed ? .white : .primary)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard !pressed else { return }
+                        pressed = true
+                        onChanged(macro, true)
+                    }
+                    .onEnded { _ in
+                        guard pressed else { return }
+                        pressed = false
+                        onChanged(macro, false)
+                    }
+            )
+            .onDisappear {
+                if pressed {
+                    pressed = false
+                    onChanged(macro, false)
+                }
+            }
     }
 }
 
@@ -482,5 +618,12 @@ struct ConnectionPill: View {
             .background(.thinMaterial)
             .clipShape(Capsule())
             .foregroundStyle(connected ? .green : .red)
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

@@ -59,6 +59,14 @@ struct AppSettingsView: View {
                 }
 
                 Section {
+                    Toggle("Auto-reconnect on launch", isOn: Binding(
+                        get: { appState.autoReconnectEnabled },
+                        set: { appState.setAutoReconnectEnabled($0) }
+                    ))
+                    Text("When enabled, TabletHID restarts the experimental BLE HID reconnect flow for the most recent host when the app opens.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
                     Toggle("Enable local session logging", isOn: Binding(
                         get: { appState.loggingEnabled },
                         set: { appState.setLoggingEnabled($0) }

@@ -47,6 +47,22 @@ struct TouchMouseSettingsView: View {
                     }
                 }
 
+                if draft.mode == .mouse {
+                    Section("Shared Dynamic Zone") {
+                        Toggle("Use one follower location", isOn: $draft.sharedDynamicZone)
+                        if draft.sharedDynamicZone {
+                            SliderRow(title: "Offset X", value: $draft.sharedDynamicOffsetX, range: -1...1, step: 0.05)
+                            SliderRow(title: "Offset Y", value: $draft.sharedDynamicOffsetY, range: -1...1, step: 0.05)
+                            SliderRow(title: "Radius", value: $draft.sharedDynamicRadius, range: 0.03...0.2, step: 0.01)
+                        }
+                    }
+                }
+
+                MacroConfigSection(
+                    hostDefaults: $draft.macroHostDefaults,
+                    macros: $draft.macroButtons
+                )
+
                 Section("Left Button") {
                     buttonEditor(button: $draft.leftButton)
                 }

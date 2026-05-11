@@ -13,7 +13,7 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Add report-builder unit tests.
 - [x] Verify simulator app build with `xcodebuild build`.
 - [x] Verify test bundle compilation with `xcodebuild build-for-testing`.
-- [ ] Run unit tests successfully in simulator. Current local blocker: `xcodebuild test` builds, then simulator launch fails with `NSMachErrorDomain Code=-308`.
+- [x] Run unit tests successfully in simulator.
 
 ## Phase 1 - Transport Strategy
 
@@ -22,13 +22,16 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Add `ExperimentalBLEHIDTransport` using the expanded HID service UUID workaround (`00001812-0000-1000-8000-00805F9B34FB`) and HID-over-GATT characteristics.
 - [x] Wire experimental BLE HID transport into `AppState`.
 - [x] Add iOS quick reconnect flow that remembers the last subscribed host and restarts advertising for that host.
+- [x] Align the iOS Home connection workflow with Android: status card, Make Discoverable, Reconnect, Cancel, Disconnect, editable HoG server name, and direct mode entry.
+- [x] Add opt-in auto-reconnect on app launch after onboarding is complete.
+- [x] Make iOS new-pair advertising drop stale subscribed centrals, ignore known-host auto-reattach attempts, require explicit on-iPad approval for new hosts, include Device Information Service/PnP ID, and require encrypted HID report access.
 - [ ] Test `ExperimentalBLEHIDTransport` on a physical iPhone/iPad against macOS, Windows, Android, and iPadOS hosts.
 - [ ] Confirm whether hosts subscribe to the Report characteristics and accept mouse/gamepad reports from the combined report map.
 - [ ] If combined mouse+gamepad fails, split iOS advertisement into keyboard/mouse-only, mouse-only, and gamepad-only BLE HID variants.
 - [ ] Add transport diagnostics UI/logging for `didAdd`, advertising, read/write requests, subscriptions, and `updateValue` backpressure.
 - [ ] Evaluate pairing/reconnect behavior after app restart, force quit, host forget-device, and iOS Bluetooth toggle.
 - [ ] Confirm whether Windows/macOS automatically reattach when iOS enters reconnect advertising mode, or whether the host still needs a manual Connect click.
-- [ ] Decide whether read/write permissions need encryption-required flags for stable host pairing.
+- [x] Decide whether read/write permissions need encryption-required flags for stable host pairing; iOS report/protocol/control characteristics now require encrypted access.
 - [ ] Decide the real iOS transport path:
   - Public iOS Bluetooth HID peripheral mode is not clearly documented as supported; the expanded UUID path may be an undocumented workaround.
   - Core Bluetooth can be explored for custom BLE/GATT transport, but that would require a companion host app/driver and would not pair as a normal mouse/gamepad.
@@ -61,8 +64,8 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Add A/B/X/Y, LB/RB, LT/RT, Back/Start buttons.
 - [x] Add D-pad hat mapping with diagonals.
 - [x] Send 13-byte gamepad reports through `HIDTransport`.
-- [ ] Wire per-button enable/disable settings into visible controls.
-- [ ] Wire latching and turbo behavior into button controls.
+- [x] Wire per-button enable/disable settings into visible controls.
+- [x] Wire latching and turbo behavior into button controls.
 - [ ] Implement analog trigger drag travel like Android.
 - [ ] Add settings sheet for button behavior, turbo, trigger travel, joystick deadzone/gain.
 - [ ] Add drag-to-reposition layout edit mode.
@@ -74,25 +77,30 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Session logging — `SessionLogger` writes `.config` snapshot + timestamped `.log` of all HID events to `Documents/sessions/` on each connection; toggle in Settings.
 - [x] Appearance / dark mode — gear icon on Home opens `AppSettingsView`; segmented picker (System / Light / Dark) drives `preferredColorScheme`.
 - [x] User-configurable Bluetooth peripheral name — Settings stores the advertised local name and `ExperimentalBLEHIDTransport` uses it for new pairing/reconnect advertising.
+- [x] First-run onboarding — mirrors the Android intro/tutorial flow, explains pairing/modes, prompts for the HoG server name, and persists completion locally.
 - [x] Accessibility display toggles — Settings adds Large Text and High Contrast options; the SwiftUI root applies dynamic type and stronger rendered contrast.
 - [x] Orientation lock — `OrientationLock` enum (System / Portrait / Landscape); `AppDelegate` + `UIApplicationDelegateAdaptor`; `UIWindowScene.requestGeometryUpdate` (iOS 16+); picker in Settings; cycle button in Touch Mouse and Gamepad canvas bars.
 - [ ] Bring built-in Android XML defaults over to iOS as bundled JSON or plist defaults.
 - [ ] Add profile import/export to aid parity testing.
-- [ ] Add onboarding copy explaining iOS transport limits and development mode.
+- [x] Add onboarding copy explaining pairing, modes, and iOS HoG server naming.
 - [x] Add app icon asset catalog.
 - [ ] Add device signing notes after a development team is selected in Xcode.
 - [ ] Add CI for iOS build/test once simulator test launch is stable.
 
 ## Phase 2 - Input Customization And HID Expansion
 
-- [ ] Add the Touch Mouse setting for one shared dynamic follower location when one or more button zones are configured as dynamic.
+- [x] Add the Touch Mouse setting for one shared dynamic follower location when one or more button zones are configured as dynamic.
 - [ ] Remove maximum size constraints from iOS gamepad widgets once layout editing exists, so any widget dimension can be resized as large as the user wants.
-- [ ] Add single-joystick gamepad layout mode.
-- [ ] In single-joystick mode, add an optional in-layout toggle beside the joystick that maps the live joystick values to either left-stick or right-stick fields in outgoing reports.
-- [ ] Keep the iOS gamepad HID report descriptor and report byte structure stable regardless of which buttons or joysticks are enabled, hidden, or toggled.
-- [ ] Add a standard keyboard report collection/descriptor to the iOS HID-over-GATT report map alongside mouse and gamepad.
-- [ ] Add configurable keyboard macro buttons to Touch Mouse and Gamepad layouts instead of adding a separate keyboard tab.
-- [ ] Pre-populate keyboard macro choices with Windows and Mac target defaults, including Alt+Tab or Cmd+Tab and Ctrl+S or Cmd+S.
+- [x] Add single-joystick gamepad layout mode.
+- [x] In single-joystick mode, add an optional in-layout toggle beside the joystick that maps the live joystick values to either left-stick or right-stick fields in outgoing reports.
+- [x] Keep the iOS gamepad HID report descriptor and report byte structure stable regardless of which buttons or joysticks are enabled, hidden, or toggled.
+- [x] Add a standard keyboard report collection/descriptor to the iOS HID-over-GATT report map alongside mouse and gamepad.
+- [x] Add configurable keyboard macro buttons to Touch Mouse and Gamepad layouts instead of adding a separate keyboard tab.
+- [x] Pre-populate keyboard macro choices with Windows and Mac target defaults, including Alt+Tab or Cmd+Tab and Ctrl+S or Cmd+S.
+- [x] Add a custom keyboard macro editor for one modifier combination plus one key usage.
+- [x] Make overlapping static/dynamic Touch Mouse left/right zones send combined button bits.
+- [x] Add configurable gamepad haptic feedback intensity.
+- [x] Add custom gamepad button labels.
 - [ ] Make overlapping static Touch Mouse button zones send all overlapping mouse button presses in the same report.
 - [ ] Allow each Touch Mouse button to define multiple sub-regions.
 - [ ] Allow each Touch Mouse sub-region to add a key modifier or alternate mouse button while pressed.

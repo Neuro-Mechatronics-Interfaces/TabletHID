@@ -16,6 +16,7 @@ struct SetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             statusCard
+            pendingConnectionPrompt
             instructions
             knownHostsCard
             actionButtons
@@ -46,6 +47,11 @@ struct SetupView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(appState.connectionState.label)
                 .font(.headline)
+            if appState.pendingConnectionHost != nil {
+                Text("Approve the incoming host below before entering \(mode.title).")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
             if case .unavailable(let reason) = appState.connectionState {
                 Text(reason)
                     .font(.callout)
@@ -58,13 +64,48 @@ struct SetupView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    @ViewBuilder
+    private var pendingConnectionPrompt: some View {
+        if let host = appState.pendingConnectionHost {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Incoming host", systemImage: "person.crop.circle.badge.questionmark")
+                    .font(.headline)
+                Text("\(host.label) is asking to use TabletHID. Allow only the computer you are pairing right now; ignore any laptop that should keep its existing Bluetooth entry but not take this session.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Button {
+                        appState.approvePendingConnection()
+                    } label: {
+                        Label("Allow This Host", systemImage: "checkmark.circle")
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button(role: .destructive) {
+                        appState.rejectPendingConnection()
+                    } label: {
+                        Label("Ignore", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color.accentColor.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
     // MARK: - Instructions note
 
     private var instructions: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Implementation Note")
+            Text("First Pairing")
                 .font(.headline)
-            Text("Prepare the transport, then pair from the host Bluetooth screen when \(appState.deviceName) appears. This iOS build uses an experimental Core Bluetooth HID-over-GATT advertisement with the expanded HID service UUID.")
+            Text("Use this screen when a host has not paired with TabletHID yet. Tap Make Discoverable, then open Bluetooth settings on the host and choose \(appState.deviceName). When an incoming host appears here, approve it on the iPad before entering \(mode.title).")
+                .foregroundStyle(.secondary)
+            Text("iOS uses an experimental Core Bluetooth HID-over-GATT advertisement. If a host was paired before a report-map update, forget TabletHID on the host and pair again. Host names may appear as unidentified IDs because iOS does not expose the central's friendly name.")
                 .foregroundStyle(.secondary)
         }
     }
@@ -145,11 +186,11 @@ struct SetupView: View {
                 Section {
                     TextField("Label", text: $renameText)
                         .autocorrectionDisabled()
-                } header: {
-                    Text("Custom label for \(host.displayName)")
-                } footer: {
-                    Text("Leave blank to use the device's Bluetooth name.")
-                }
+            } header: {
+                Text("Custom label for \(host.displayName)")
+            } footer: {
+                Text("iOS only exposes a central identifier here, so adding your own label is the clearest way to recognize this host.")
+            }
             }
             .navigationTitle("Rename Host")
             .toolbar {
@@ -173,26 +214,28 @@ struct SetupView: View {
         HStack {
             if appState.knownHosts.isEmpty {
                 Button {
-                    appState.initialize(mode: mode)
+                    appState.startPairing(mode: mode)
                 } label: {
-                    Label("Prepare Transport", systemImage: "antenna.radiowaves.left.and.right")
+                    Label("Make Discoverable", systemImage: "antenna.radiowaves.left.and.right")
                 }
                 .buttonStyle(.borderedProminent)
             } else {
                 Button {
-                    appState.initialize(mode: mode)
+                    appState.startPairing(mode: mode)
                 } label: {
-                    Label("Prepare New Pair", systemImage: "antenna.radiowaves.left.and.right")
+                    Label("Make Discoverable for New Pair", systemImage: "antenna.radiowaves.left.and.right")
                 }
                 .buttonStyle(.bordered)
             }
 
+            #if DEBUG
             Button {
                 appState.developmentConnect(mode: mode)
             } label: {
                 Label("Use Development Mode", systemImage: "hammer")
             }
             .buttonStyle(.bordered)
+            #endif
         }
     }
 

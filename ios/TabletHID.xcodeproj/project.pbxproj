@@ -320,7 +320,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 33;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TabletHID;
@@ -329,7 +329,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tablet.hid.ios;
 				PRODUCT_NAME = TabletHID;
 				SDKROOT = iphoneos;
@@ -344,7 +344,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 33;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = 4Y8T66B2HQ;
 				INFOPLIST_FILE = TabletHID/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TabletHID;
@@ -353,7 +353,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tablet.hid.ios;
 				PRODUCT_NAME = TabletHID;
 				SDKROOT = iphoneos;

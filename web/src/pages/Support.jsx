@@ -42,7 +42,7 @@ const FAQS = {
     },
     {
       q: 'Can I switch between Touch Mouse and Gamepad without re-pairing?',
-      a: 'Yes. Both modes share a single Bluetooth bond using a combined HID descriptor. Exit the current mode, choose the other from the Home screen, and tap Reconnect — the host will reattach in the new mode instantly.',
+      a: 'On Android, yes: both modes share a single Bluetooth bond using a combined HID descriptor. On iOS, TabletHID exposes the same mouse/gamepad/keyboard report map through the experimental BLE HID transport, but host reconnect behavior still needs physical iPhone/iPad validation.',
     },
   ],
   ios: [
@@ -56,7 +56,7 @@ const FAQS = {
     },
     {
       q: 'My Mac or PC doesn\'t discover the iPad.',
-      a: 'iPad uses Bluetooth LE (HOGP) rather than Classic Bluetooth HID, which some older operating systems don\'t support as a peripheral target. Windows 11 and macOS 13 Ventura or later work reliably. Try tapping "Prepare Transport" again if the timer expires.',
+      a: 'iPad uses Bluetooth LE HID-over-GATT rather than Android\'s Classic Bluetooth HID path, and iOS HID peripheral behavior is still experimental. Test with recent Windows or macOS hosts, tap "Make Discoverable" again if advertising expires, and forget/re-pair after updates that change the report map. Known hosts are ignored during new-pair discovery; new hosts require approval on the iPad before the app accepts them.',
     },
     {
       q: 'Gamepad inputs work in one app but not another on macOS.',
@@ -195,19 +195,26 @@ function IosWalkthrough() {
         <Step tag="App settings" title="Set appearance and orientation" imgs={[imgIosAppSettings]} reverse>
           Tap the <b>gear icon</b> on the home screen to open app-wide settings.
           Choose light, dark, or system appearance; lock control surfaces to portrait
-          or landscape; and enable local session logging when you need a diagnostic
+          or landscape; change the Bluetooth HoG server name shown to hosts; enable
+          auto-reconnect; and enable local session logging when you need a diagnostic
           record of HID events.
         </Step>
 
-        <Step tag="Transport" title="Prepare the Bluetooth connection" imgs={[imgIosSetupPhone]}>
-          Open either mode and tap <b>Prepare Transport</b>. iOS uses Core Bluetooth
-          peripheral mode, so the app prepares the HID-over-GATT advertisement before
-          you enter the control surface.
+        <Step tag="Transport" title="Start the Bluetooth connection" imgs={[imgIosSetupPhone]}>
+          The first launch intro asks for the HoG server name your computer will see.
+          From Home or Setup, tap <b>Make Discoverable</b>. iOS uses Core Bluetooth
+          peripheral mode for an experimental HID-over-GATT advertisement, then lets
+          you enter Touch Mouse or Gamepad from the same paired host.
           <br /><br />
-          When the status changes to <b>Connected to Development Preview</b>, tap{' '}
-          <b>Enter Touch Mouse</b> or enter the gamepad mode. If the host does not
-          discover the device, confirm Bluetooth permission for TabletHID in iOS
-          Settings, then return to this screen and prepare the transport again.
+          If the host does not discover the device, confirm Bluetooth permission for
+          TabletHID in iOS Settings, then return to Home or Setup and make the app
+          discoverable again. When the correct computer appears as an incoming host,
+          approve it on the iPad. If an earlier iOS build was paired before keyboard
+          macro support, forget and re-pair so the host reads the updated report map.
+          iOS may show known hosts as unidentified IDs because Core Bluetooth does
+          not expose the host's friendly name to the peripheral app. During new-pair
+          discovery, known hosts are ignored so they cannot steal the pairing slot
+          from the new computer.
         </Step>
       </div>
 
@@ -240,15 +247,20 @@ function IosWalkthrough() {
           are visible, so you can keep the layout dense for full control or simpler
           for accessibility-focused play.
           <br /><br />
-          The status pill at the top confirms the active Bluetooth connection while
-          the surface is sending input to the host.
+          Settings can enable a single-stick layout with an L/R output toggle, edit
+          button labels, adjust haptic intensity, and add Windows or Mac keyboard
+          macro buttons. The status pill at the top confirms the active Bluetooth
+          connection while the surface is sending input to the host.
         </Step>
 
         <Step tag="Settings" title="Tune the Touch Mouse layout" imgs={[imgIosSettingsIpad]}>
           Tap the <b>gear icon</b> from Touch Mouse to adjust sensitivity and button
           behavior. The settings sheet lets you enable each button, switch between
           static and dynamic zones, choose momentary or latching clicks, and tune
-          offsets and radius for comfortable placement.
+          offsets and radius for comfortable placement. When both buttons use dynamic
+          zones, the shared dynamic follower option keeps their click target in one
+          reachable place, and configured macros appear behind the keyboard button
+          on the control surface.
         </Step>
       </div>
     </>

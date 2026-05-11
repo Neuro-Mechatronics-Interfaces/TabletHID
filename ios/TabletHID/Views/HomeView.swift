@@ -10,13 +10,17 @@ struct HomeView: View {
     @State private var newProfileName = ""
     @State private var showingNewProfile = false
     @State private var showingSettings = false
+    @State private var showingDeviceNameEditor = false
+    @State private var deviceNameDraft = ""
 
     let onSelectMode: (DeviceMode) -> Void
+    let onShowSetup: (DeviceMode) -> Void
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
+                connectionCard
                 profilePicker
                 modeGrid
             }
@@ -59,6 +63,15 @@ struct HomeView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .alert("Device Name", isPresented: $showingDeviceNameEditor) {
+            TextField("Device name", text: $deviceNameDraft)
+                .autocorrectionDisabled()
+            Button("Save") {
+                appState.setDeviceName(deviceNameDraft)
+                deviceNameDraft = appState.deviceName
+            }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 
     private var header: some View {
@@ -85,6 +98,174 @@ struct HomeView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var connectionCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(appState.connectionState.isConnected ? Color.green : Color.red)
+                    .frame(width: 12, height: 12)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(connectionStatusText)
+                        .font(.headline)
+                    if let detail = connectionDetailText {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Button {
+                    deviceNameDraft = appState.deviceName
+                    showingDeviceNameEditor = true
+                } label: {
+                    Label(appState.deviceName, systemImage: "pencil")
+                        .lineLimit(1)
+                }
+                .buttonStyle(.bordered)
+            }
+
+            pendingConnectionPrompt
+
+            HStack(spacing: 10) {
+                if shouldShowIdleActions {
+                    Button {
+                        appState.startPairing(mode: .touchMouse)
+                    } label: {
+                        Label("Make Discoverable", systemImage: "antenna.radiowaves.left.and.right")
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    if let host = appState.lastHost {
+                        Button {
+                            appState.reconnect(mode: .touchMouse, host: host)
+                        } label: {
+                            Label("Reconnect", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                } else if appState.connectionState.isConnected {
+                    Button(role: .destructive) {
+                        appState.disconnect()
+                    } label: {
+                        Label("Disconnect", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Button(role: .destructive) {
+                        appState.cancelConnection()
+                    } label: {
+                        Label("Cancel", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Spacer()
+
+                Button {
+                    onShowSetup(.touchMouse)
+                } label: {
+                    Label("Setup", systemImage: "questionmark.circle")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(cardBackgroundColor)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private var pendingConnectionPrompt: some View {
+        if let host = appState.pendingConnectionHost {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Incoming host", systemImage: "person.crop.circle.badge.questionmark")
+                    .font(.subheadline.weight(.semibold))
+                Text("\(host.label) is asking to use TabletHID. Allow only the computer you are pairing right now.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Button {
+                        appState.approvePendingConnection()
+                    } label: {
+                        Label("Allow", systemImage: "checkmark.circle")
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button(role: .destructive) {
+                        appState.rejectPendingConnection()
+                    } label: {
+                        Label("Ignore", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.accentColor.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    private var shouldShowIdleActions: Bool {
+        switch appState.connectionState {
+        case .idle, .error, .unavailable:
+            true
+        case .registering, .waitingForConnection, .reconnecting, .connected:
+            false
+        }
+    }
+
+    private var connectionStatusText: String {
+        switch appState.connectionState {
+        case .idle:
+            "Disconnected"
+        case .registering:
+            "Starting"
+        case .waitingForConnection:
+            "Waiting for connection"
+        case .reconnecting(_, let hostName):
+            "Reconnecting to \(hostName)"
+        case .connected(_, let host):
+            "Connected to \(host.label)"
+        case .unavailable:
+            "Transport unavailable"
+        case .error:
+            "Connection error"
+        }
+    }
+
+    private var connectionDetailText: String? {
+        switch appState.connectionState {
+        case .idle:
+            if let host = appState.lastHost {
+                "Last host: \(host.label)"
+            } else {
+                "Make the iPad discoverable, then pair from the host Bluetooth settings."
+            }
+        case .waitingForConnection(_, let deviceName):
+            if appState.pendingConnectionHost != nil {
+                "Approve the incoming host on this iPad before entering a control surface."
+            } else {
+                "Pair with \(deviceName) from the host Bluetooth settings."
+            }
+        case .registering:
+            "Publishing the experimental BLE HID service."
+        case .reconnecting(_, let hostName):
+            "Advertising for \(hostName). If it does not reconnect, open Setup and pair again."
+        case .connected:
+            "Tap Touch Mouse or Gamepad to enter a control surface."
+        case .unavailable(let reason):
+            reason
+        case .error(let message):
+            message
         }
     }
 

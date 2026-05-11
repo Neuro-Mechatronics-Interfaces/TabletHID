@@ -26,10 +26,11 @@ export default function Privacy() {
         <h2>Bluetooth Usage</h2>
         <p>
           TabletHID uses your device's Bluetooth hardware to act as a HID peripheral
-          (mouse or gamepad). Bluetooth data (input reports) is sent directly to the
-          paired host computer using standard Bluetooth protocols. This data never
-          leaves your local network and is never sent to any server operated by us
-          or any third party.
+          (mouse, gamepad, and keyboard macro reports). Bluetooth data (input
+          reports) is sent directly to the paired host computer. Android uses the
+          platform Bluetooth HID device APIs; iOS uses an experimental BLE
+          HID-over-GATT transport. This data never leaves your local network and is
+          never sent to any server operated by us or any third party.
         </p>
         <p>
           On Android, TabletHID requests <code>BLUETOOTH_ADVERTISE</code>,{' '}
@@ -48,9 +49,10 @@ export default function Privacy() {
         <h2>Local Storage</h2>
         <p>
           The app saves your configuration preferences (sensitivity, button layout,
-          profiles, last connected host address) to your device's local storage
-          (SharedPreferences on Android, UserDefaults on iOS). This data never
-          leaves your device.
+          keyboard macros, profiles, Bluetooth/HoG server name, onboarding completion
+          flag, last connected host address) to your device's
+          local storage (SharedPreferences on Android, UserDefaults on iOS). This
+          data never leaves your device.
         </p>
 
         <h2>Third-Party Services</h2>

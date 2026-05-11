@@ -3,6 +3,7 @@ import Foundation
 enum HIDReportDescriptors {
     static let reportIDMouse: UInt8 = 0x01
     static let reportIDGamepad: UInt8 = 0x02
+    static let reportIDKeyboard: UInt8 = 0x03
 
     static let mouseReportDescriptor: [UInt8] = [
         0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, 0x01,
@@ -35,8 +36,17 @@ enum HIDReportDescriptors {
         0x81, 0x03, 0xC0
     ]
 
+    static let keyboardReportDescriptor: [UInt8] = [
+        0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x03,
+        0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
+        0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
+        0x75, 0x08, 0x95, 0x01, 0x81, 0x03, 0x05, 0x07,
+        0x19, 0x00, 0x29, 0xFF, 0x15, 0x00, 0x26, 0xFF,
+        0x00, 0x75, 0x08, 0x95, 0x06, 0x81, 0x00, 0xC0
+    ]
+
     static var combinedReportDescriptor: [UInt8] {
-        mouseReportDescriptor + gamepadReportDescriptor
+        mouseReportDescriptor + gamepadReportDescriptor + keyboardReportDescriptor
     }
 
     static func buildMouseReport(buttons: Int, dx: Int, dy: Int, wheel: Int = 0, horizontalWheel: Int = 0) -> Data {
@@ -69,6 +79,15 @@ enum HIDReportDescriptors {
         report[10] = UInt8(buttons & 0xFF)
         report[11] = UInt8((buttons >> 8) & 0x03)
         report[12] = UInt8(hat & 0x0F)
+        return report
+    }
+
+    static func buildKeyboardReport(modifiers: Int = 0, keyUsages: [Int] = []) -> Data {
+        var report = Data(count: 8)
+        report[0] = UInt8(modifiers & 0xFF)
+        for (index, usage) in keyUsages.prefix(6).enumerated() {
+            report[index + 2] = UInt8(usage & 0xFF)
+        }
         return report
     }
 

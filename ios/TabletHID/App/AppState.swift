@@ -16,7 +16,10 @@ final class AppState: ObservableObject {
     @Published var largeTextEnabled: Bool
     @Published var highContrastEnabled: Bool
     @Published var loggingEnabled: Bool
+    @Published var autoReconnectEnabled: Bool
+    @Published var onboardingCompleted: Bool
     @Published var orientationLock: OrientationLock
+    @Published var pendingConnectionHost: HIDHost?
 
     private let store = ConfigStore()
     private let transport: HIDTransport
@@ -36,6 +39,9 @@ final class AppState: ObservableObject {
         self.largeTextEnabled = store.loadLargeTextEnabled()
         self.highContrastEnabled = store.loadHighContrastEnabled()
         self.loggingEnabled = store.loadLoggingEnabled()
+        self.autoReconnectEnabled = store.loadAutoReconnectEnabled()
+        self.onboardingCompleted = store.loadOnboardingCompleted()
+        self.pendingConnectionHost = nil
         let lock = store.loadOrientationLock()
         self.orientationLock = lock
         #if canImport(UIKit)
@@ -100,7 +106,25 @@ final class AppState: ObservableObject {
         }
     }
 
+    func startPairing(mode: DeviceMode) {
+        pendingConnectionHost = nil
+        connectionState = .registering(mode)
+        do {
+            try transport.startPairing(
+                mode: mode,
+                deviceName: deviceName,
+                excludingHostIDs: Set(knownHosts.map(\.identifier))
+            )
+            if !transport.isAvailable {
+                connectionState = .unavailable(transport.unavailableReason)
+            }
+        } catch {
+            connectionState = .error(error.localizedDescription)
+        }
+    }
+
     func reconnect(mode: DeviceMode, host: HIDHost) {
+        pendingConnectionHost = nil
         connectionState = .reconnecting(mode: mode, hostName: host.label)
         do {
             try transport.reconnect(mode: mode, host: host, deviceName: deviceName)
@@ -126,8 +150,27 @@ final class AppState: ObservableObject {
     }
 
     func disconnect() {
+        pendingConnectionHost = nil
         transport.disconnect()
         connectionState = .idle
+    }
+
+    func cancelConnection() {
+        pendingConnectionHost = nil
+        transport.cancelConnection()
+        connectionState = .idle
+    }
+
+    func approvePendingConnection() {
+        guard let host = pendingConnectionHost else { return }
+        transport.approvePendingConnection(identifier: host.identifier)
+        pendingConnectionHost = nil
+    }
+
+    func rejectPendingConnection() {
+        guard let host = pendingConnectionHost else { return }
+        transport.rejectPendingConnection(identifier: host.identifier)
+        pendingConnectionHost = nil
     }
 
     func setAppearanceMode(_ mode: AppearanceMode) {
@@ -174,6 +217,25 @@ final class AppState: ObservableObject {
         } else {
             endSession()
         }
+    }
+
+    func setAutoReconnectEnabled(_ enabled: Bool) {
+        autoReconnectEnabled = enabled
+        store.saveAutoReconnectEnabled(enabled)
+    }
+
+    func maybeAutoReconnectOnLaunch() {
+        guard autoReconnectEnabled,
+              onboardingCompleted,
+              case .idle = connectionState,
+              let host = lastHost else { return }
+        reconnect(mode: host.lastMode, host: host)
+    }
+
+    func completeOnboarding(deviceName name: String) {
+        setDeviceName(name)
+        onboardingCompleted = true
+        store.saveOnboardingCompleted(true)
     }
 
     private func syncLogger() {
@@ -245,6 +307,11 @@ final class AppState: ObservableObject {
         transport.sendReport(id: HIDReportDescriptors.reportIDGamepad, data: report)
     }
 
+    func sendKeyboardReport(modifiers: Int = 0, keyUsages: [Int] = []) {
+        let report = HIDReportDescriptors.buildKeyboardReport(modifiers: modifiers, keyUsages: keyUsages)
+        transport.sendReport(id: HIDReportDescriptors.reportIDKeyboard, data: report)
+    }
+
     // MARK: - Transport events
 
     private func handleTransportEvent(_ event: HIDTransportEvent) {
@@ -253,7 +320,11 @@ final class AppState: ObservableObject {
             connectionState = .waitingForConnection(mode: mode, deviceName: deviceName)
         case .reconnecting(let mode, let hostName):
             connectionState = .reconnecting(mode: mode, hostName: hostName)
+        case .pendingConnection(let mode, let host):
+            pendingConnectionHost = host
+            connectionState = .waitingForConnection(mode: mode, deviceName: deviceName)
         case .connected(let mode, let host):
+            pendingConnectionHost = nil
             let updatedHost = HIDHost(
                 identifier: host.identifier,
                 displayName: host.displayName,
@@ -265,6 +336,7 @@ final class AppState: ObservableObject {
             knownHosts = store.loadKnownHosts()
             connectionState = .connected(mode: mode, host: updatedHost)
         case .disconnected:
+            pendingConnectionHost = nil
             connectionState = .idle
         case .unavailable(let reason):
             connectionState = .unavailable(reason)

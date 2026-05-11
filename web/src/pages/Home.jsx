@@ -72,8 +72,8 @@ export default function Home() {
         <div className="hero-badge">Bluetooth HID Peripheral</div>
         <h1>Turn Your Tablet Into a<br /><span>Wireless Controller</span></h1>
         <p>
-          TabletHID transforms your Android or iOS tablet into a Bluetooth mouse
-          or Xbox-style gamepad — no extra hardware required.
+          TabletHID transforms your Android tablet, and experimental iOS builds,
+          into a Bluetooth mouse or Xbox-style gamepad — no extra hardware required.
         </p>
         <div className="hero-btns">
           <Link to="/support" className="btn btn-primary">Get Support</Link>
@@ -121,7 +121,7 @@ export default function Home() {
         <div className="page">
           <div className="section-label">
             <h2>Two Modes, One App</h2>
-            <p>Pair once — switch between mouse and gamepad without re-pairing.</p>
+            <p>Android uses one Classic Bluetooth HID bond. iOS uses an experimental BLE HID path while host validation continues.</p>
           </div>
           <div className="cards">
             <div className="card">
@@ -133,6 +133,7 @@ export default function Home() {
                 <li>Static, dynamic, or shared follower click zones</li>
                 <li>Momentary and latching clicks</li>
                 <li>Sensitivity 1–10 slider</li>
+                <li>Keyboard shortcut panel when macros are configured</li>
               </ul>
             </div>
             <div className="card">
@@ -144,19 +145,19 @@ export default function Home() {
                 <li>Analog triggers (LT / RT)</li>
                 <li>Single-stick layout with L/R output toggle</li>
                 <li>Windows and Mac keyboard macro buttons</li>
-                <li>Drag to reposition any control</li>
-                <li>Pinch to resize independently</li>
+                <li>Custom labels and configurable haptics</li>
+                <li>Android: drag to reposition and pinch to resize</li>
               </ul>
             </div>
             <div className="card">
               <div className="card-icon"><IconBluetooth /></div>
               <h3>Single Bond</h3>
-              <p>Both modes share one Bluetooth pairing. Switch instantly with no re-pairing needed.</p>
+              <p>Android shares one Bluetooth pairing across modes. iOS exposes the same report map through experimental BLE HID.</p>
               <ul>
-                <li>Combined HID descriptor</li>
+                <li>Combined mouse, gamepad, and keyboard report map</li>
                 <li>Smart reconnect to last host</li>
-                <li>Windows 11 &amp; macOS support</li>
-                <li>Standard Bluetooth HID profile</li>
+                <li>Windows 11 &amp; macOS targets</li>
+                <li>iOS physical-device validation pending</li>
               </ul>
             </div>
             <div className="card">

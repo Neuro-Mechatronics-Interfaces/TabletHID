@@ -154,6 +154,22 @@ struct ConfigStore {
         defaults.set(enabled, forKey: "logging_enabled")
     }
 
+    func loadAutoReconnectEnabled() -> Bool {
+        defaults.bool(forKey: "auto_reconnect_enabled")
+    }
+
+    func saveAutoReconnectEnabled(_ enabled: Bool) {
+        defaults.set(enabled, forKey: "auto_reconnect_enabled")
+    }
+
+    func loadOnboardingCompleted() -> Bool {
+        defaults.bool(forKey: "onboarding_completed")
+    }
+
+    func saveOnboardingCompleted(_ completed: Bool) {
+        defaults.set(completed, forKey: "onboarding_completed")
+    }
+
     func loadOrientationLock() -> OrientationLock {
         guard let raw = defaults.string(forKey: "orientation_lock"),
               let lock = OrientationLock(rawValue: raw) else { return .system }

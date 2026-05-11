@@ -13,6 +13,7 @@ struct TouchMouseView: View {
     @EnvironmentObject private var appState: AppState
     @State private var showingSettings = false
     @State private var calibrationPhase: CalibrationPhase = .none
+    @State private var showingShortcutPanel = false
     let onExit: () -> Void
 
     var body: some View {
@@ -59,6 +60,15 @@ struct TouchMouseView: View {
                 .buttonStyle(.bordered)
                 #endif
 
+                if !appState.touchMouseConfig.macroButtons.isEmpty {
+                    Button {
+                        showingShortcutPanel.toggle()
+                    } label: {
+                        Image(systemName: "keyboard")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
                 Button {
                     showingSettings = true
                 } label: {
@@ -89,8 +99,26 @@ struct TouchMouseView: View {
                     .padding(.bottom, 48)
                 }
             }
+
+            if showingShortcutPanel {
+                HStack {
+                    Spacer()
+                    KeyboardMacroPanel(macros: appState.touchMouseConfig.macroButtons) { macro, pressed in
+                        if pressed {
+                            appState.sendKeyboardReport(modifiers: macro.modifiers, keyUsages: macro.keyUsages)
+                        } else {
+                            appState.sendKeyboardReport()
+                        }
+                    }
+                    .padding(.top, 72)
+                    .padding(.trailing, 16)
+                }
+            }
         }
         .navigationBarBackButtonHidden()
+        .onChange(of: appState.touchMouseConfig.macroButtons) { _, macros in
+            if macros.isEmpty { showingShortcutPanel = false }
+        }
         .sheet(isPresented: $showingSettings) {
             TouchMouseSettingsView(
                 config: appState.touchMouseConfig,
@@ -319,13 +347,14 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     private func zoneDown(_ zone: Int, touch: UITouch) {
-        if zone == leftBit {
+        if zone & leftBit != 0 {
             if config.leftButton.behavior == .latching {
                 leftLatched.toggle()
             } else {
                 leftPointers.insert(touch)
             }
-        } else {
+        }
+        if zone & rightBit != 0 {
             if config.rightButton.behavior == .latching {
                 rightLatched.toggle()
             } else {
@@ -336,9 +365,10 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     private func zoneUp(_ zone: Int, touch: UITouch) {
-        if zone == leftBit {
+        if zone & leftBit != 0 {
             leftPointers.remove(touch)
-        } else {
+        }
+        if zone & rightBit != 0 {
             rightPointers.remove(touch)
         }
         sendReport?(currentButtonBits(), 0, 0, 0, 0)
@@ -419,9 +449,10 @@ final class TouchMouseSurfaceView: UIView {
     }
 
     private func hitTestZone(_ point: CGPoint) -> Int {
-        if config.leftButton.enabled && contains(point, button: config.leftButton) { return leftBit }
-        if config.rightButton.enabled && contains(point, button: config.rightButton) { return rightBit }
-        return 0
+        var bits = 0
+        if config.leftButton.enabled && contains(point, button: config.leftButton) { bits |= leftBit }
+        if config.rightButton.enabled && contains(point, button: config.rightButton) { bits |= rightBit }
+        return bits
     }
 
     private func contains(_ point: CGPoint, button: ButtonZoneConfig) -> Bool {
@@ -448,6 +479,15 @@ final class TouchMouseSurfaceView: UIView {
 
     private func dynamicCircle(_ button: ButtonZoneConfig, primary: CGPoint) -> (center: CGPoint, radius: CGFloat) {
         let minDim = min(bounds.width, bounds.height)
+        if config.sharedDynamicZone {
+            return (
+                CGPoint(
+                    x: primary.x + minDim * config.sharedDynamicOffsetX,
+                    y: primary.y + minDim * config.sharedDynamicOffsetY
+                ),
+                minDim * config.sharedDynamicRadius
+            )
+        }
         return (
             CGPoint(x: primary.x + minDim * button.dynamicOffsetX, y: primary.y + minDim * button.dynamicOffsetY),
             minDim * button.dynamicRadius
