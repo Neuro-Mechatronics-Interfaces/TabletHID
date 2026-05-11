@@ -304,6 +304,7 @@ class TouchMouseFragment : Fragment() {
                         is BleHidManager.State.Registering        -> getString(R.string.home_status_connecting)
                         is BleHidManager.State.WaitingForConnection -> getString(R.string.home_status_waiting)
                         is BleHidManager.State.Reconnecting       -> getString(R.string.tutorial_status_reconnecting, state.deviceName)
+                        is BleHidManager.State.PendingApproval   -> getString(R.string.home_status_pending_approval)
                         is BleHidManager.State.Error              -> getString(R.string.status_disconnected)
                         is BleHidManager.State.Idle               -> getString(R.string.status_disconnected)
                     }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -36,6 +37,14 @@ class BrowseFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // ── Import result feedback ──────────────────────────────────────────
+        childFragmentManager.setFragmentResultListener(
+            ImportSheet.REQUEST_APPLY, viewLifecycleOwner
+        ) { _, result ->
+            val profileName = result.getString(ImportSheet.KEY_PROFILE) ?: return@setFragmentResultListener
+            Snackbar.make(binding.root, getString(R.string.community_applied_snackbar, profileName), Snackbar.LENGTH_SHORT).show()
+        }
 
         // ── RecyclerView setup ──────────────────────────────────────────────
         adapter = ConfigListAdapter { record -> showImportSheet(record) }

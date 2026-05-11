@@ -312,6 +312,8 @@ class TutorialFragment : Fragment() {
                 getString(R.string.tutorial_status_reconnecting, state.deviceName) to false
             is BleHidManager.State.WaitingForConnection ->
                 getString(R.string.tutorial_status_waiting, peripheralName()) to false
+            is BleHidManager.State.PendingApproval ->
+                getString(R.string.home_status_pending_approval) to false
             is BleHidManager.State.Connected ->
                 getString(R.string.tutorial_status_connected, state.deviceName) to true
             is BleHidManager.State.Error ->
@@ -324,6 +326,7 @@ class TutorialFragment : Fragment() {
             is BleHidManager.State.Idle, is BleHidManager.State.Error -> 0
             is BleHidManager.State.Registering                      -> 1
             is BleHidManager.State.WaitingForConnection             -> 2
+            is BleHidManager.State.PendingApproval                  -> currentPairStep
             is BleHidManager.State.Connected -> (pairRows.size - 1).coerceAtLeast(0)
             is BleHidManager.State.Reconnecting                     -> currentPairStep
         }

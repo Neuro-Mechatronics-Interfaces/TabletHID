@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -29,6 +30,8 @@ class ImportSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val ARG_RECORD_JSON = "record_json"
+        const val REQUEST_APPLY = "import_apply"
+        const val KEY_PROFILE   = "profile"
     }
 
     private var _binding: SheetImportBinding? = null
@@ -213,13 +216,17 @@ class ImportSheet : BottomSheetDialogFragment() {
                 }
             }
 
-            val anchor = binding.root
             if (result.isSuccess) {
-                Snackbar.make(anchor, getString(R.string.community_applied_snackbar, profile.name), Snackbar.LENGTH_SHORT).show()
+                // Signal the parent fragment to show feedback on its own view, which
+                // stays visible after this sheet dismisses.
+                parentFragmentManager.setFragmentResult(
+                    REQUEST_APPLY,
+                    bundleOf(KEY_PROFILE to profile.name),
+                )
                 dismiss()
             } else {
                 val msg = result.exceptionOrNull()?.message ?: "Unknown error"
-                Snackbar.make(anchor, msg, Snackbar.LENGTH_LONG).show()
+                Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
     }

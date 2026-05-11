@@ -51,6 +51,7 @@ class BleHidManager(private val context: Context) {
         object Registering : State()
         object WaitingForConnection : State()
         data class Reconnecting(val deviceName: String) : State()
+        data class PendingApproval(val deviceName: String) : State()
         data class Connected(val device: BluetoothDevice, val mode: DeviceMode, val deviceName: String) : State()
         data class Error(val message: String) : State()
     }
@@ -62,6 +63,7 @@ class BleHidManager(private val context: Context) {
     private var advertiseCallback: AdvertiseCallback? = null
     private var activeMode: DeviceMode? = null
     private var connectedDevice: BluetoothDevice? = null
+    private var pendingApprovalDevice: BluetoothDevice? = null
 
     // Built fresh each time startGattServer() is called.
     private var mouseReportChar: BluetoothGattCharacteristic? = null
@@ -160,6 +162,8 @@ class BleHidManager(private val context: Context) {
 
     fun disconnect() {
         cancelReconnectTimeout()
+        pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
+        pendingApprovalDevice = null
         stopAdvertising()
         // Set Idle before cancelConnection so the onConnectionStateChange callback sees
         // state=Idle and does not restart advertising.
@@ -175,6 +179,8 @@ class BleHidManager(private val context: Context) {
 
     fun disconnectAndUnbond() {
         cancelReconnectTimeout()
+        pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
+        pendingApprovalDevice = null
         stopAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
@@ -188,6 +194,8 @@ class BleHidManager(private val context: Context) {
 
     fun cleanup() {
         cancelReconnectTimeout()
+        pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
+        pendingApprovalDevice = null
         stopAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
@@ -416,33 +424,45 @@ class BleHidManager(private val context: Context) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     cancelReconnectTimeout()
-                    connectedDevice = device
                     stopAdvertising()
-                    HidPrefs.saveLastDevice(context, device.address)
-                    HidHostStore.upsert(context, HidHost(
-                        address    = device.address,
-                        btName     = device.name ?: "",
-                        lastSeenMs = System.currentTimeMillis()
-                    ))
-                    // If the host is not yet bonded, send an SMP Security Request so Windows
-                    // initiates the full pairing handshake and both sides show the PIN dialog.
-                    // Without this, Android's BLE stack silently handles (or drops) the host's
-                    // bonding attempt and the pairing dialog never appears.
                     if (device.bondState == BluetoothDevice.BOND_NONE) {
-                        device.createBond()
+                        // Unknown host — require explicit user approval before bonding.
+                        pendingApprovalDevice = device
+                        _state.value = State.PendingApproval(device.name ?: device.address)
+                    } else {
+                        connectedDevice = device
+                        HidPrefs.saveLastDevice(context, device.address)
+                        HidHostStore.upsert(context, HidHost(
+                            address    = device.address,
+                            btName     = device.name ?: "",
+                            lastSeenMs = System.currentTimeMillis()
+                        ))
+                        _state.value = State.Connected(device, activeMode!!, device.name ?: device.address)
                     }
-                    _state.value = State.Connected(device, activeMode!!, device.name ?: device.address)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    if (connectedDevice?.address == device.address) {
-                        connectedDevice = null
+                    if (pendingApprovalDevice?.address == device.address) {
+                        pendingApprovalDevice = null
                     }
+                    val wasConnected = connectedDevice?.address == device.address
+                    if (wasConnected) connectedDevice = null
                     // Re-advertise unless disconnect() was called explicitly (state=Idle).
                     // Keep the existing GATT server open — only restart advertising.
                     if (_state.value !is State.Idle) {
-                        Log.d(TAG, "Disconnected — re-advertising for reconnection")
-                        _state.value = State.WaitingForConnection
-                        startAdvertising()
+                        if (wasConnected) {
+                            // Windows commonly drops and immediately reconnects after enumerating
+                            // HID services. Stay in Reconnecting (with the device name) rather
+                            // than falling back to WaitingForConnection — avoids the "connected →
+                            // not connected → connected" flicker the user sees.
+                            Log.d(TAG, "Disconnected from known host — staying in Reconnecting")
+                            _state.value = State.Reconnecting(device.name ?: device.address)
+                            startAdvertising()
+                            scheduleReconnectTimeout(device.address)
+                        } else {
+                            Log.d(TAG, "Disconnected — re-advertising for reconnection")
+                            _state.value = State.WaitingForConnection
+                            startAdvertising()
+                        }
                     }
                 }
             }
@@ -493,6 +513,32 @@ class BleHidManager(private val context: Context) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Pending-approval actions
+    // -------------------------------------------------------------------------
+
+    fun approvePendingConnection() {
+        val device = pendingApprovalDevice ?: return
+        pendingApprovalDevice = null
+        connectedDevice = device
+        HidPrefs.saveLastDevice(context, device.address)
+        HidHostStore.upsert(context, HidHost(
+            address    = device.address,
+            btName     = device.name ?: "",
+            lastSeenMs = System.currentTimeMillis()
+        ))
+        device.createBond()
+        _state.value = State.Connected(device, activeMode!!, device.name ?: device.address)
+    }
+
+    fun rejectPendingConnection() {
+        val device = pendingApprovalDevice ?: return
+        pendingApprovalDevice = null
+        try { gattServer?.cancelConnection(device) } catch (_: Exception) {}
+        _state.value = State.WaitingForConnection
+        startAdvertising()
     }
 
     // -------------------------------------------------------------------------

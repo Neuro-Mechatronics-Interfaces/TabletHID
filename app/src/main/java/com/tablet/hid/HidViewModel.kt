@@ -155,6 +155,7 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
     // ── Known hosts ──────────────────────────────────────────────────────────────
 
     private val _knownHosts = MutableStateFlow(HidHostStore.getAll(app))
+    val knownHosts: StateFlow<List<HidHost>> = _knownHosts.asStateFlow()
     private fun refreshHosts() {
         _knownHosts.value = HidHostStore.getAll(getApplication())
     }
@@ -168,6 +169,13 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
         hidManager.forgetDevice(host)
         refreshHosts()
     }
+
+    fun approvePendingConnection() {
+        hidManager.approvePendingConnection()
+        refreshHosts()
+    }
+
+    fun rejectPendingConnection() = hidManager.rejectPendingConnection()
 
     // ── Profile state ────────────────────────────────────────────────────────────
 

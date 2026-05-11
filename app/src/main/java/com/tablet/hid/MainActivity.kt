@@ -104,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         is BleHidManager.State.Registering         -> "Starting…"
         is BleHidManager.State.WaitingForConnection -> "Waiting for connection"
         is BleHidManager.State.Reconnecting        -> "Connecting to ${state.deviceName}"
+        is BleHidManager.State.PendingApproval    -> "Incoming host — open app to approve"
         is BleHidManager.State.Connected           ->
             "Connected · ${state.deviceName}"
         is BleHidManager.State.Error               -> "Error: ${state.message}"

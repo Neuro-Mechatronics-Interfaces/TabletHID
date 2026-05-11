@@ -7,7 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.view.ContextThemeWrapper
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,6 +28,7 @@ import com.tablet.hid.R
 import com.tablet.hid.bluetooth.BleHidManager
 import com.tablet.hid.databinding.FragmentHomeBinding
 import com.tablet.hid.model.DeviceMode
+import com.tablet.hid.model.HidHost
 import com.tablet.hid.model.Profile
 import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidPrefs
@@ -92,10 +96,8 @@ class HomeFragment : Fragment() {
         binding.btnHomeDiscoverable.setOnClickListener {
             viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE)
         }
-        binding.btnHomeReconnect.setOnClickListener {
-            val addr = HidPrefs.getLastDeviceAddress(requireContext()) ?: return@setOnClickListener
-            viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE, addr)
-        }
+        binding.btnPendingAllow.setOnClickListener { viewModel.approvePendingConnection() }
+        binding.btnPendingIgnore.setOnClickListener { viewModel.rejectPendingConnection() }
 
         // ── Add profile button ───────────────────────────────────────────────
         binding.btnAddProfile.setOnClickListener { showAddProfileDialog() }
@@ -112,6 +114,13 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state -> updateConnectionUi(state) }
+            }
+        }
+
+        // ── Observe known hosts ──────────────────────────────────────────────
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.knownHosts.collect { hosts -> rebuildKnownHostRows(hosts) }
             }
         }
 
@@ -137,24 +146,35 @@ class HomeFragment : Fragment() {
     private fun updateConnectionUi(state: BleHidManager.State) {
         val connected = state is BleHidManager.State.Connected
         val idle = state is BleHidManager.State.Idle || state is BleHidManager.State.Error
-        val lastAddr = HidPrefs.getLastDeviceAddress(requireContext())
+        val pending = state is BleHidManager.State.PendingApproval
 
         binding.homeLedStatus.backgroundTintList = ColorStateList.valueOf(
             if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
         )
         binding.homeConnStatus.text = when (state) {
-            is BleHidManager.State.Idle            -> getString(R.string.status_disconnected)
-            is BleHidManager.State.Registering     -> getString(R.string.home_status_connecting)
+            is BleHidManager.State.Idle               -> getString(R.string.status_disconnected)
+            is BleHidManager.State.Registering        -> getString(R.string.home_status_connecting)
             is BleHidManager.State.WaitingForConnection -> getString(R.string.home_status_waiting)
-            is BleHidManager.State.Reconnecting    -> getString(R.string.tutorial_status_reconnecting, state.deviceName)
-            is BleHidManager.State.Connected       -> getString(R.string.status_connected)
-            is BleHidManager.State.Error           -> getString(R.string.tutorial_status_error, state.message)
+            is BleHidManager.State.Reconnecting       -> getString(R.string.tutorial_status_reconnecting, state.deviceName)
+            is BleHidManager.State.PendingApproval    -> getString(R.string.home_status_pending_approval)
+            is BleHidManager.State.Connected          -> getString(R.string.status_connected)
+            is BleHidManager.State.Error              -> getString(R.string.tutorial_status_error, state.message)
         }
 
-        // Show Discoverable when idle; hide when active
+        // Pending approval card
+        binding.pendingApprovalCard.isVisible = pending
+        if (pending) {
+            binding.pendingDeviceName.text = (state as BleHidManager.State.PendingApproval).deviceName
+        }
+
+        // Discoverable button: visible when idle, label changes based on known hosts
         binding.btnHomeDiscoverable.isVisible = idle
-        // Show Reconnect only when idle and there is a last device
-        binding.btnHomeReconnect.isVisible = idle && lastAddr != null
+        if (idle) {
+            val hasHosts = viewModel.knownHosts.value.isNotEmpty()
+            binding.btnHomeDiscoverable.text = getString(
+                if (hasHosts) R.string.btn_new_pair else R.string.btn_make_discoverable
+            )
+        }
     }
 
     private fun updateDeviceNameChip() {
@@ -182,6 +202,103 @@ class HomeFragment : Fragment() {
             .show()
     }
 
+    // ── Known hosts list ─────────────────────────────────────────────────────────
+
+    private fun rebuildKnownHostRows(hosts: List<HidHost>) {
+        val container = binding.knownHostsContainer
+        val label = binding.knownHostsLabel
+        container.removeAllViews()
+        val hasHosts = hosts.isNotEmpty()
+        container.isVisible = hasHosts
+        label.isVisible = hasHosts
+        hosts.forEach { host -> container.addView(buildHostRow(host)) }
+        // Refresh button label if currently idle
+        val state = viewModel.state.value
+        if (state is BleHidManager.State.Idle || state is BleHidManager.State.Error) {
+            binding.btnHomeDiscoverable.text = getString(
+                if (hasHosts) R.string.btn_new_pair else R.string.btn_make_discoverable
+            )
+        }
+    }
+
+    private fun buildHostRow(host: HidHost): View {
+        val ctx = requireContext()
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Weight=3 keeps the name dominant even when it's long.
+        val nameView = TextView(ctx).apply {
+            text = host.displayName
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 3f)
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
+        row.addView(nameView)
+
+        fun textBtn(label: String, cd: String, onClick: () -> Unit): MaterialButton =
+            MaterialButton(
+                ContextThemeWrapper(ctx, com.google.android.material.R.style.Widget_Material3_Button_TextButton),
+                null, 0
+            ).apply {
+                text = label
+                contentDescription = cd
+                insetTop = 0
+                insetBottom = 0
+                setOnClickListener { onClick() }
+            }
+
+        row.addView(textBtn(getString(R.string.btn_reconnect_short), getString(R.string.home_cd_reconnect)) {
+            viewModel.startServiceForMode(ctx, DeviceMode.TOUCH_MOUSE, host.address)
+        })
+        row.addView(textBtn(getString(R.string.home_btn_rename), getString(R.string.home_cd_rename)) {
+            showRenameHostDialog(host)
+        })
+
+        val forgetBtn = MaterialButton(
+            ContextThemeWrapper(ctx, com.google.android.material.R.style.Widget_Material3_Button_TextButton),
+            null, 0
+        ).apply {
+            text = getString(R.string.home_btn_forget)
+            contentDescription = getString(R.string.home_cd_forget)
+            insetTop = 0
+            insetBottom = 0
+            val errorColor = com.google.android.material.color.MaterialColors.getColor(
+                ctx, com.google.android.material.R.attr.colorError, android.graphics.Color.RED
+            )
+            setTextColor(errorColor)
+            setOnClickListener { viewModel.forgetHost(host) }
+        }
+        row.addView(forgetBtn)
+
+        return row
+    }
+
+    private fun showRenameHostDialog(host: HidHost) {
+        val input = EditText(requireContext()).apply {
+            setText(host.alias ?: "")
+            hint = getString(R.string.hint_device_label)
+            setSingleLine()
+            setPadding(48, 24, 48, 8)
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(host.displayName)
+            .setMessage(getString(R.string.dialog_device_options_message))
+            .setView(input)
+            .setPositiveButton(R.string.btn_save) { _, _ ->
+                val alias = input.text.toString().trim().ifEmpty { null }
+                viewModel.renameHost(host.address, alias)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
     // ── Mode card navigation ─────────────────────────────────────────────────────
 
     private fun onModeTapped(mode: DeviceMode) {
@@ -197,11 +314,14 @@ class HomeFragment : Fragment() {
             is BleHidManager.State.Idle, is BleHidManager.State.Error -> {
                 val lastAddr = HidPrefs.getLastDeviceAddress(requireContext())
                 if (lastAddr != null) {
-                    // Reconnect to known device and enter the mode directly
                     viewModel.startServiceForMode(requireContext(), mode, lastAddr)
                     findNavController().navigate(directAction)
+                } else if (viewModel.knownHosts.value.isNotEmpty()) {
+                    // At least one known host — reconnect to the most recently seen
+                    val host = viewModel.knownHosts.value.maxByOrNull { it.lastSeenMs }!!
+                    viewModel.startServiceForMode(requireContext(), mode, host.address)
+                    findNavController().navigate(directAction)
                 } else {
-                    // No prior pairing — guide through Tutorial
                     navigateToTutorial(mode)
                 }
             }
