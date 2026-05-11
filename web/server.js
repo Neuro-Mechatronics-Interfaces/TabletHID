@@ -8,7 +8,7 @@ const app = express();
 const PORT = Number(process.env.PORT ?? 12122);
 const TIME_ZONE = 'America/New_York';
 
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 const supportedRoutes = new Map([
   ['/', { name: 'home' }],

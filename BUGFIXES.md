@@ -59,4 +59,39 @@ Leave blank if not yet gathered.
 
 ## Resolved bugs
 
-<!-- Move entries here once Status = Fixed, with Resolution filled in. -->
+## BUG-001: Reconnect stalls forever when Windows host has forgotten the device
+
+- **Category**: BLE Transport
+- **Platform**: Android / Host:Windows
+- **Severity**: High
+- **Status**: Fixed
+
+### Symptom
+Tapping "Reconnect" when the Android device is not listed in Windows 11 Bluetooth (Input or Other Devices) causes the app to stay in "Reconnecting…" indefinitely. Windows never shows a PIN pairing dialog even if the user tries to add the device manually via Windows Bluetooth settings.
+
+### Expected behavior
+After a short timeout, the app should clear the stale bond and fall back to "Waiting for connection" mode, allowing a fresh PIN pairing flow when the user adds the device in Windows Bluetooth settings.
+
+### Reproduction steps
+1. Pair Android tablet to Windows 11 PC at least once.
+2. On Windows, remove the device from Bluetooth settings (or forget it).
+3. On the tablet, tap "Reconnect" on the Home screen.
+4. Observe the app stalls in "Reconnecting to <host>" indefinitely.
+5. On Windows, open Bluetooth → Add device — no PIN dialog appears.
+
+### Diagnostic data
+N/A — behaviour is deterministic.
+
+### Investigation
+`BleHidManager.initialize()` (line 101) takes a fast path when `reconnectTarget != null && gattServer != null`: it calls only `startAdvertising()`, skipping `removeStaleBonds()`. The manager stays in `State.Reconnecting` with no timeout.
+
+If Windows has forgotten the device it will not initiate a connection on its own, so the stall is permanent. If the user goes to Windows Bluetooth → Add device, Android presents the cached LTK; Windows no longer has the matching bond record, so SMP key validation fails silently — no PIN dialog on either side.
+
+The same fast path exists in `reconnect()` (line 137). There is no timeout anywhere in the `Reconnecting` state machine.
+
+Key files: `BleHidManager.kt:82-138`, `HidForegroundService.kt:87`, `HomeFragment.kt:95-98`.
+
+### Resolution
+Added `scheduleReconnectTimeout(address)` / `cancelReconnectTimeout()` helpers to `BleHidManager.kt`. The timeout (30 s) is scheduled whenever a `Reconnecting` state is entered via `initialize()` (fast path) or `reconnect()`. On expiry, if still `Reconnecting`, the specific host's Android-side bond is removed via the private `removeBond` API and state transitions to `WaitingForConnection`. `cancelReconnectTimeout()` is called on successful `STATE_CONNECTED`, `disconnect()`, `disconnectAndUnbond()`, `cleanup()`, and `forgetDevice()`.
+
+Result: after 30 s with no response from the host, the stale LTK is cleared so Windows can perform a fresh SMP exchange and show the PIN dialog if the user adds the device in Windows Bluetooth settings. Re-pairing required after the timeout fires.

@@ -32,6 +32,7 @@ class BleHidManager(private val context: Context) {
 
     companion object {
         private const val TAG = "BleHidManager"
+        private const val RECONNECT_TIMEOUT_MS = 30_000L
         private val UUID_DIS         = UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB")
         private val UUID_HID         = UUID.fromString("00001812-0000-1000-8000-00805F9B34FB")
         private val UUID_MANUF_NAME  = UUID.fromString("00002A29-0000-1000-8000-00805F9B34FB")
@@ -70,6 +71,11 @@ class BleHidManager(private val context: Context) {
     // Sequential service-add queue — Android only allows one addService() in flight.
     private val serviceQueue = ArrayDeque<BluetoothGattService>()
 
+    // Reconnect timeout — if the host does not connect within RECONNECT_TIMEOUT_MS the stale
+    // bond is removed and the manager falls back to WaitingForConnection (fresh-pair mode).
+    private val reconnectTimeoutHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var reconnectTimeoutRunnable: Runnable? = null
+
     // Value stores keyed by the characteristic/descriptor object — replaces the deprecated
     // .value getter/setter on BluetoothGattCharacteristic and BluetoothGattDescriptor (API 33).
     private val charValues = HashMap<BluetoothGattCharacteristic, ByteArray>()
@@ -100,6 +106,7 @@ class BleHidManager(private val context: Context) {
         // bonding or CCCD state from a previous session.
         if (reconnectTarget != null && gattServer != null) {
             startAdvertising()
+            scheduleReconnectTimeout(reconnectTarget.address)
         } else {
             // Fresh-pair flow: remove Android-side bonds for all previously-seen HID hosts.
             // If the host removed its pairing but Android still has the LTK, Android will try
@@ -135,9 +142,11 @@ class BleHidManager(private val context: Context) {
         _state.value = State.Reconnecting(host.displayName)
         try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (_: Exception) {}
         if (gattServer != null) startAdvertising() else startGattServer()
+        scheduleReconnectTimeout(host.address)
     }
 
     fun forgetDevice(host: HidHost) {
+        cancelReconnectTimeout()
         if (connectedDevice?.address == host.address) {
             try { gattServer?.cancelConnection(connectedDevice!!) } catch (_: Exception) {}
             connectedDevice = null
@@ -150,6 +159,7 @@ class BleHidManager(private val context: Context) {
     }
 
     fun disconnect() {
+        cancelReconnectTimeout()
         stopAdvertising()
         // Set Idle before cancelConnection so the onConnectionStateChange callback sees
         // state=Idle and does not restart advertising.
@@ -164,6 +174,7 @@ class BleHidManager(private val context: Context) {
     }
 
     fun disconnectAndUnbond() {
+        cancelReconnectTimeout()
         stopAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
@@ -176,6 +187,7 @@ class BleHidManager(private val context: Context) {
     }
 
     fun cleanup() {
+        cancelReconnectTimeout()
         stopAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
@@ -403,6 +415,7 @@ class BleHidManager(private val context: Context) {
             Log.d(TAG, "onConnectionStateChange device=${device.address} status=$status newState=$newState")
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
+                    cancelReconnectTimeout()
                     connectedDevice = device
                     stopAdvertising()
                     HidPrefs.saveLastDevice(context, device.address)
@@ -480,6 +493,36 @@ class BleHidManager(private val context: Context) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Reconnect timeout
+    // -------------------------------------------------------------------------
+
+    private fun scheduleReconnectTimeout(hostAddress: String) {
+        cancelReconnectTimeout()
+        val r = Runnable {
+            if (_state.value is State.Reconnecting) {
+                Log.d(TAG, "Reconnect timed out — clearing stale bond for $hostAddress")
+                val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
+                adapter?.bondedDevices?.find { it.address == hostAddress }?.let { device ->
+                    try {
+                        @Suppress("DiscouragedPrivateApi")
+                        device.javaClass.getMethod("removeBond").invoke(device)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "removeBond on reconnect timeout: ${e.message}")
+                    }
+                }
+                _state.value = State.WaitingForConnection
+            }
+        }
+        reconnectTimeoutRunnable = r
+        reconnectTimeoutHandler.postDelayed(r, RECONNECT_TIMEOUT_MS)
+    }
+
+    private fun cancelReconnectTimeout() {
+        reconnectTimeoutRunnable?.let { reconnectTimeoutHandler.removeCallbacks(it) }
+        reconnectTimeoutRunnable = null
     }
 
     // -------------------------------------------------------------------------
