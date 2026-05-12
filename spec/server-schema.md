@@ -106,7 +106,7 @@ Response:
 
 ### GET /api/v1/devices
 
-Returns saved preview device presets:
+Returns saved preview device presets plus viable unique `device_name` values inferred from existing config records that include screen dimensions and density:
 
 ```json
 {
@@ -128,7 +128,7 @@ Request body:
 | `heightDp` | yes | integer 120-3000 | Portrait/native height in dp |
 | `density` | no | float 0.5-5 | Android-style density multiplier; defaults to `2` |
 
-Custom device presets are public to the local web instance and are used by the `/configs` preview dropdown.
+Custom device presets are public to the local web instance and are used by the `/configs` preview dropdown. The dropdown also includes inferred devices from existing config records when those records have `device_name`, `device_screen_width_px`, `device_screen_height_px`, and `device_screen_density_dpi`.
 
 ### POST /api/v1/configs
 
