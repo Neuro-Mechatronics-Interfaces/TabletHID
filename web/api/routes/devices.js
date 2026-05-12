@@ -14,17 +14,73 @@ function parseDevice(row) {
   };
 }
 
+function normalizeName(value) {
+  return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
 function slug(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
 }
 
 export function listDevices(_req, res) {
   try {
-    const rows = db.prepare(`
+    const presetRows = db.prepare(`
       SELECT * FROM device_presets
       ORDER BY is_builtin DESC, name COLLATE NOCASE
     `).all();
-    return res.json({ devices: rows.map(parseDevice) });
+
+    const devices = presetRows.map(parseDevice);
+    const seenNames = new Set(devices.map(device => normalizeName(device.name)));
+
+    const configRows = db.prepare(`
+      SELECT
+        device_name,
+        device_screen_width_px,
+        device_screen_height_px,
+        device_screen_density_dpi,
+        device_screen_diagonal_in,
+        uploaded_at
+      FROM configs
+      WHERE device_name IS NOT NULL
+        AND TRIM(device_name) <> ''
+        AND device_screen_width_px IS NOT NULL
+        AND device_screen_height_px IS NOT NULL
+        AND device_screen_density_dpi IS NOT NULL
+      ORDER BY uploaded_at DESC
+    `).all();
+
+    for (const row of configRows) {
+      const normalized = normalizeName(row.device_name);
+      if (!normalized || seenNames.has(normalized)) continue;
+
+      const density = row.device_screen_density_dpi / 160;
+      if (!Number.isFinite(density) || density <= 0) continue;
+
+      const widthDpObserved = Math.round(row.device_screen_width_px / density);
+      const heightDpObserved = Math.round(row.device_screen_height_px / density);
+      const shortDp = Math.min(widthDpObserved, heightDpObserved);
+      const longDp = Math.max(widthDpObserved, heightDpObserved);
+      const deviceClass = row.device_screen_diagonal_in !== null && row.device_screen_diagonal_in < 7 ? 'phone' : 'tablet';
+
+      devices.push({
+        id: `config-${slug(row.device_name)}`,
+        name: row.device_name,
+        class: deviceClass,
+        widthDp: shortDp,
+        heightDp: longDp,
+        density,
+        isBuiltin: false,
+        source: 'configs',
+      });
+      seenNames.add(normalized);
+    }
+
+    devices.sort((a, b) => {
+      if (a.isBuiltin !== b.isBuiltin) return a.isBuiltin ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return res.json({ devices });
   } catch {
     return res.status(500).json({ error: 'Internal server error.' });
   }

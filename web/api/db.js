@@ -101,7 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_device_presets_name ON device_presets (name);
 `);
 
 const hasMigration4 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 4').get();
-if (!hasMigration4) {
+const seedDefaultDevices = () => {
   const now = new Date().toISOString();
   const insert = db.prepare(`
     INSERT OR IGNORE INTO device_presets (
@@ -111,10 +111,17 @@ if (!hasMigration4) {
     )
   `);
   for (const device of DEFAULT_DEVICES) insert.run({ ...device, now });
+};
+
+if (!hasMigration4) {
+  const now = new Date().toISOString();
+  seedDefaultDevices();
   db.prepare(`
     INSERT INTO schema_migrations (version, applied_at, description)
     VALUES (4, ?, 'Added device presets table with seeded defaults')
   `).run(now);
+} else {
+  seedDefaultDevices();
 }
 
 export default db;
