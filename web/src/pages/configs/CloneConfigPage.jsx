@@ -3,6 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import ConfigOptionsPanel from './ConfigOptionsPanel.jsx';
 import DevicePreviewEditor from './DevicePreviewEditor.jsx';
 import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './GamepadCanvas.jsx';
+import TouchMouseCanvas, {
+  getTouchMouseElementOffset,
+  applyTouchMouseOffset,
+  applyTouchMouseScale,
+} from './TouchMouseCanvas.jsx';
 import useDevicePresets from './useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
@@ -87,6 +92,15 @@ export default function CloneConfigPage() {
     }
     if (fresh.leftJoystick)  { fresh.leftJoystick.offsetX  = 0; fresh.leftJoystick.offsetY  = 0; fresh.leftJoystick.scaleX  = 1; fresh.leftJoystick.scaleY  = 1; }
     if (fresh.rightJoystick) { fresh.rightJoystick.offsetX = 0; fresh.rightJoystick.offsetY = 0; fresh.rightJoystick.scaleX = 1; fresh.rightJoystick.scaleY = 1; }
+    if (Array.isArray(fresh.macroButtons)) {
+      fresh.macroButtons = fresh.macroButtons.map(macro => ({
+        ...macro,
+        layoutOffsetX: 0,
+        layoutOffsetY: 0,
+        layoutScaleX: 1,
+        layoutScaleY: 1,
+      }));
+    }
     setConfig(fresh);
     setSelectedKey(null);
   }
@@ -212,18 +226,14 @@ export default function CloneConfigPage() {
             >
               {landscape ? '⟷ Landscape' : '↕ Portrait'}
             </button>
-            {isGamepad && (
-              <>
-                <button
-                  className={'configs-orient-btn' + (editLayout ? ' active' : '')}
-                  onClick={() => { setEditLayout(m => !m); setSelectedKey(null); }}
-                >
-                  {editLayout ? 'Done Editing' : 'Edit Layout'}
-                </button>
-                {editLayout && (
-                  <button className="configs-orient-btn" onClick={resetLayout}>Reset Layout</button>
-                )}
-              </>
+            <button
+              className={'configs-orient-btn' + (editLayout ? ' active' : '')}
+              onClick={() => { setEditLayout(m => !m); setSelectedKey(null); }}
+            >
+              {editLayout ? 'Done Editing' : 'Edit Layout'}
+            </button>
+            {editLayout && (
+              <button className="configs-orient-btn" onClick={resetLayout}>Reset Layout</button>
             )}
           </div>
 
@@ -254,35 +264,54 @@ export default function CloneConfigPage() {
                   onSelect={editLayout ? setSelectedKey : undefined}
                 />
               ) : (
-                <div className="canvas-phase-stub">Touch Mouse canvas — coming soon</div>
+                <TouchMouseCanvas
+                  canvasW={canvasW}
+                  canvasH={canvasH}
+                  config={config}
+                  editMode={editLayout}
+                  canvasScale={canvasScale}
+                  onConfigChange={setConfig}
+                  selectedKey={editLayout ? selectedKey : null}
+                  onSelect={editLayout ? setSelectedKey : undefined}
+                />
               )}
             </DevicePreviewEditor>
           </div>
 
           {editLayout && selectedKey && (() => {
-            const { ox, oy, sx, sy } = getElementOffset(config, selectedKey);
+            const offsetApi = isGamepad
+              ? { get: getElementOffset, move: applyOffset, scale: applyScale }
+              : { get: getTouchMouseElementOffset, move: applyTouchMouseOffset, scale: applyTouchMouseScale };
+            const { ox, oy, sx, sy } = offsetApi.get(config, selectedKey);
+            const canEditNumeric = isGamepad || selectedKey.startsWith('macro:');
             return (
               <div className="elem-props-bar">
                 <span className="elem-props-key">{selectedKey}</span>
-                <label className="elem-props-field">
-                  <span>X</span>
-                  <input type="number" step="1" value={Math.round(ox)}
-                    onChange={e => setConfig(c => applyOffset(c, selectedKey, Number(e.target.value), oy))} />
-                </label>
-                <label className="elem-props-field">
-                  <span>Y</span>
-                  <input type="number" step="1" value={Math.round(oy)}
-                    onChange={e => setConfig(c => applyOffset(c, selectedKey, ox, Number(e.target.value)))} />
-                </label>
-                <label className="elem-props-field">
-                  <span>Scale</span>
-                  <input type="number" step="0.05" min="0.2" max="4"
-                    value={Number(sx.toFixed(2))}
-                    onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfig(c => applyScale(c, selectedKey, v, v)); }} />
-                </label>
-                <button className="elem-props-reset" onClick={() => setConfig(c => applyScale(applyOffset(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
-                  Reset
-                </button>
+                {canEditNumeric ? (
+                  <>
+                    <label className="elem-props-field">
+                      <span>X</span>
+                      <input type="number" step="1" value={Math.round(ox)}
+                        onChange={e => setConfig(c => offsetApi.move(c, selectedKey, Number(e.target.value), oy))} />
+                    </label>
+                    <label className="elem-props-field">
+                      <span>Y</span>
+                      <input type="number" step="1" value={Math.round(oy)}
+                        onChange={e => setConfig(c => offsetApi.move(c, selectedKey, ox, Number(e.target.value)))} />
+                    </label>
+                    <label className="elem-props-field">
+                      <span>Scale</span>
+                      <input type="number" step="0.05" min="0.2" max="4"
+                        value={Number(sx.toFixed(2))}
+                        onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfig(c => offsetApi.scale(c, selectedKey, v, v)); }} />
+                    </label>
+                    <button className="elem-props-reset" onClick={() => setConfig(c => offsetApi.scale(offsetApi.move(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
+                      Reset
+                    </button>
+                  </>
+                ) : (
+                  <span className="elem-props-note">Drag this zone on the preview to reposition it.</span>
+                )}
               </div>
             );
           })()}

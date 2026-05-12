@@ -29,6 +29,28 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
     onConfigChange(prev => ({ ...prev, [field]: val }));
   }
 
+  function setTouchButton(key, field, val) {
+    onConfigChange(prev => ({
+      ...prev,
+      [key]: { ...(prev?.[key] ?? {}), [field]: val },
+    }));
+  }
+
+  function setSniper(field, val) {
+    onConfigChange(prev => ({
+      ...prev,
+      sniper: { ...(prev?.sniper ?? {}), [field]: val },
+    }));
+  }
+
+  function setMacro(index, field, val) {
+    onConfigChange(prev => {
+      const macroButtons = [...(prev?.macroButtons ?? [])];
+      macroButtons[index] = { ...(macroButtons[index] ?? {}), [field]: val };
+      return { ...prev, macroButtons };
+    });
+  }
+
   const isGamepad = mode === 'gamepad';
 
   return (
@@ -184,6 +206,129 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
                 </button>
               ))}
             </div>
+          </section>
+        </>
+      )}
+
+      {!isGamepad && config && (
+        <>
+          <section className="cfg-opt-section">
+            <h3 className="cfg-opt-heading">Touch Mouse</h3>
+            <div className="cfg-chips">
+              {['MOUSE', 'TOUCH'].map(v => (
+                <button
+                  key={v}
+                  className={'cfg-chip' + (config?.mode === v ? ' active' : '')}
+                  onClick={() => setGlobal('mode', v)}
+                >
+                  {v === 'MOUSE' ? 'Mouse' : 'Touch'}
+                </button>
+              ))}
+            </div>
+            <label className="cfg-opt-label">
+              Sensitivity
+              <input
+                className="cfg-opt-input"
+                type="number"
+                min="1"
+                max="10"
+                value={config?.sensitivity ?? 5}
+                onChange={e => setGlobal('sensitivity', Math.max(1, Math.min(10, Number(e.target.value))))}
+              />
+            </label>
+            <label className="cfg-btn-toggle cfg-opt-row">
+              <input
+                type="checkbox"
+                checked={config?.scrollEnabled ?? true}
+                onChange={e => setGlobal('scrollEnabled', e.target.checked)}
+              />
+              <span>Scroll Enabled</span>
+            </label>
+            <label className="cfg-btn-toggle cfg-opt-row">
+              <input
+                type="checkbox"
+                checked={config?.invertScroll ?? false}
+                onChange={e => setGlobal('invertScroll', e.target.checked)}
+              />
+              <span>Invert Scroll</span>
+            </label>
+          </section>
+
+          <section className="cfg-opt-section">
+            <h3 className="cfg-opt-heading">Mouse Buttons</h3>
+            {[
+              ['leftButton', 'Left Button'],
+              ['rightButton', 'Right Button'],
+            ].map(([key, label]) => (
+              <div key={key} className="cfg-touch-button-block">
+                <label className="cfg-btn-toggle cfg-opt-row">
+                  <input
+                    type="checkbox"
+                    checked={config?.[key]?.enabled ?? false}
+                    onChange={e => setTouchButton(key, 'enabled', e.target.checked)}
+                  />
+                  <span>{label}</span>
+                </label>
+                <div className="cfg-chips">
+                  {['STATIC', 'DYNAMIC'].map(v => (
+                    <button
+                      key={v}
+                      className={'cfg-chip' + (config?.[key]?.zoneType === v ? ' active' : '')}
+                      onClick={() => setTouchButton(key, 'zoneType', v)}
+                    >
+                      {v[0] + v.slice(1).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <p className="cfg-opt-hint">
+              Use Edit Layout on the preview to drag static zones, dynamic zones, and macro buttons.
+            </p>
+          </section>
+
+          <section className="cfg-opt-section">
+            <h3 className="cfg-opt-heading">Sniper Zone</h3>
+            <label className="cfg-btn-toggle cfg-opt-row">
+              <input
+                type="checkbox"
+                checked={config?.sniper?.enabled ?? false}
+                onChange={e => setSniper('enabled', e.target.checked)}
+              />
+              <span>Enable Sniper Zone</span>
+            </label>
+            <label className="cfg-opt-label">
+              Divisor
+              <input
+                className="cfg-opt-input"
+                type="number"
+                min="1"
+                max="12"
+                step="0.5"
+                value={config?.sniper?.divisor ?? 3}
+                onChange={e => setSniper('divisor', Math.max(1, Math.min(12, Number(e.target.value))))}
+              />
+            </label>
+          </section>
+
+          <section className="cfg-opt-section">
+            <h3 className="cfg-opt-heading">Keyboard Macros</h3>
+            {(config?.macroButtons ?? []).length === 0 ? (
+              <p className="cfg-opt-hint">No keyboard macros in this config.</p>
+            ) : (
+              <div className="cfg-macro-list">
+                {config.macroButtons.map((macro, index) => (
+                  <label key={index} className="cfg-opt-label">
+                    Macro {index + 1}
+                    <input
+                      className="cfg-opt-input"
+                      value={macro.label ?? ''}
+                      onChange={e => setMacro(index, 'label', e.target.value)}
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
           </section>
         </>
       )}

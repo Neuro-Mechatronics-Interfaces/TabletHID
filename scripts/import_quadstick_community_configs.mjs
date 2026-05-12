@@ -74,13 +74,16 @@ const KEYBOARD_USAGE = new Map([
   ['kb_backslash', 0x31],
   ['kb_semicolon', 0x33],
   ['kb_quote', 0x34],
+  ['kb_apostrophe', 0x34],
   ['kb_grave', 0x35],
+  ['kb_grave_accent_and_tilde', 0x35],
   ['kb_comma', 0x36],
   ['kb_period', 0x37],
   ['kb_slash', 0x38],
   ['kb_caps_lock', 0x39],
   ...Array.from({ length: 12 }, (_, index) => [`kb_f${index + 1}`, 0x3a + index]),
   ['kb_print_screen', 0x46],
+  ['kb_printscreen', 0x46],
   ['kb_scroll_lock', 0x47],
   ['kb_pause', 0x48],
   ['kb_insert', 0x49],
@@ -94,6 +97,12 @@ const KEYBOARD_USAGE = new Map([
   ['kb_down_arrow', 0x51],
   ['kb_up_arrow', 0x52],
   ['kb_keypad_plus', 0x57],
+  ['kb_keypad_slash', 0x54],
+  ['kb_keypad_asterisk', 0x55],
+  ['kb_keypad_0', 0x62],
+  ['kb_keypad_dot', 0x63],
+  ['kb_non_us_backslash_and_pipe', 0x64],
+  ['kb_power', 0x66],
   ['kb_left_control', 0xe0],
   ['kb_left_shift', 0xe1],
   ['kb_left_alt', 0xe2],
@@ -102,6 +111,17 @@ const KEYBOARD_USAGE = new Map([
   ['kb_right_shift', 0xe5],
   ['kb_right_alt', 0xe6],
   ['kb_right_gui', 0xe7],
+]);
+
+const KEYBOARD_MODIFIER_BITS = new Map([
+  ['kb_left_control', 0x01],
+  ['kb_left_shift', 0x02],
+  ['kb_left_alt', 0x04],
+  ['kb_left_gui', 0x08],
+  ['kb_right_control', 0x10],
+  ['kb_right_shift', 0x20],
+  ['kb_right_alt', 0x40],
+  ['kb_right_gui', 0x80],
 ]);
 
 function parseArgs(argv) {
@@ -304,11 +324,64 @@ function bindingInputsByOutput(bindings) {
   return byOutput;
 }
 
+function inputSignature(inputs) {
+  return [...inputs].map(input => input.trim()).filter(Boolean).sort().join('+');
+}
+
+function keyboardMacroDefsForBindings(bindings) {
+  const byInput = new Map();
+  for (const binding of bindings) {
+    const output = binding.output_name;
+    if (!output.startsWith('kb_') || !KEYBOARD_USAGE.has(output)) continue;
+    const inputs = rowInputs(binding);
+    if (!inputs.length) continue;
+    const signature = inputSignature(inputs);
+    if (!signature) continue;
+    const current = byInput.get(signature) ?? { inputs: new Set(), outputs: new Set() };
+    for (const input of inputs) current.inputs.add(input);
+    current.outputs.add(output);
+    byInput.set(signature, current);
+  }
+
+  const defs = [];
+  for (const [signature, item] of byInput.entries()) {
+    let modifiers = 0;
+    const keyUsages = [];
+    const keyOutputs = [];
+    for (const output of [...item.outputs].sort()) {
+      const modifierBit = KEYBOARD_MODIFIER_BITS.get(output);
+      if (modifierBit !== undefined) {
+        modifiers |= modifierBit;
+      } else {
+        keyUsages.push(KEYBOARD_USAGE.get(output));
+        keyOutputs.push(output);
+      }
+    }
+    if (!keyUsages.length) continue;
+    const id = `${modifiers}:${[...new Set(keyUsages)].sort((a, b) => a - b).join('+')}:${signature}`;
+    defs.push({
+      id,
+      inputs: item.inputs,
+      keyOutputs,
+      modifiers,
+      keyUsages: [...new Set(keyUsages)].sort((a, b) => a - b),
+    });
+  }
+  return defs.sort((a, b) => a.id.localeCompare(b.id));
+}
+
 function controlsForBindings(bindings) {
   const controls = new Set();
   const unsupportedOutputs = new Set();
   const inputsByButton = new Map();
-  const macroInputsByOutput = new Map();
+  const macroDefsById = new Map();
+  const macroDefIdsByInput = new Map();
+
+  for (const def of keyboardMacroDefsForBindings(bindings)) {
+    controls.add(`macro:${def.id}`);
+    macroDefsById.set(def.id, def);
+    macroDefIdsByInput.set(inputSignature(def.inputs), def.id);
+  }
 
   for (const [output, inputSet] of bindingInputsByOutput(bindings).entries()) {
     const directButton = OUTPUT_TO_BUTTON.get(output);
@@ -324,8 +397,6 @@ function controlsForBindings(bindings) {
       continue;
     }
     if (output.startsWith('kb_') && KEYBOARD_USAGE.has(output)) {
-      controls.add(`macro:${output}`);
-      macroInputsByOutput.set(output, inputSet);
       continue;
     }
     if (output === 'mouse_left_button') {
@@ -358,7 +429,7 @@ function controlsForBindings(bindings) {
     }
   }
 
-  return { controls, unsupportedOutputs, inputsByButton, macroInputsByOutput };
+  return { controls, unsupportedOutputs, inputsByButton, macroDefsById, macroDefIdsByInput };
 }
 
 function inputKindsForBindings(bindings) {
@@ -432,26 +503,47 @@ function applyLayoutHints(config, layout, controls) {
   }
 }
 
-function macroLabel(output, inputs) {
-  const key = output.replace(/^kb_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+function displayKeyOutput(output) {
+  return output
+    .replace(/^kb_/, '')
+    .replace(/grave_accent_and_tilde/g, 'grave')
+    .replace(/apostrophe/g, 'quote')
+    .replace(/printscreen/g, 'print screen')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function modifierLabel(modifiers) {
+  const parts = [];
+  if (modifiers & 0x11) parts.push('Ctrl');
+  if (modifiers & 0x22) parts.push('Shift');
+  if (modifiers & 0x44) parts.push('Alt');
+  if (modifiers & 0x88) parts.push('Meta');
+  return parts;
+}
+
+function macroLabel(def) {
+  const key = [...modifierLabel(def.modifiers), ...def.keyOutputs.map(displayKeyOutput)].join('+');
+  const inputs = [...def.inputs];
   if (!inputs.length) return key;
   const rendered = `${key}: ${inputs.map(displayInput).join(' + ')}`;
   return rendered.length <= 18 ? rendered : `${rendered.slice(0, 15)}...`;
 }
 
-function macroButtonsForControls(controls, macroInputsByOutput) {
-  const outputs = [...controls]
+function macroButtonsForControls(controls, macroDefsById, layout = 'right-panel') {
+  const defs = [...controls]
     .filter(control => control.startsWith('macro:'))
-    .map(control => control.slice('macro:'.length))
-    .sort();
+    .map(control => macroDefsById.get(control.slice('macro:'.length)))
+    .filter(Boolean)
+    .sort((a, b) => a.id.localeCompare(b.id));
 
-  return outputs.map((output, index) => ({
-    label: macroLabel(output, [...(macroInputsByOutput.get(output) ?? [])]),
-    modifiers: 0,
-    keyUsages: [KEYBOARD_USAGE.get(output)],
-    // 2-column grid; 90dp between columns, 56dp between rows (~44dp button height + 12dp gap)
-    layoutOffsetX: (index % 2) * 90,
-    layoutOffsetY: Math.floor(index / 2) * 56,
+  return defs.map((def, index) => ({
+    label: macroLabel(def),
+    modifiers: def.modifiers,
+    keyUsages: def.keyUsages,
+    // Shared source clusters use a predictable 2-column macro palette.
+    layoutOffsetX: layout === 'bottom-panel' ? (index % 4) * 84 : (index % 2) * 92,
+    layoutOffsetY: layout === 'bottom-panel' ? Math.floor(index / 4) * 54 : Math.floor(index / 2) * 54,
     layoutScaleX: 1,
     layoutScaleY: 1,
   }));
@@ -513,7 +605,7 @@ function clusterSources(items, threshold) {
 
 function convertGamepadConfig(sourceConfig, bindings, cluster) {
   const config = emptyGamepadConfig();
-  const { controls, inputsByButton, macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
+  const { controls, inputsByButton, macroDefsById, unsupportedOutputs } = controlsForBindings(bindings);
 
   for (const button of BUTTON_KEYS) {
     if (!cluster.unionControls.has(button)) continue;
@@ -522,7 +614,7 @@ function convertGamepadConfig(sourceConfig, bindings, cluster) {
   }
 
   applyLayoutHints(config, cluster.layout, cluster.unionControls);
-  config.macroButtons = macroButtonsForControls(controls, macroInputsByOutput);
+  config.macroButtons = macroButtonsForControls(controls, macroDefsById, 'bottom-panel');
 
   const error = validateGamepadConfig(config);
   if (error !== null) {
@@ -534,7 +626,7 @@ function convertGamepadConfig(sourceConfig, bindings, cluster) {
 
 function convertTouchMouseConfig(sourceConfig, bindings, cluster) {
   const config = emptyTouchMouseConfig();
-  const { controls, macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
+  const { controls, macroDefsById, unsupportedOutputs } = controlsForBindings(bindings);
   config.mode = cluster.unionControls.has('touchMovement') ? 'MOUSE' : 'TOUCH';
   config.leftButton.enabled = cluster.unionControls.has('touchLeftButton');
   config.rightButton.enabled = cluster.unionControls.has('touchRightButton');
@@ -550,7 +642,7 @@ function convertTouchMouseConfig(sourceConfig, bindings, cluster) {
     });
   }
 
-  config.macroButtons = macroButtonsForControls(controls, macroInputsByOutput);
+  config.macroButtons = macroButtonsForControls(controls, macroDefsById, 'right-panel');
 
   const error = validateTouchMouseConfig(config);
   if (error !== null) {

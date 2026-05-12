@@ -571,6 +571,12 @@ body {
   display: flex; align-items: center; justify-content: center;
   height: 100%; color: rgba(255,255,255,.45); font-size: 13px;
 }
+.touchmouse-surface-label {
+  position: absolute; left: 16px; top: 14px;
+  color: rgba(255,255,255,.44); font-size: 12px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .06em;
+  pointer-events: none; user-select: none;
+}
 
 .graph-panel {
   width: 100%; min-height: 560px;
@@ -797,6 +803,16 @@ body {
 }
 .cfg-btn-toggle input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
 .cfg-btn-toggle span { user-select: none; }
+.cfg-touch-button-block {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cfg-touch-button-block:last-of-type { border-bottom: none; }
+.cfg-macro-list {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 240px; overflow-y: auto; padding-right: 2px;
+}
 
 /* Clone canvas area */
 .clone-canvas-area {
@@ -842,6 +858,7 @@ body {
   border-radius: 5px; color: var(--text-muted); font-size: .8rem; cursor: pointer;
 }
 .elem-props-reset:hover { border-color: var(--primary); color: var(--primary); }
+.elem-props-note { color: var(--text-muted); font-size: .8rem; }
 
 .clone-loading { padding: 60px; text-align: center; color: var(--text-muted); }
 .clone-load-error {

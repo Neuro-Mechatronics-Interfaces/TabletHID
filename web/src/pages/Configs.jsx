@@ -4,6 +4,7 @@ import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
 import ConfigGraphPanel from './configs/ConfigGraphPanel.jsx';
 import DevicePreviewEditor from './configs/DevicePreviewEditor.jsx';
 import GamepadCanvas from './configs/GamepadCanvas.jsx';
+import TouchMouseCanvas from './configs/TouchMouseCanvas.jsx';
 import useDevicePresets from './configs/useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
@@ -220,9 +221,7 @@ export default function Configs() {
                   {isGamepad ? (
                     <GamepadCanvas canvasW={canvasW} canvasH={canvasH} config={configJson} />
                   ) : (
-                    <div className="canvas-phase-stub">
-                      Touch Mouse canvas — coming soon
-                    </div>
+                    <TouchMouseCanvas canvasW={canvasW} canvasH={canvasH} config={configJson} />
                   )}
                 </DevicePreviewEditor>
               ) : (
