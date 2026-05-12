@@ -1,0 +1,541 @@
+folder,xlsx_name,rel_path,sheet_name,sheet_index,block_index,mode_name,layout_type,transport,profile_file,config_id
+Android Game Controller,Android Game Controller.xlsx,Android Game Controller\Android Game Controller.xlsx,Left Analog,0,0,Left joy,Normal,bluetooth,android.csv,0
+Android Game Controller,Android Game Controller.xlsx,Android Game Controller\Android Game Controller.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,bluetooth,,1
+Android Game Controller,Android Game Controller.xlsx,Android Game Controller\Android Game Controller.xlsx,Right Analog,2,0,Right joy,Normal,bluetooth,,2
+Android Game Controller,Android Game Controller.xlsx,Android Game Controller\Android Game Controller.xlsx,D-Pad,3,0,D-Pad,Normal,bluetooth,,3
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,MoveStrafe,0,0,Left joy,Normal,usb,ac1.csv,4
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,MoveStrafe,0,1,Controller,mapping:,http://guides.gamepressure.com/assassinscreedpc/guide.asp?ID=4504,ac1.csv,5
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,MoveSteer,1,0,Left joy,Normal,usb,,6
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,MoveSteer,1,1,Mixed joy,Alternate,usb,,7
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,View,2,0,Right joy,Normal,usb,,8
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,View,2,1,Mixed joy,Alternate,usb,,9
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,Weapon,3,0,Right joy,Normal,usb,,10
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,Weapon,3,1,Mixed joy,Alternate,usb,,11
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,12
+Assassin_s Creed PC,Assassin_s Creed PC.xlsx,Assassin_s Creed PC\Assassin_s Creed PC.xlsx,Mouse,4,1,Pan Mode,Alternate,usb,,13
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Left Analog,0,0,Left joy,Normal,usb,autoright.csv,14
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,15
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Right Analog,2,0,Right joy,Normal,usb,,16
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,17
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,18
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,19
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Auto Right Stick 1,6,0,Right joy,Normal,usb,,20
+Auto Right Stick Demo,Auto Right Stick Demo.xlsx,Auto Right Stick Demo\Auto Right Stick Demo.xlsx,Auto Right Stick 2,7,0,Right joy,Normal,usb,,21
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Left,0,0,Left joy,Normal,usb,bf4ps4.csv,22
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,bf4ps4.csv,23
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,24
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,25
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,26
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,27
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,28
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,29
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Gyro PS3,4,0,D-Pad,Normal,usb,,30
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Gyro PS3,4,1,D-Pad,Alternate,usb,,31
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Both Analog,5,0,Left joy,Normal,usb,,32
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Both Analog,5,1,Mixed joy,Alternate,usb,,33
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Opposite Analog,6,0,Left joy,Normal,usb,,34
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,Opposite Analog,6,1,Mixed joy,Alternate,usb,,35
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Climb,7,0,D-Pad,Normal,usb,,36
+Battlefield PS4,Battlefield PS4.xlsx,Battlefield PS4\Battlefield PS4.xlsx,PS3 Climb,7,1,D-Pad,Alternate,usb,,37
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Left,0,0,Left joy,Normal,usb,bio1.csv,38
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,bio1.csv,39
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,40
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,41
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,42
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,43
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,44
+BioShock1,BioShock1.xlsx,BioShock1\BioShock1.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,45
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,PS3 Left,0,0,Left joy,Normal,usb,default.csv,46
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,47
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,48
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,49
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,Mouse,4,0,Mouse Mode,Normal,bluetooth,,50
+Bluetooth Combo Default,Bluetooth Combo Default.xlsx,Bluetooth Combo Default\Bluetooth Combo Default.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,bluetooth,,51
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,PS3 Left,0,0,Left joy,Normal,bluetooth,default.csv,52
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,PS3 Mixed,1,0,Left joy,Normal,bluetooth,,53
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,PS3 Right,2,0,Right joy,Normal,bluetooth,,54
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,bluetooth,,55
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,56
+Bluetooth GamePad Default,Bluetooth GamePad Default.xlsx,Bluetooth GamePad Default\Bluetooth GamePad Default.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,57
+Bluetooth Mouse Default,Bluetooth Mouse Default.xlsx,Bluetooth Mouse Default\Bluetooth Mouse Default.xlsx,Mouse,0,0,Mouse Mode,Normal,bluetooth,default.csv,58
+Bluetooth Mouse Default,Bluetooth Mouse Default.xlsx,Bluetooth Mouse Default\Bluetooth Mouse Default.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,bluetooth,,59
+Bluetooth Mouse Default,Bluetooth Mouse.xlsx,Bluetooth Mouse Default\Bluetooth Mouse.xlsx,Mouse,0,0,Mouse Mode,Normal,bluetooth,amouse.csv,60
+Bluetooth Mouse Default,Bluetooth Mouse.xlsx,Bluetooth Mouse Default\Bluetooth Mouse.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,bluetooth,,61
+Bluetooth Mouse Default,iPad Bluetooth Mouse.xlsx,Bluetooth Mouse Default\iPad Bluetooth Mouse.xlsx,Mouse,0,0,Mouse Mode,Normal,bluetooth,ipad.csv,62
+Bluetooth Mouse Default,iPad Bluetooth Mouse.xlsx,Bluetooth Mouse Default\iPad Bluetooth Mouse.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,bluetooth,,63
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Left,0,0,Left joy,Normal,usb,cod.csv,64
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,65
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,66
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,67
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,68
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,69
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Gyro PS3,4,0,D-Pad,Normal,usb,,70
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Gyro PS3,4,1,D-Pad,Alternate,usb,,71
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Both Analog,5,0,Left joy,Normal,usb,,72
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Both Analog,5,1,Mixed joy,Alternate,usb,,73
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Opposite Analog,6,0,Left joy,Normal,usb,,74
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,Opposite Analog,6,1,Mixed joy,Alternate,usb,,75
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Climb,7,0,D-Pad,Normal,usb,,76
+Call of Duty,Call of Duty UltraStik.xlsx,Call of Duty\Call of Duty UltraStik.xlsx,PS3 Climb,7,1,D-Pad,Alternate,usb,,77
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,PS3 Left,0,0,Left joy,Normal,usb,cod.csv,78
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,79
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,80
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,81
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,Gyro PS3,4,0,D-Pad,Normal,usb,,82
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,Both Analog,5,0,Left joy,Normal,usb,,83
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,Opposite Analog,6,0,Left joy,Normal,usb,,84
+Call of Duty,Call of Duty.xlsx,Call of Duty\Call of Duty.xlsx,PS3 Climb,7,0,D-Pad,Normal,usb,,85
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Left,0,0,Left joy,Normal,usb,codaw.csv,86
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Left,0,1,Mixed joy,Alternate,usb,codaw.csv,87
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Mixed,1,0,Left joy,Normal,usb,,88
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Mixed,1,1,Mixed joy,Alternate,usb,,89
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Right,2,0,Right joy,Normal,usb,,90
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Right,2,1,Mixed joy,Alternate,usb,,91
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Strafe,3,0,Left joy,Normal,usb,,92
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Strafe,3,1,Mixed joy,Alternate,usb,,93
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,94
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,D-Pad,4,1,D-Pad,Alternate,usb,,95
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Sprint,5,0,Automatic Sprint,Normal,usb,,96
+Call of Duty Advanced Warfare,Call of Duty Advanced Warfare.xlsx,Call of Duty Advanced Warfare\Call of Duty Advanced Warfare.xlsx,Sprint,5,1,Mixed joy,Alternate,usb,,97
+Default Configuration,Blank Configuration.xlsx,Default Configuration\Blank Configuration.xlsx,Mode 1,0,0,Left joy,Normal,usb,blank.csv,98
+Default Configuration,Screen Saver.xlsx,Default Configuration\Screen Saver.xlsx,Mode 1,0,0,Left joy,Normal,none,screensaver.csv,99
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,Left,0,0,Left joy,Normal,usb,default.csv,100
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,Mixed,1,0,Left joy,Normal,usb,,101
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,Right,2,0,Right joy,Normal,usb,,102
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,103
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,104
+Default PS4 PCPROG,Default PS4 PCPROG.xlsx,Default PS4 PCPROG\Default PS4 PCPROG.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,105
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Left,0,0,Left joy,Normal,usb,destiny.csv,106
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Mixed,1,0,Left joy,Normal,usb,,107
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Right,2,0,Right joy,Normal,usb,,108
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Strafing,3,0,Left joy,Normal,usb,,109
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,110
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Sprint,5,0,Left joy,Normal,usb,,111
+Destiny,Destiny UltraStik.xlsx,Destiny\Destiny UltraStik.xlsx,Crucible,6,0,Left joy,Normal,usb,,112
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Left,0,0,Left joy,Normal,usb,destiny.csv,113
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Mixed,1,0,Left joy,Normal,usb,,114
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Right,2,0,Right joy,Normal,usb,,115
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Strafing,3,0,Left joy,Normal,usb,,116
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,117
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Sprint,5,0,Left joy,Normal,usb,,118
+Destiny,Destiny.xlsx,Destiny\Destiny.xlsx,Crucible,6,0,Left joy,Normal,usb,,119
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Left,0,0,Left joy,Normal,usb,dmc.csv,120
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,dmc.csv,121
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,122
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,123
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,124
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,125
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,126
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,127
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,Grapple,4,0,Left joy,Normal,usb,,128
+Devil May Cry,Devil May Cry.xlsx,Devil May Cry\Devil May Cry.xlsx,Grapple,4,1,Mixed joy,Alternate,usb,,129
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Left,0,0,Left joy,Normal,usb,doom.csv,130
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Left,0,1,Mixed joy,Alternate,usb,doom.csv,131
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Mixed,1,0,Left joy,Normal,usb,,132
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Mixed,1,1,Mixed joy,Alternate,usb,,133
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Right,2,0,Right joy,Normal,usb,,134
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Right,2,1,Mixed joy,Alternate,usb,,135
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Strafing,3,0,Left joy,Normal,usb,,136
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Strafing,3,1,Mixed joy,Alternate,usb,,137
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,138
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,D-Pad,4,1,D-Pad,Alternate,usb,,139
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Sprint,5,0,Left joy,Normal,usb,,140
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Sprint,5,1,Mixed joy,Alternate,usb,,141
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Crucible,6,0,Left joy,Normal,usb,,142
+DOOM,Matt Victor DOOM.xlsx,DOOM\Matt Victor DOOM.xlsx,Crucible,6,1,Mixed joy,Alternate,usb,,143
+Dual UltraStiks,8BitDo Lite SE.xlsx,Dual UltraStiks\8BitDo Lite SE.xlsx,Mouse,1,0,,,usb,,144
+Dual UltraStiks,Dual UltraStiks.xlsx,Dual UltraStiks\Dual UltraStiks.xlsx,Left Analog,0,0,Right joy,Normal,usb,ultra2.csv,145
+Dual UltraStiks,Dual UltraStiks.xlsx,Dual UltraStiks\Dual UltraStiks.xlsx,Right Analog,1,0,Right joy,Normal,usb,ultra1.csv,146
+Dual UltraStiks,Dual UltraStiks.xlsx,Dual UltraStiks\Dual UltraStiks.xlsx,Mouse,2,0,Mouse Mode,Normal,usb,,147
+Dual UltraStiks,Dual UltraStiks.xlsx,Dual UltraStiks\Dual UltraStiks.xlsx,Mouse Scroll,3,0,Mouse Mode,Normal,usb,,148
+Dual UltraStiks,PeriPad 504 Tester.xlsx,Dual UltraStiks\PeriPad 504 Tester.xlsx,Left Analog,0,0,Right joy,Normal,usb,default.csv,149
+Dual UltraStiks,PeriPad 504 Tester.xlsx,Dual UltraStiks\PeriPad 504 Tester.xlsx,Mouse,1,0,Right joy,Normal,usb,test.csv,150
+Dual UltraStiks,PeriPad 504 Tester.xlsx,Dual UltraStiks\PeriPad 504 Tester.xlsx,Mouse,1,1,,Alternate,usb,test.csv,151
+Dual UltraStiks,UltraStik Tester.xlsx,Dual UltraStiks\UltraStik Tester.xlsx,Left Analog,0,0,,,usb,test.csv,152
+Dual UltraStiks,UltraStik Tester.xlsx,Dual UltraStiks\UltraStik Tester.xlsx,Mouse,1,0,,,usb,,153
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Mouse,0,0,Mouse Mode,,usb,elite.csv,154
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Flight Roll,1,0,,,usb,,155
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Flight Yaw,2,0,,,usb,,156
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Flight Thrust,3,0,,,usb,,157
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Select Panel,4,0,,Select panel to operate,usb,,158
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Panel Operation,5,0,,Operate panel,usb,,159
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,Head Look,6,0,,,usb,,160
+Elite Dangerous,Elite Dangerous PC.xlsx,Elite Dangerous\Elite Dangerous PC.xlsx,CAM,7,0,,,usb,,161
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,MoveStrafe,0,0,Strafe,Normal,usb,test.csv,162
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,MoveSteer,1,0,Steer,Normal,usb,,163
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,MoveSteer,1,1,Mixed joy,Alternate,usb,,164
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,View,2,0,View,Normal,usb,,165
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,View,2,1,Mixed joy,Alternate,usb,,166
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,Compass,3,0,Weapon Selector,Normal,usb,test.csv,167
+Example PC Weapon Selectors,Example PC Weapon Selectors.xlsx,Example PC Weapon Selectors\Example PC Weapon Selectors.xlsx,SipPuff,4,0,Weapon Selector,Normal,usb,,168
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,Left Analog,0,0,Mixed Joystick,Normal,usb,default.csv,169
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,170
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,Right Analog,2,0,Right joy,Normal,usb,,171
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,172
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,Mouse,4,0,D-Pad,Normal,usb,,173
+Fadi Default,Fadi Default.xlsx,Fadi Default\Fadi Default.xlsx,Drive,5,0,Mixed Joystick,Normal,usb,default.csv,174
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Left,0,0,Left joy,Normal,usb,farcry5.csv,175
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Mixed,1,0,Left joy,Normal,usb,,176
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Right,2,0,Right joy,Normal,usb,,177
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Right,2,1,Comment,,usb,,178
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Strafing,3,0,Left joy,Normal,usb,,179
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,180
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,D-Pad,4,1,D-Pad,Alternate,usb,,181
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Weapon Wheel 1,5,0,Left joy,Normal,usb,,182
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Weapon Wheel 2,6,0,Left joy,Normal,usb,,183
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Weapon Wheel 3,7,0,Left joy,Normal,usb,,184
+Far Cry 4,Far Cry 5.xlsx,Far Cry 4\Far Cry 5.xlsx,Sprint,8,0,Left joy,Normal,usb,,185
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Left Analog,0,0,Left joy,Normal,usb,fpv.csv,186
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Left Analog,0,1,,Alternate,usb,fpv.csv,187
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying,1,0,Mixed Joystick,Normal,usb,,188
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying,1,1,,Alternate,usb,,189
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying mixed,2,0,Mixed Joystick,Normal,usb,,190
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying mixed,2,1,,Alternate,usb,,191
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying lip throttle,3,0,Mixed Joystick,Normal,usb,,192
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,flying lip throttle,3,1,,Alternate,usb,,193
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Right Analog,4,0,Right joy,Normal,usb,,194
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Right Analog,4,1,,Alternate,usb,,195
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,D-Pad,5,0,D-Pad,Normal,usb,,196
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,D-Pad,5,1,,Alternate,usb,,197
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Mouse,6,0,Mouse Mode,Normal,usb,,198
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Mouse,6,1,,Alternate,usb,,199
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Mouse Scroll,7,0,Mouse Mode,Normal,usb,,200
+FPV Freerider,FPV Freerider.xlsx,FPV Freerider\FPV Freerider.xlsx,Mouse Scroll,7,1,Pan Mode,Alternate,usb,,201
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Left Analog,0,0,Left joy,Normal,usb,ghstb.csv,202
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Left Analog,0,1,,Alternate,usb,ghstb.csv,203
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,204
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Mixed Analog,1,1,,Alternate,usb,,205
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Right Analog,2,0,Right joy,Normal,usb,,206
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,Right Analog,2,1,,Alternate,usb,,207
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,208
+Ghostbusters,Ghostbusters_.xlsx,Ghostbusters\Ghostbusters_.xlsx,D-Pad,3,1,,Alternate,usb,,209
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Left,0,0,Left joy,Normal,usb,ghosts.csv,210
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,ghosts.csv,211
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,212
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,213
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,214
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,215
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,216
+Ghosts,Ghosts.xlsx,Ghosts\Ghosts.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,217
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,PS3 Left,0,0,Left joy,Normal,usb,gta.csv,218
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,PS3 Mixed,1,0,Mixed Joy,Normal,usb,,219
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,220
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,221
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,Driving,4,0,Driving,Normal,usb,,222
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,Taxi,5,0,Taxi Takeoff and Landing,Normal,usb,,223
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,Fly,6,0,Flying,Normal,usb,,224
+Grand Theft Auto,Grand Theft Auto.xlsx,Grand Theft Auto\Grand Theft Auto.xlsx,Foot Race,7,0,Mixed Joy,Normal,usb,,225
+Grand Theft Auto,GTA V Cheat codes.xlsx,Grand Theft Auto\GTA V Cheat codes.xlsx,Left Analog,0,0,Left joy,Normal,usb,GTA cheat.csv,226
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Movement,0,0,Left joy,Normal,usb,gta5pc.csv,227
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Mixed,1,0,Mixed Joystick,Normal,usb,,228
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Camera,2,0,Right joy,Normal,usb,,229
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Character,3,0,Switch Characters,Normal,usb,,230
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Drive,4,0,Left joy,Normal,usb,gta5pc.csv,231
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Drive Mouse,5,0,Left joy,Normal,usb,gta5pc.csv,232
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Mouse,6,0,Mouse Mode,Normal,usb,,233
+Grand Theft Auto 5 PC,Grand Theft Auto 5 PC.xlsx,Grand Theft Auto 5 PC\Grand Theft Auto 5 PC.xlsx,Mouse Scroll,7,0,Mouse Mode,Normal,usb,,234
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Left Analog,0,0,Left joy,Normal,usb,gta.csv,235
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,236
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Mixed Analog,1,1,,Alternate,usb,,237
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Right Analog,2,0,Right joy,Normal,usb,,238
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Right Analog,2,1,,Alternate,usb,,239
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,240
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,D-Pad,3,1,,Alternate,usb,,241
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Driving,4,0,Left joy,Normal,usb,default.csv,242
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Flying,5,0,Left joy,Normal,usb,default.csv,243
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Flying,5,1,,Alternate,usb,default.csv,244
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Taxi,6,0,Left joy,Normal,usb,default.csv,245
+Grand Theft Auto PS4-XBox One,Grand Theft Auto PS4-XBox One.xlsx,Grand Theft Auto PS4-XBox One\Grand Theft Auto PS4-XBox One.xlsx,Taxi,6,1,,Alternate,usb,default.csv,246
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,MoveStrafe,0,0,Left joy,Normal,usb,halflife.csv,247
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,MoveSteer,1,0,Left joy,Normal,usb,,248
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,MoveSteer,1,1,Mixed joy,Alternate,usb,,249
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,View,2,0,Right joy,Normal,usb,,250
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,View,2,1,Mixed joy,Alternate,usb,,251
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Weapon,3,0,Right joy,Normal,usb,,252
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Weapon,3,1,Mixed joy,Alternate,usb,,253
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,254
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Mouse,4,1,Pan Mode,Alternate,usb,,255
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,256
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Mouse Scroll,5,1,Pan Mode,Alternate,usb,,257
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Drive,6,0,Left joy,Normal,usb,halflife.csv,258
+HalfLife,HalfLife.xlsx,HalfLife\HalfLife.xlsx,Drive,6,1,Mixed joy,Alternate,usb,halflife.csv,259
+Keyboard Test,Keyboard Test.xlsx,Keyboard Test\Keyboard Test.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,keyboard.csv,260
+Keyboard Test,Keyboard Test.xlsx,Keyboard Test\Keyboard Test.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,usb,,261
+Keyboard Test,Keyboard Test.xlsx,Keyboard Test\Keyboard Test.xlsx,Letters,2,0,Normal Mode,Normal,usb,,262
+Keyboard Test,Keyboard Test.xlsx,Keyboard Test\Keyboard Test.xlsx,Numbers,3,0,Normal Mode,Normal,usb,,263
+Keyboard Test,Keyboard Test.xlsx,Keyboard Test\Keyboard Test.xlsx,Special Characters,4,0,Normal Mode,Normal,usb,,264
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Left,0,0,Left joy,Normal,usb,lbp.csv,265
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,lbp.csv,266
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,267
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,268
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,269
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,270
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,271
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,272
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,Swing,4,0,Left joy,Normal,usb,,273
+Little Big Planet,Little Big Planet.xlsx,Little Big Planet\Little Big Planet.xlsx,Swing,4,1,Mixed joy,Alternate,usb,,274
+Mac,Mac.xlsx,Mac\Mac.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,275
+Mac,Mac.xlsx,Mac\Mac.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,usb,,276
+Mac,Mac.xlsx,Mac\Mac.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,277
+Mac,Mac.xlsx,Mac\Mac.xlsx,PS3 Left,3,0,Left joy,Normal,usb,,278
+Mac,Mac.xlsx,Mac\Mac.xlsx,PS3 Mixed,4,0,Left joy,Normal,usb,,279
+Mac,Mac.xlsx,Mac\Mac.xlsx,PS3 Right,5,0,Right joy,Normal,usb,,280
+Mac,Mac.xlsx,Mac\Mac.xlsx,PS3 D-Pad,6,0,D-Pad,Normal,usb,,281
+Madden,Madden.xlsx,Madden\Madden.xlsx,Passing O,0,0,Left joy,Normal,usb,Maddness.csv,282
+Madden,Madden.xlsx,Madden\Madden.xlsx,Running O,1,0,Left joy,Normal,usb,Maddness.csv,283
+Madden,Madden.xlsx,Madden\Madden.xlsx,Defense ,2,0,Left joy,Normal,usb,Maddness.csv,284
+Madden,Madden.xlsx,Madden\Madden.xlsx,PrePlay,3,0,Right joy,Normal,usb,,285
+Madden,Madden.xlsx,Madden\Madden.xlsx,Camera ,4,0,D-Pad,Normal,usb,,286
+Mayflash Fightstick F300,Mayflash FightStick F300.xlsx,Mayflash Fightstick F300\Mayflash FightStick F300.xlsx,Right Analog,0,0,Right joy,Normal,usb,Mayflash.csv,287
+Mayflash Fightstick F300,Mayflash FightStick F300.xlsx,Mayflash Fightstick F300\Mayflash FightStick F300.xlsx,D-Pad,1,0,D-Pad,Normal,usb,,288
+Mayflash Fightstick F300,Mayflash FightStick F300.xlsx,Mayflash Fightstick F300\Mayflash FightStick F300.xlsx,Left Analog,2,0,Right joy,Normal,usb,,289
+Minecraft,Minecraft PC.xlsx,Minecraft\Minecraft PC.xlsx,Dive,0,0,Mouse Mode,Normal,usb,mine.csv,290
+Minecraft,Minecraft PC.xlsx,Minecraft\Minecraft PC.xlsx,Mouse,3,0,Mouse Mode,Normal,usb,mouse.csv,291
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Left,0,0,Left joy,Normal,usb,mlb13.csv,292
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,mlb13.csv,293
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,294
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,295
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,296
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,297
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,298
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,299
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Left swap X-T,4,0,Left joy,Normal,usb,,300
+MLB13,MLB13.xlsx,MLB13\MLB13.xlsx,PS3 Left swap X-T,4,1,Mixed joy,Alternate,usb,,301
+Mouse,Mouse.xlsx,Mouse\Mouse.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,302
+Mouse,Mouse.xlsx,Mouse\Mouse.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,usb,,303
+Mouse,Mouse.xlsx,Mouse\Mouse.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,304
+Mouse2,Mouse2 BT and USB.xlsx,Mouse2\Mouse2 BT and USB.xlsx,Mouse,0,0,Mouse Mode,Normal,both,default.csv,305
+Mouse2,Mouse2 BT and USB.xlsx,Mouse2\Mouse2 BT and USB.xlsx,Scroll,1,0,Mouse Mode,Normal,both,,306
+Mouse2,Mouse2 BT and USB.xlsx,Mouse2\Mouse2 BT and USB.xlsx,Arrows,2,0,Mouse Mode,Normal,both,,307
+Mouse2,Mouse2 no Flash - USB A.xlsx,Mouse2\Mouse2 no Flash - USB A.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,308
+Mouse2,Mouse2 no Flash - USB A.xlsx,Mouse2\Mouse2 no Flash - USB A.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,309
+Mouse2,Mouse2 no Flash - USB A.xlsx,Mouse2\Mouse2 no Flash - USB A.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,310
+Mouse2,Mouse2 no Flash.xlsx,Mouse2\Mouse2 no Flash.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse2nf.csv,311
+Mouse2,Mouse2 no Flash.xlsx,Mouse2\Mouse2 no Flash.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,312
+Mouse2,Mouse2 no Flash.xlsx,Mouse2\Mouse2 no Flash.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,313
+Mouse2,Mouse2 UltraStik.xlsx,Mouse2\Mouse2 UltraStik.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,314
+Mouse2,Mouse2 UltraStik.xlsx,Mouse2\Mouse2 UltraStik.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,315
+Mouse2,Mouse2 UltraStik.xlsx,Mouse2\Mouse2 UltraStik.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,316
+Mouse2,Mouse2 USB A.xlsx,Mouse2\Mouse2 USB A.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,317
+Mouse2,Mouse2 USB A.xlsx,Mouse2\Mouse2 USB A.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,318
+Mouse2,Mouse2 USB A.xlsx,Mouse2\Mouse2 USB A.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,319
+Mouse2,Mouse2 with Flash.xlsx,Mouse2\Mouse2 with Flash.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,320
+Mouse2,Mouse2 with Flash.xlsx,Mouse2\Mouse2 with Flash.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,321
+Mouse2,Mouse2 with Flash.xlsx,Mouse2\Mouse2 with Flash.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,322
+Mouse2,Mouse2.xlsx,Mouse2\Mouse2.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,323
+Mouse2,Mouse2.xlsx,Mouse2\Mouse2.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,324
+Mouse2,Mouse2.xlsx,Mouse2\Mouse2.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,325
+Mouse2,Mouse3.xlsx,Mouse2\Mouse3.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,mouse.csv,326
+Mouse2,Mouse3.xlsx,Mouse2\Mouse3.xlsx,Scroll,1,0,Mouse Mode,Normal,usb,,327
+Mouse2,Mouse3.xlsx,Mouse2\Mouse3.xlsx,Arrows,2,0,Mouse Mode,Normal,usb,,328
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Left Analog,0,0,Left joy,Normal,usb,mxvsatvu.csv,329
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,330
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mixed Analog,1,1,,Alternate,usb,,331
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Right Analog,2,0,Right joy,Normal,usb,,332
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Right Analog,2,1,,Alternate,usb,,333
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,334
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,D-Pad,3,1,,Alternate,usb,,335
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,336
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mouse,4,1,,Alternate,usb,,337
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,338
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Mouse Scroll,5,1,Pan Mode,Alternate,usb,,339
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Drive,6,0,Left joy,Normal,usb,,340
+MX vs ATV Unleashed - Steam,MX vs ATV Unleashed - Steam.xlsx,MX vs ATV Unleashed - Steam\MX vs ATV Unleashed - Steam.xlsx,Drive,6,1,,Alternate,usb,,341
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Left Analog,0,0,Left joy,Normal,usb,default.csv,342
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Left Analog,0,1,,Alternate,usb,default.csv,343
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,344
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mixed Analog,1,1,,Alternate,usb,,345
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Right Analog,2,0,Right joy,Normal,usb,,346
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Right Analog,2,1,,Alternate,usb,,347
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,348
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,D-Pad,3,1,,Alternate,usb,,349
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,350
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mouse,4,1,,Alternate,usb,,351
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,352
+No Side Tube Default,No Side Tube Default.xlsx,No Side Tube Default\No Side Tube Default.xlsx,Mouse Scroll,5,1,Pan Mode,Alternate,usb,,353
+Ori and the Blind Forest - Steam,Ori and the Blind Forest - Steam.xlsx,Ori and the Blind Forest - Steam\Ori and the Blind Forest - Steam.xlsx,Left Analog,0,0,Left joy,Normal,usb,oristeam.csv,354
+Ori and the Blind Forest - Steam,Ori and the Blind Forest - Steam.xlsx,Ori and the Blind Forest - Steam\Ori and the Blind Forest - Steam.xlsx,Ori,1,0,Ori Game mode,Normal,usb,,355
+Ori and the Blind Forest - Steam,Ori and the Blind Forest - Steam.xlsx,Ori and the Blind Forest - Steam\Ori and the Blind Forest - Steam.xlsx,Mouse,2,0,Mouse Mode,Normal,usb,,356
+Ori and the Blind Forest - Steam,Ori and the Blind Forest - Steam.xlsx,Ori and the Blind Forest - Steam\Ori and the Blind Forest - Steam.xlsx,Mouse Scroll,3,0,Mouse Mode,Normal,usb,,357
+,PoE2 WASD.xlsx,PoE2 WASD.xlsx,gameplay,0,0,Mouse Mode,Normal,usb,poe2.csv,358
+,PoE2 WASD.xlsx,PoE2 WASD.xlsx,menus,1,0,Mouse Mode,Normal,usb,,359
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Strafe,0,0,Left joy,Normal,usb,portal2.csv,360
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Strafe,0,1,Mixed joy,Alternate,usb,portal2.csv,361
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Steer,1,0,Left joy,Normal,usb,,362
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Steer,1,1,Mixed joy,Alternate,usb,,363
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Aim,2,0,Right joy,Normal,usb,,364
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Aim,2,1,Mixed joy,Alternate,usb,,365
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Mouse,3,0,Mouse Mode,Normal,usb,,366
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Mouse,3,1,Pan Mode,Alternate,usb,,367
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Mouse Scroll,4,0,Mouse Mode,Normal,usb,,368
+Portal2,Portal2 UltraStik.xlsx,Portal2\Portal2 UltraStik.xlsx,Mouse Scroll,4,1,Pan Mode,Alternate,usb,,369
+Portal2,Portal2.xlsx,Portal2\Portal2.xlsx,Strafe,0,0,Left joy,Normal,usb,portal2.csv,370
+Portal2,Portal2.xlsx,Portal2\Portal2.xlsx,Steer,1,0,Left joy,Normal,usb,,371
+Portal2,Portal2.xlsx,Portal2\Portal2.xlsx,Aim,2,0,Right joy,Normal,usb,,372
+Portal2,Portal2.xlsx,Portal2\Portal2.xlsx,Mouse,3,0,Mouse Mode,Normal,usb,,373
+Portal2,Portal2.xlsx,Portal2\Portal2.xlsx,Mouse Scroll,4,0,Mouse Mode,Normal,usb,,374
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Left Analog,0,0,Left joy,Normal,usb,prjcars.csv,375
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Left Analog,0,1,,Alternate,usb,prjcars.csv,376
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,377
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mixed Analog,1,1,,Alternate,usb,,378
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Right Analog,2,0,Right joy,Normal,usb,,379
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Right Analog,2,1,,Alternate,usb,,380
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,381
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,D-Pad,3,1,,Alternate,usb,,382
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Driving,4,0,Left joy,Normal,usb,,383
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mouse,5,0,Mouse Mode,Normal,usb,,384
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mouse,5,1,,Alternate,usb,,385
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mouse Scroll,6,0,Mouse Mode,Normal,usb,,386
+Project Cars PC,Project Cars PC.xlsx,Project Cars PC\Project Cars PC.xlsx,Mouse Scroll,6,1,Pan Mode,Alternate,usb,,387
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,Mixed Analog,1,0,Left joy,Normal,usb,,388
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,Right Analog,2,0,Right joy,Normal,usb,,389
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,390
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,Accel XY,4,0,Left joy,Normal,usb,,391
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,Accel Z Gyro Y,5,0,Left joy,Normal,usb,,392
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,Gyro XZ,6,0,Left joy,Normal,usb,,393
+PS4 Full Crossover Default,PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\PS4 Full Crossover Default.xlsx,TouchPad,7,0,Left joy,Normal,usb,,394
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,Mixed Analog,1,0,Left joy,Normal,usb,,395
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,Right Analog,2,0,Right joy,Normal,usb,,396
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,397
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,Accel XY,4,0,Left joy,Normal,usb,,398
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,Accel Z Gyro Y,5,0,Left joy,Normal,usb,,399
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,Gyro XZ,6,0,Left joy,Normal,usb,,400
+PS4 Full Crossover Default,T2 USB-A PS4 Full Crossover Default.xlsx,PS4 Full Crossover Default\T2 USB-A PS4 Full Crossover Default.xlsx,TouchPad,7,0,Left joy,Normal,usb,,401
+RockyNoHands PC,Deathloop KBM.xlsx,RockyNoHands PC\Deathloop KBM.xlsx,mode 1,0,0,,,usb,deathloop.csv,402
+RockyNoHands PC,Deathloop KBM.xlsx,RockyNoHands PC\Deathloop KBM.xlsx,mode 2,1,0,,,usb,,403
+RockyNoHands PC,Deathloop KBM.xlsx,RockyNoHands PC\Deathloop KBM.xlsx,mode 3,2,0,,,usb,,404
+RockyNoHands PC,Halo Infinite.xlsx,RockyNoHands PC\Halo Infinite.xlsx,running,0,0,Left joy,Normal,usb,Halo Infinite WASD.csv,405
+RockyNoHands PC,Halo Infinite.xlsx,RockyNoHands PC\Halo Infinite.xlsx,looking,1,0,Left joy,Normal,usb,,406
+RockyNoHands PC,Halo Infinite.xlsx,RockyNoHands PC\Halo Infinite.xlsx,drive,2,0,Left joy,Normal,usb,,407
+RockyNoHands PC,RockyNoHands PUBG PC.xlsx,RockyNoHands PC\RockyNoHands PUBG PC.xlsx,running,0,0,Inputs,,usb,pubg.csv,408
+RockyNoHands PC,RockyNoHands PUBG PC.xlsx,RockyNoHands PC\RockyNoHands PUBG PC.xlsx,looking,1,0,Inputs,,usb,,409
+RockyNoHands PC,RockyNoHands PUBG PC.xlsx,RockyNoHands PC\RockyNoHands PUBG PC.xlsx,drive,2,0,Inputs,,usb,,410
+Samsung TV,Samsung TV.xlsx,Samsung TV\Samsung TV.xlsx,TV,0,0,Left joy,Normal,none,samsung.csv,411
+Samsung TV,Samsung TV.xlsx,Samsung TV\Samsung TV.xlsx,Mouse,1,0,Mouse Mode,Normal,usb,,412
+Samsung TV,Samsung TV.xlsx,Samsung TV\Samsung TV.xlsx,Mouse Scroll,2,0,Mouse Mode,Normal,usb,,413
+Simple Mouse,Simple Mouse.xlsx,Simple Mouse\Simple Mouse.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,414
+Simple Mouse,Simple Mouse.xlsx,Simple Mouse\Simple Mouse.xlsx,Mouse,0,1,Pan Mode,Alternate,usb,default.csv,415
+Simple Mouse,Simple Mouse.xlsx,Simple Mouse\Simple Mouse.xlsx,Mouse Scroll,1,0,Mouse Mode,Normal,usb,,416
+Simple Mouse,Simple Mouse.xlsx,Simple Mouse\Simple Mouse.xlsx,Mouse Scroll,1,1,Pan Mode,Alternate,usb,,417
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,flash.csv,418
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Pattern,1,0,Pattern,Normal,usb,,419
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Scroll,2,0,Scroll,Normal,usb,default.csv,420
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Arrows,3,0,Arrows,Normal,usb,default.csv,421
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Letters,4,0,Letters,Normal,usb,,422
+Singleton,Singleton - Flash.xlsx,Singleton\Singleton - Flash.xlsx,Numbers,5,0,Numbers,Normal,usb,,423
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,424
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Pattern,1,0,Pattern,Normal,usb,,425
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Scroll,2,0,Scroll,Normal,usb,default.csv,426
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Arrows,3,0,Arrows,Normal,usb,default.csv,427
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Letters,4,0,Letters,Normal,usb,,428
+Singleton,Singleton - No Flash.xlsx,Singleton\Singleton - No Flash.xlsx,Numbers,5,0,Numbers,Normal,usb,,429
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,430
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Pattern,1,0,Pattern,Normal,usb,,431
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Scroll,2,0,Scroll,Normal,usb,default.csv,432
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Arrows,3,0,Arrows,Normal,usb,default.csv,433
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Letters,4,0,Letters,Normal,usb,,434
+Singleton,Singleton - Reversed Sip Puff.xlsx,Singleton\Singleton - Reversed Sip Puff.xlsx,Numbers,5,0,Numbers,Normal,usb,,435
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Mouse,0,0,Mouse Mode,Normal,bluetooth,default.csv,436
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Pattern,1,0,Pattern,Normal,bluetooth,,437
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Scroll,2,0,Scroll,Normal,bluetooth,default.csv,438
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Arrows,3,0,Arrows,Normal,bluetooth,default.csv,439
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Letters,4,0,Letters,Normal,bluetooth,,440
+Singleton,Singleton Bluetooth.xlsx,Singleton\Singleton Bluetooth.xlsx,Numbers,5,0,Numbers,Normal,usb,,441
+Singleton,Singleton WASD.xlsx,Singleton\Singleton WASD.xlsx,Play,0,0,Left joy,Normal,usb,wasd.csv,442
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,default.csv,443
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Pattern,1,0,Pattern,Normal,usb,,444
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Scroll,2,0,Scroll,Normal,usb,default.csv,445
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Arrows,3,0,Arrows,Normal,usb,default.csv,446
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Letters,4,0,Letters,Normal,usb,,447
+Singleton,Singleton.xlsx,Singleton\Singleton.xlsx,Numbers,5,0,Numbers,Normal,usb,,448
+Singleton plus Mouse - WASD,Singleton plus Mouse - WASD.xlsx,Singleton plus Mouse - WASD\Singleton plus Mouse - WASD.xlsx,Play,0,0,Left joy,Normal,usb,wasd.csv,449
+Singleton plus Mouse - WASD,Singleton plus Mouse - WASD.xlsx,Singleton plus Mouse - WASD\Singleton plus Mouse - WASD.xlsx,Commands,1,0,Left joy,Normal,usb,,450
+Singleton plus UltraStik - Portal 2,Singleton plus UltraStik - Portal 2.xlsx,Singleton plus UltraStik - Portal 2\Singleton plus UltraStik - Portal 2.xlsx,Play,0,0,Left joy,Normal,usb,portal2.csv,451
+Singleton plus UltraStik - Portal 2,Singleton plus UltraStik - Portal 2.xlsx,Singleton plus UltraStik - Portal 2\Singleton plus UltraStik - Portal 2.xlsx,Commands,1,0,Left joy,Normal,usb,,452
+Snippits,multiplex inputs.xlsx,Snippits\multiplex inputs.xlsx,mode1,0,0,Left joy,Normal,usb,default.csv,453
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,TV,0,0,Left joy,Normal,usb,sonystr1.csv,454
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,TV,0,1,,Alternate,usb,sonystr1.csv,455
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,Mouse,1,0,Mouse Mode,Normal,usb,,456
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,Mouse,1,1,,Alternate,usb,,457
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,Mouse Scroll,2,0,Mouse Mode,Normal,usb,,458
+Sony STRDN1040,Sony STRDN1040.xlsx,Sony STRDN1040\Sony STRDN1040.xlsx,Mouse Scroll,2,1,Pan Mode,Alternate,usb,,459
+StarCraft,StarCraft 2 RTSv3.xlsx,StarCraft\StarCraft 2 RTSv3.xlsx,Action,0,0,Normal Mode,Normal,usb,starcraft2v3.csv,460
+StarCraft,StarCraft 2 RTSv3.xlsx,StarCraft\StarCraft 2 RTSv3.xlsx,Control groups,1,0,Normal Mode,Normal,usb,starcraft2v3.csv,461
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Left,0,0,Left joy,Normal,usb,stmlego.csv,462
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Left,0,1,Mixed joy,Alternate,usb,stmlego.csv,463
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Mixed,1,0,Left joy,Normal,usb,,464
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Mixed,1,1,Mixed joy,Alternate,usb,,465
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Right,2,0,Right joy,Normal,usb,,466
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 Right,2,1,Mixed joy,Alternate,usb,,467
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 D-Pad,3,0,D-Pad,Normal,usb,,468
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,PS3 D-Pad,3,1,D-Pad,Alternate,usb,,469
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,470
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Mouse,4,1,Pan Mode,Alternate,usb,,471
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,472
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Mouse Scroll,5,1,Pan Mode,Alternate,usb,,473
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Arrows,6,0,Mouse Mode,Normal,usb,,474
+Steam Lego,Steam Lego.xlsx,Steam Lego\Steam Lego.xlsx,Arrows,6,1,Pan Mode,Alternate,usb,,475
+The Crew,The Crew.xlsx,The Crew\The Crew.xlsx,Left,0,0,Left joy,Normal,usb,thecrew.csv,476
+The Crew,The Crew.xlsx,The Crew\The Crew.xlsx,Mixed,1,0,Left joy,Normal,usb,,477
+The Crew,The Crew.xlsx,The Crew\The Crew.xlsx,Right,2,0,Right joy,Normal,usb,,478
+The Crew,The Crew.xlsx,The Crew\The Crew.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,479
+The Crew,The Crew.xlsx,The Crew\The Crew.xlsx,Drive,4,0,Left joy,Normal,usb,,480
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Left,0,0,Left joy,Normal,usb,tomb.csv,481
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Left,0,1,Mixed joy,Alternate,usb,tomb.csv,482
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Mixed,1,0,Left joy,Normal,usb,,483
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Mixed,1,1,Mixed joy,Alternate,usb,,484
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Right,2,0,Right joy,Normal,usb,,485
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Right,2,1,Mixed joy,Alternate,usb,,486
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Strafing,3,0,Left joy,Normal,usb,,487
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Strafing,3,1,Mixed joy,Alternate,usb,,488
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,D-Pad,4,0,D-Pad,Normal,usb,,489
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,D-Pad,4,1,D-Pad,Alternate,usb,,490
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Sprint,5,0,Left joy,Normal,usb,,491
+Tomb Raider,Matt Victor Tomb Raider.xlsx,Tomb Raider\Matt Victor Tomb Raider.xlsx,Sprint,5,1,Mixed joy,Alternate,usb,,492
+UltraStik Default,Ablenet Hitch 2.0 Example.xlsx,UltraStik Default\Ablenet Hitch 2.0 Example.xlsx,Left Analog,0,0,Left joy,Normal,usb,hitch.csv,493
+UltraStik Default,Ablenet Hitch 2.0 Example.xlsx,UltraStik Default\Ablenet Hitch 2.0 Example.xlsx,Mouse,1,0,Mouse Mode,Normal,usb,,494
+UltraStik Default,ATEC Example.xlsx,UltraStik Default\ATEC Example.xlsx,Left Analog,0,0,Left joy,Normal,usb,atech.csv,495
+UltraStik Default,ATEC Example.xlsx,UltraStik Default\ATEC Example.xlsx,Mouse,1,0,Mouse Mode,Normal,usb,,496
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Right Analog,0,0,Right joy,Normal,usb,ultra1.csv,497
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Right Analog,0,1,,Alternate,usb,ultra1.csv,498
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,D-Pad,1,0,D-Pad,Normal,usb,,499
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,D-Pad,1,1,,Alternate,usb,,500
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Mouse,2,0,Mouse Mode,Normal,usb,,501
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Mouse,2,1,,Alternate,usb,,502
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Mouse Scroll,3,0,Mouse Mode,Normal,usb,,503
+UltraStik Left,UltraStik Left.xlsx,UltraStik Left\UltraStik Left.xlsx,Mouse Scroll,3,1,Pan Mode,Alternate,usb,,504
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Right Analog,0,0,Right joy,Normal,usb,ultraxbox.csv,505
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Right Analog,0,1,,Alternate,usb,ultraxbox.csv,506
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,D-Pad,1,0,D-Pad,Normal,usb,,507
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,D-Pad,1,1,,Alternate,usb,,508
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Mouse,2,0,Mouse Mode,Normal,usb,,509
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Mouse,2,1,,Alternate,usb,,510
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Mouse Scroll,3,0,Mouse Mode,Normal,usb,,511
+UltraStik Left XBox 360 PC,UltraStik Left XBox 360 PC.xlsx,UltraStik Left XBox 360 PC\UltraStik Left XBox 360 PC.xlsx,Mouse Scroll,3,1,Pan Mode,Alternate,usb,,512
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,WASD,0,0,Right joy,Normal,usb,ultrawasd.csv,513
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,WASD,0,1,,Alternate,usb,ultrawasd.csv,514
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,Mouse,1,0,Mouse Mode,Normal,usb,,515
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,Mouse,1,1,,Alternate,usb,,516
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,Mouse Scroll,2,0,Mouse Mode,Normal,usb,,517
+UltraStik WASD,UltraStik WASD.xlsx,UltraStik WASD\UltraStik WASD.xlsx,Mouse Scroll,2,1,Pan Mode,Alternate,usb,,518
+USB A,USB A.xlsx,USB A\USB A.xlsx,Left Analog,0,0,Left joy,Normal,usb,usba.csv,519
+USB A,USB A.xlsx,USB A\USB A.xlsx,Left Analog,0,1,,Alternate,usb,usba.csv,520
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mixed Analog,1,0,Mixed Joystick,Normal,usb,,521
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mixed Analog,1,1,,Alternate,usb,,522
+USB A,USB A.xlsx,USB A\USB A.xlsx,Right Analog,2,0,Right joy,Normal,usb,,523
+USB A,USB A.xlsx,USB A\USB A.xlsx,Right Analog,2,1,,Alternate,usb,,524
+USB A,USB A.xlsx,USB A\USB A.xlsx,D-Pad,3,0,D-Pad,Normal,usb,,525
+USB A,USB A.xlsx,USB A\USB A.xlsx,D-Pad,3,1,,Alternate,usb,,526
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mouse,4,0,Mouse Mode,Normal,usb,,527
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mouse,4,1,,Alternate,usb,,528
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mouse Scroll,5,0,Mouse Mode,Normal,usb,,529
+USB A,USB A.xlsx,USB A\USB A.xlsx,Mouse Scroll,5,1,Pan Mode,Alternate,usb,,530
+Wizard101,Wizard101.xlsx,Wizard101\Wizard101.xlsx,Mouse,0,0,Mouse Mode,Normal,usb,wizard101.csv,531
+Wizard101,Wizard101.xlsx,Wizard101\Wizard101.xlsx,WASD,1,0,Mouse Mode,Normal,usb,wizard101.csv,532
+World of Tanks,World of Tanks.xlsx,World of Tanks\World of Tanks.xlsx,Main,0,0,Left joy,Normal,usb,wot.csv,533
+World of Tanks,World of Tanks.xlsx,World of Tanks\World of Tanks.xlsx,Chat,1,0,Left joy,Normal,usb,,534
+World of Tanks,World of Tanks.xlsx,World of Tanks\World of Tanks.xlsx,Consumables,2,0,Right joy,Normal,usb,,535
+XBox 360 for PC Configuration,XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,XBox 360 for PC Configuration\XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,Mouse,6,0,Mouse Mode,Normal,bluetooth,,536
+XBox 360 for PC Configuration,XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,XBox 360 for PC Configuration\XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,Scroll,7,0,Mouse Mode,Normal,bluetooth,,537
+XBox 360 for PC with Bluetooth Mouse,XBox 360 for PC with Bluetooth Mouse.xlsx,XBox 360 for PC with Bluetooth Mouse\XBox 360 for PC with Bluetooth Mouse.xlsx,Mouse,4,0,Mouse Mode,Normal,bluetooth,,538
+XBox 360 for PC with Bluetooth Mouse,XBox 360 for PC with Bluetooth Mouse.xlsx,XBox 360 for PC with Bluetooth Mouse\XBox 360 for PC with Bluetooth Mouse.xlsx,Scroll,5,0,Mouse Mode,Normal,bluetooth,,539

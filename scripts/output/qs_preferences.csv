@@ -1,0 +1,375 @@
+source_xlsx,sheet_name,preference,value,units,description
+Assassin_s Creed PC.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Assassin_s Creed PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Assassin_s Creed PC X360.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Assassin_s Creed PC X360.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Battlefield PS4.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Battlefield PS4.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Battlefield Xbox.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Battlefield Xbox.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Beloader Basic Configuration.xlsx,Preferences,titan_two,1,,Disable authentication
+Beloader Basic Configuration.xlsx,Preferences,enable_DS3_emulation,7,,DS4
+Beloader Fortnite.xlsx,Preferences,enable_DS3_emulation,7,,DS4
+BioShock1.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+BioShock1.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_deflection_minimum,9,percent,Defines center dead zone. Percent of physical movement
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_deflection_maximum,30,percent,Defines physical deflection scaled to 100% Signal
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_dead_zone_shape,1,,"0=Square, 1=Circle"
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_warning,400,percent,Joystick position beyond full scale that will flash the leds
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_alarm,500,percent,Joysitck position beyond full scale that will buzz the speaker
+Bluetooth Android Default Preferences.xlsx,Preferences,anti_dead_zone,0,percent,Counteracts the dead zone built into the Game Console's joystick software
+Bluetooth Android Default Preferences.xlsx,Preferences,deflection_multiplier_up,140,percent,Adjusts joystick deflection value in the UP direction
+Bluetooth Android Default Preferences.xlsx,Preferences,deflection_multiplier_down,130,percent,Adjusts joystick deflection value in the DOWN direction
+Bluetooth Android Default Preferences.xlsx,Preferences,deflection_multiplier_left,100,percent,Adjusts joystick deflection value in the LEFT direction
+Bluetooth Android Default Preferences.xlsx,Preferences,deflection_multiplier_right,100,percent,Adjusts joystick deflection value in the RIGHT direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_1_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_1_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_1_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_1_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_2_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_2_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_2_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,usb_2_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_D_Pad_inner,25,percent,Inner Zone Ring as percent of scaled Signal
+Bluetooth Android Default Preferences.xlsx,Preferences,joystick_D_Pad_outer,60,percent,Outer Zone Ring as percent of scaled Signal
+Bluetooth Android Default Preferences.xlsx,Preferences,sip_puff_threshold_soft,8,percent,Percent of full scale Pressure to detect Soft Sip/Puff
+Bluetooth Android Default Preferences.xlsx,Preferences,sip_puff_threshold,40,percent,Percent of full scale Pressure to detect Hard Sip/Puff
+Bluetooth Android Default Preferences.xlsx,Preferences,sip_puff_maximum,70,percent,Percent of full scale Pressure to scale into 100% button push pressure
+Bluetooth Android Default Preferences.xlsx,Preferences,sip_puff_delay_soft,1000,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+Bluetooth Android Default Preferences.xlsx,Preferences,lip_position_minimum,8,percent,Percent of full scale of lip movement to initiate output
+Bluetooth Android Default Preferences.xlsx,Preferences,lip_position_maximum,35,percent,Percent of full scale of lip movement for 100% output
+Bluetooth Android Default Preferences.xlsx,Preferences,mouse_speed,100,percent,Speed control for mouse cursor movement
+Bluetooth Android Default Preferences.xlsx,Preferences,mouse_response_curve,1,,"0=linear, 1=mixed curve, 2=parabolic"
+Bluetooth Android Default Preferences.xlsx,Preferences,volume,40,percent,Initial Speaker Volume
+Bluetooth Android Default Preferences.xlsx,Preferences,brightness,75,percent,Initial Status LED brightness
+Bluetooth Android Default Preferences.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Bluetooth Android Default Preferences.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Bluetooth Android Default Preferences.xlsx,Preferences,bluetooth_device_mode,combo,,Bluetooth HID Device Selection
+Bluetooth Android Default Preferences.xlsx,Preferences,bluetooth_authentication_mode,2,,Bluetooth Authentication Selection
+Bluetooth Android Default Preferences.xlsx,Preferences,bluetooth_connection_mode,pair,,Bluetooth pairing control
+Bluetooth Android Default Preferences.xlsx,Preferences,bluetooth_throttle,15,ms,Bluetooth mouse report interval in ms.
+Bluetooth Android Default Preferences.xlsx,Preferences,enable_swap_inputs,0,,Allow user to swap inputs with Lip sensor
+Bluetooth Android Default Preferences.xlsx,Preferences,enable_select_files,1,,Allow user to select a configuration file
+Bluetooth Android Default Preferences.xlsx,Preferences,enable_usb_a_device,0,DO NOT CHANGE,"1=USB-A port active, 0=USB-B port active"
+Bluetooth Android Default Preferences.xlsx,Preferences,enable_DS3_emulation,0,DO NOT CHANGE,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation"
+Bluetooth Android Default Preferences.xlsx,Preferences,enable_rumble,0,,"1=Buzz when Rumble activated, 0=silent. Requires DS3=1"
+Brook Super Converter firmware updater.xlsx,Preferences,enable_DS3_emulation,1,,
+Call of Duty UltraStik.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Call of Duty UltraStik.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Call of Duty.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Call of Duty.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Matt Victor COD Black Ops 3.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Matt Victor COD Black Ops 3.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Matt Victor CODMW.xlsx,Preferences,sip_puff_delay_soft,250,ms,
+Matt Victor CODMW.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Matt Victor CODMW.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Call of Duty Advanced Warfare.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Call of Duty Advanced Warfare.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Call of Duty Advanced Warfare XBox One.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Call of Duty Advanced Warfare XBox One.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Screen Saver.xlsx,Preferences,brightness,0,percent,LED brightness
+Screen Saver.xlsx,Preferences,enable_DS3_emulation,9,Bad value,PC will see this as an unrecognized device and not talk to it.
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_deflection_minimum,2,percent,Defines center dead zone. Percent of physical movement
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_deflection_maximum,20,percent,Defines physical deflection scaled to 100% Signal
+Default Preferences - FPS PS4.xlsx,Preferences,deflection_multiplier_up,100,percent,Adjusts joystick deflection value in the UP direction
+Default Preferences - FPS PS4.xlsx,Preferences,deflection_multiplier_down,100,percent,Adjusts joystick deflection value in the DOWN direction
+Default Preferences - FPS PS4.xlsx,Preferences,deflection_multiplier_left,100,percent,Adjusts joystick deflection value in the LEFT direction
+Default Preferences - FPS PS4.xlsx,Preferences,deflection_multiplier_right,100,percent,Adjusts joystick deflection value in the RIGHT direction
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_dead_zone_shape,1,,"0=Square, 1=Circle"
+Default Preferences - FPS PS4.xlsx,Preferences,anti_dead_zone,0,percent,Counteracts the dead zone built into the Game Console's joystick software
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_warning,500,percent,Joystick position beyond full scale that will flash the leds
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_alarm,600,percent,Joystick position beyond full scale that will buzz the speaker
+Default Preferences - FPS PS4.xlsx,Preferences,usb_1_dead_zone,20,percent,Controls how far the external joystick must be moved to produce an output
+Default Preferences - FPS PS4.xlsx,Preferences,usb_1_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_1_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_1_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_1_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_2_dead_zone,20,percent,Controls how far the external joystick must be moved to procduce an output
+Default Preferences - FPS PS4.xlsx,Preferences,usb_2_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_2_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_2_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,usb_2_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_D_Pad_inner,25,percent,Inner Zone Ring as percent of scaled Signal
+Default Preferences - FPS PS4.xlsx,Preferences,joystick_D_Pad_outer,60,percent,Outer Zone Ring as percent of scaled Signal
+Default Preferences - FPS PS4.xlsx,Preferences,sip_puff_threshold_soft,8,percent,Percent of full scale Pressure to detect Soft Sip/Puff
+Default Preferences - FPS PS4.xlsx,Preferences,sip_puff_threshold,40,percent,Percent of full scale Pressure to detect Hard Sip/Puff
+Default Preferences - FPS PS4.xlsx,Preferences,sip_puff_maximum,70,percent,Percent of full scale Pressure to scale into 100% button push pressure
+Default Preferences - FPS PS4.xlsx,Preferences,sip_puff_delay_hard,1000,ms,Time delay before detecting Hard Sip/Puff on the side tube
+Default Preferences - FPS PS4.xlsx,Preferences,sip_puff_delay_soft,1000,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+Default Preferences - FPS PS4.xlsx,Preferences,lip_position_minimum,8,percent,Percent of full scale of lip movement to initiate output
+Default Preferences - FPS PS4.xlsx,Preferences,lip_position_maximum,35,percent,Percent of full scale of lip movement for 100% output
+Default Preferences - FPS PS4.xlsx,Preferences,mouse_speed,150,percent,Speed control for mouse cursor movement
+Default Preferences - FPS PS4.xlsx,Preferences,mouse_response_curve,2,,"0=linear, 1=mixed curve, 2=parabolic"
+Default Preferences - FPS PS4.xlsx,Preferences,volume,40,percent,Initial Speaker Volume
+Default Preferences - FPS PS4.xlsx,Preferences,brightness,75,percent,Initial Status LED brightness
+Default Preferences - FPS PS4.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Default Preferences - FPS PS4.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Default Preferences - FPS PS4.xlsx,Preferences,bluetooth_device_mode,none,,Bluetooth HID Device Selection
+Default Preferences - FPS PS4.xlsx,Preferences,bluetooth_authentication_mode,2,,Bluetooth Authentication Selection
+Default Preferences - FPS PS4.xlsx,Preferences,bluetooth_connection_mode,pair,,Bluetooth pairing control
+Default Preferences - FPS PS4.xlsx,Preferences,bluetooth_throttle,15,ms,Bluetooth mouse report interval in ms.
+Default Preferences - FPS PS4.xlsx,Preferences,enable_swap_inputs,0,,Allow user to swap inputs with Lip sensor
+Default Preferences - FPS PS4.xlsx,Preferences,enable_left_side_tube,0,,Swaps center mouthpiece and mode tube sensors when using mode tube on the left side.
+Default Preferences - FPS PS4.xlsx,Preferences,enable_select_files,1,,Allow user to select a configuration file
+Default Preferences - FPS PS4.xlsx,Preferences,enable_usb_a_host,1,,Enable Host mode support for devices plugged into USB-A
+Default Preferences - FPS PS4.xlsx,Preferences,enable_usb_a_device,0,DO NOT CHANGE,"1=USB-A port active in Device mode, 0=USB-B port active"
+Default Preferences - FPS PS4.xlsx,Preferences,enable_DS3_emulation,4,DO NOT CHANGE,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=Nintendo Switch"
+Default Preferences - FPS PS4.xlsx,Preferences,enable_rumble,0,,"1=Buzz when Rumble activated, 0=silent. Requires DS3=1"
+Default Preferences - FPS PS4.xlsx,Preferences,titan_two,0,,"0=Not using Titan 2, 1=Using Titan 2 with PS4/PS5"
+Default Preferences - FPS.xlsx,Preferences,joystick_deflection_minimum,2,percent,Defines center dead zone. Percent of physical movement
+Default Preferences - FPS.xlsx,Preferences,joystick_deflection_maximum,20,percent,Defines physical deflection scaled to 100% Signal
+Default Preferences - FPS.xlsx,Preferences,deflection_multiplier_up,100,percent,Adjusts joystick deflection value in the UP direction
+Default Preferences - FPS.xlsx,Preferences,deflection_multiplier_down,100,percent,Adjusts joystick deflection value in the DOWN direction
+Default Preferences - FPS.xlsx,Preferences,deflection_multiplier_left,100,percent,Adjusts joystick deflection value in the LEFT direction
+Default Preferences - FPS.xlsx,Preferences,deflection_multiplier_right,100,percent,Adjusts joystick deflection value in the RIGHT direction
+Default Preferences - FPS.xlsx,Preferences,joystick_dead_zone_shape,1,,"0=Square, 1=Circle"
+Default Preferences - FPS.xlsx,Preferences,anti_dead_zone,0,percent,Counteracts the dead zone built into the Game Console's joystick software
+Default Preferences - FPS.xlsx,Preferences,joystick_warning,500,percent,Joystick position beyond full scale that will flash the leds
+Default Preferences - FPS.xlsx,Preferences,joystick_alarm,600,percent,Joystick position beyond full scale that will buzz the speaker
+Default Preferences - FPS.xlsx,Preferences,usb_1_dead_zone,20,percent,Controls how far the external joystick must be moved to produce an output
+Default Preferences - FPS.xlsx,Preferences,usb_1_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_1_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_1_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_1_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_2_dead_zone,20,percent,Controls how far the external joystick must be moved to procduce an output
+Default Preferences - FPS.xlsx,Preferences,usb_2_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_2_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_2_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,usb_2_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences - FPS.xlsx,Preferences,joystick_D_Pad_inner,25,percent,Inner Zone Ring as percent of scaled Signal
+Default Preferences - FPS.xlsx,Preferences,joystick_D_Pad_outer,60,percent,Outer Zone Ring as percent of scaled Signal
+Default Preferences - FPS.xlsx,Preferences,sip_puff_threshold_soft,8,percent,Percent of full scale Pressure to detect Soft Sip/Puff
+Default Preferences - FPS.xlsx,Preferences,sip_puff_threshold,40,percent,Percent of full scale Pressure to detect Hard Sip/Puff
+Default Preferences - FPS.xlsx,Preferences,sip_puff_maximum,70,percent,Percent of full scale Pressure to scale into 100% button push pressure
+Default Preferences - FPS.xlsx,Preferences,sip_puff_delay_hard,1000,ms,Time delay before detecting Hard Sip/Puff on the side tube
+Default Preferences - FPS.xlsx,Preferences,sip_puff_delay_soft,1000,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+Default Preferences - FPS.xlsx,Preferences,lip_position_minimum,8,percent,Percent of full scale of lip movement to initiate output
+Default Preferences - FPS.xlsx,Preferences,lip_position_maximum,35,percent,Percent of full scale of lip movement for 100% output
+Default Preferences - FPS.xlsx,Preferences,mouse_speed,150,percent,Speed control for mouse cursor movement
+Default Preferences - FPS.xlsx,Preferences,mouse_response_curve,2,,"0=linear, 1=mixed curve, 2=parabolic"
+Default Preferences - FPS.xlsx,Preferences,volume,40,percent,Initial Speaker Volume
+Default Preferences - FPS.xlsx,Preferences,brightness,75,percent,Initial Status LED brightness
+Default Preferences - FPS.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Default Preferences - FPS.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Default Preferences - FPS.xlsx,Preferences,bluetooth_device_mode,none,,Bluetooth HID Device Selection
+Default Preferences - FPS.xlsx,Preferences,bluetooth_authentication_mode,2,,Bluetooth Authentication Selection
+Default Preferences - FPS.xlsx,Preferences,bluetooth_connection_mode,pair,,Bluetooth pairing control
+Default Preferences - FPS.xlsx,Preferences,bluetooth_throttle,15,ms,Bluetooth mouse report interval in ms.
+Default Preferences - FPS.xlsx,Preferences,enable_swap_inputs,0,,Allow user to swap inputs with Lip sensor
+Default Preferences - FPS.xlsx,Preferences,enable_left_side_tube,0,,Swaps center mouthpiece and mode tube sensors when using mode tube on the left side.
+Default Preferences - FPS.xlsx,Preferences,enable_select_files,1,,Allow user to select a configuration file
+Default Preferences - FPS.xlsx,Preferences,enable_usb_a_host,1,,Enable Host mode support for devices plugged into USB-A
+Default Preferences - FPS.xlsx,Preferences,enable_usb_a_device,0,DO NOT CHANGE,"1=USB-A port active in Device mode, 0=USB-B port active"
+Default Preferences - FPS.xlsx,Preferences,enable_DS3_emulation,0,DO NOT CHANGE,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=Nintendo Switch"
+Default Preferences - FPS.xlsx,Preferences,enable_rumble,0,,"1=Buzz when Rumble activated, 0=silent. Requires DS3=1"
+Default Preferences - FPS.xlsx,Preferences,titan_two,0,,"0=Not using Titan 2, 1=Using Titan 2 with PS4/PS5"
+Default Preferences.xlsx,Preferences,joystick_deflection_minimum,9,percent,Defines center dead zone. Percent of physical movement
+Default Preferences.xlsx,Preferences,joystick_deflection_maximum,30,percent,Defines physical deflection scaled to 100% Signal
+Default Preferences.xlsx,Preferences,deflection_multiplier_up,140,percent,Adjusts joystick deflection value in the UP direction
+Default Preferences.xlsx,Preferences,deflection_multiplier_down,130,percent,Adjusts joystick deflection value in the DOWN direction
+Default Preferences.xlsx,Preferences,deflection_multiplier_left,100,percent,Adjusts joystick deflection value in the LEFT direction
+Default Preferences.xlsx,Preferences,deflection_multiplier_right,100,percent,Adjusts joystick deflection value in the RIGHT direction
+Default Preferences.xlsx,Preferences,joystick_dead_zone_shape,1,,"0=Square, 1=Circle"
+Default Preferences.xlsx,Preferences,anti_dead_zone,0,percent,Counteracts the dead zone built into the Game Console's joystick software
+Default Preferences.xlsx,Preferences,joystick_warning,400,percent,Joystick position beyond full scale that will flash the leds
+Default Preferences.xlsx,Preferences,joystick_alarm,500,percent,Joystick position beyond full scale that will buzz the speaker
+Default Preferences.xlsx,Preferences,usb_1_dead_zone,20,percent,Controls how far the external joystick must be moved to produce an output
+Default Preferences.xlsx,Preferences,usb_1_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_1_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_1_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_1_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_2_dead_zone,20,percent,Controls how far the external joystick must be moved to procduce an output
+Default Preferences.xlsx,Preferences,usb_2_multiplier_up,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_2_multiplier_down,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_2_multiplier_left,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,usb_2_multiplier_right,100,percent,Adjusts a USB input sensitivity in one direction
+Default Preferences.xlsx,Preferences,joystick_D_Pad_inner,25,percent,Inner Zone Ring as percent of scaled Signal
+Default Preferences.xlsx,Preferences,joystick_D_Pad_outer,60,percent,Outer Zone Ring as percent of scaled Signal
+Default Preferences.xlsx,Preferences,sip_puff_threshold_soft,8,percent,Percent of full scale Pressure to detect Soft Sip/Puff
+Default Preferences.xlsx,Preferences,sip_puff_threshold,40,percent,Percent of full scale Pressure to detect Hard Sip/Puff
+Default Preferences.xlsx,Preferences,sip_puff_maximum,70,percent,Percent of full scale Pressure to scale into 100% button push pressure
+Default Preferences.xlsx,Preferences,sip_puff_delay_hard,1000,ms,Time delay before detecting Hard Sip/Puff on the side tube
+Default Preferences.xlsx,Preferences,sip_puff_delay_soft,1000,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+Default Preferences.xlsx,Preferences,lip_position_minimum,8,percent,Percent of full scale of lip movement to initiate output
+Default Preferences.xlsx,Preferences,lip_position_maximum,35,percent,Percent of full scale of lip movement for 100% output
+Default Preferences.xlsx,Preferences,mouse_speed,150,percent,Speed control for mouse cursor movement
+Default Preferences.xlsx,Preferences,mouse_response_curve,2,,"0=linear, 1=mixed curve, 2=parabolic"
+Default Preferences.xlsx,Preferences,volume,40,percent,Initial Speaker Volume
+Default Preferences.xlsx,Preferences,brightness,75,percent,Initial Status LED brightness
+Default Preferences.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Default Preferences.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Default Preferences.xlsx,Preferences,bluetooth_device_mode,none,,Bluetooth HID Device Selection
+Default Preferences.xlsx,Preferences,bluetooth_authentication_mode,2,,Bluetooth Authentication Selection
+Default Preferences.xlsx,Preferences,bluetooth_connection_mode,pair,,Bluetooth pairing control
+Default Preferences.xlsx,Preferences,bluetooth_throttle,15,ms,Bluetooth mouse report interval in ms.
+Default Preferences.xlsx,Preferences,enable_swap_inputs,0,,Allow user to swap inputs with Lip sensor
+Default Preferences.xlsx,Preferences,enable_left_side_tube,0,,Swaps center mouthpiece and mode tube sensors when using mode tube on the left side.
+Default Preferences.xlsx,Preferences,enable_select_files,1,,Allow user to select a configuration file
+Default Preferences.xlsx,Preferences,enable_usb_a_host,1,,Enable Host mode support for devices plugged into USB-A
+Default Preferences.xlsx,Preferences,enable_usb_a_device,0,DO NOT CHANGE,"1=USB-A port active in Device mode, 0=USB-B port active"
+Default Preferences.xlsx,Preferences,enable_DS3_emulation,0,DO NOT CHANGE,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE, 3=XB360 emulation, 4=PS4, 5=Nintendo Switch, 6=No flash, 7=DS4"
+Default Preferences.xlsx,Preferences,enable_rumble,0,,"1=Buzz when Rumble activated, 0=silent. Requires DS3=1"
+Destiny UltraStik.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Destiny UltraStik.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Destiny.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Destiny.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Devil May Cry.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Devil May Cry.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Digital Inputs Test using USB socket.xlsx,Preferences,enable_usb_a_host,0,,
+Matt Victor DOOM.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Matt Victor DOOM.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Dual Shock 3 UltraStik.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Dual Shock 3 UltraStik.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Dual Shock 3 UltraStik.xlsx,Preferences,enable_DS3_emulation,1,,Switch to pure Dual Shock 3 emulation
+Dual Shock 3.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Dual Shock 3.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Dual Shock 3.xlsx,Preferences,enable_DS3_emulation,1,,Switch to pure Dual Shock 3 emulation
+PeriPad 504 Tester.xlsx,Preferences,usb_1_dead_zone,0,percent,Controls how far the external joystick must be moved to produce an output
+PeriPad 504 Tester.xlsx,Preferences,usb_1_multiplier_up,1000,percent,Adjusts a USB input sensitivity in one direction
+PeriPad 504 Tester.xlsx,Preferences,usb_1_multiplier_down,1000,percent,Adjusts a USB input sensitivity in one direction
+PeriPad 504 Tester.xlsx,Preferences,usb_1_multiplier_left,1000,percent,Adjusts a USB input sensitivity in one direction
+PeriPad 504 Tester.xlsx,Preferences,usb_1_multiplier_right,1000,percent,Adjusts a USB input sensitivity in one direction
+PeriPad 504 Tester.xlsx,Preferences,mouse_speed,500,percent,Speed control for mouse cursor movement
+Example PC Weapon Selectors.xlsx,Preferences,joystick_D_Pad_inner,25,percent,Inner Zone Ring as percent of scaled Signal
+Example PC Weapon Selectors.xlsx,Preferences,joystick_D_Pad_outer,60,percent,Outer Zone Ring as percent of scaled Signal
+Far Cry 4.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Far Cry 4.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+RockyNoHands Fortnite XBox 360 for PC.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+RockyNoHands Fortnite XBox 360 for PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+RockyNoHands Fortnite XBox 360 for PC.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+FPV Freerider.xlsx,Preferences,joystick_dead_zone_shape,1,,"0=Square, 1=Circle"
+FPV Freerider.xlsx,Preferences,joystick_warning,400,percent,Joystick position beyond full scale that will flash the leds
+FPV Freerider.xlsx,Preferences,joystick_alarm,500,percent,Joysitck position beyond full scale that will buzz the speaker
+FPV Freerider.xlsx,Preferences,sip_puff_threshold_soft,8,percent,Percent of full scale Pressure to detect Soft Sip/Puff
+FPV Freerider.xlsx,Preferences,sip_puff_threshold,9,percent,Percent of full scale Pressure to detect Hard Sip/Puff
+FPV Freerider.xlsx,Preferences,sip_puff_maximum,100,percent,Percent of full scale Pressure to scale into 100% button push pressure
+FPV Freerider.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+FPV Freerider.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+FPV Freerider.xlsx,Preferences,lip_position_minimum,3,percent,Percent of full scale of lip movement to initiate output
+FPV Freerider.xlsx,Preferences,lip_position_maximum,50,percent,Percent of full scale of lip movement for 100% output
+Ghosts.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Ghosts.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Gran Turismo Sport.xlsx,Preferences,joystick_dead_zone_shape,0,,"0=Square, 1=Circle"
+Grand Theft Auto.xlsx,Preferences,joystick_deflection_maximum,35,percent,Defines physical deflection scaled to 100% Signal
+Grand Theft Auto.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Grand Theft Auto.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Grand Theft Auto PS4-XBox One.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Grand Theft Auto PS4-XBox One.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+HalfLife.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+HalfLife.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+HalfLife.xlsx,Preferences,joystick_dead_zone_shape,0,,
+Journey UltraStik.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Journey UltraStik.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Journey UltraStik.xlsx,Preferences,joystick_dead_zone_shape,0,,
+Journey.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Journey.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Journey.xlsx,Preferences,joystick_dead_zone_shape,0,,
+Little Big Planet.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Little Big Planet.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Mac.xlsx,Preferences,enable_DS3_emulation,0,,Force default USB config even if prefs set for PS4
+Madden.xlsx,Preference,sip_puff_delay_soft,250,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+MLB13.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+MLB13.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Mouse2 no Flash - USB A.xlsx,Preferences,enable_DS3_emulation,6,on/off,Turn off flash drive
+Mouse2 no Flash - USB A.xlsx,Preferences,enable_usb_a_device,1,,Use USB-A in device mode.
+Mouse2 no Flash.xlsx,Preferences,enable_DS3_emulation,6,on/off,Turn off flash drive
+Mouse2 USB A.xlsx,Preferences,enable_usb_a_device,1,on/off,Use USB A port
+Mouse2 with Flash.xlsx,Preferences,enable_DS3_emulation,0,on/off,Turn on flash drive
+MX vs ATV Supercross Encore - Steam.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+MX vs ATV Supercross Encore - Steam.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+MX vs ATV Supercross Encore - Steam.xlsx,Preferences,enable_DS3_emulation,2,,X360CE mode
+MX vs ATV Unleashed - Steam.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+MX vs ATV Unleashed - Steam.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+MX vs ATV Unleashed - Steam.xlsx,Preferences,enable_DS3_emulation,2,,
+NBA2k15 PC.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+NBA2k15 PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Nintendo Switch Motion Controls.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay
+Nintendo Switch Motion Controls.xlsx,Preferences,enable_DS3_emulation,5,Nintendo Switch,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=NS"
+Nintendo Switch UltraStik.xlsx,Preferences,digital_out_4,1,on/off,Initial output state for relay 4
+Nintendo Switch UltraStik.xlsx,Preferences,enable_DS3_emulation,5,Nintendo Switch,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=NS"
+Nintendo Switch.xlsx,Preferences,digital_out_4,1,on/off,Initial output state for relay 4
+Nintendo Switch.xlsx,Preferences,enable_DS3_emulation,5,Nintendo Switch,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=NS"
+PoE2 WASD.xlsx,Preferences,sip_puff_delay_soft,250,ms,
+Portal2 for XBox USB-A.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Portal2 for XBox USB-A.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Portal2 for XBox USB-A.xlsx,Preferences,enable_usb_a_device,1,,"1=USB-A port active, 0=USB-B port active"
+Portal2 for XBox.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Portal2 for XBox.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Portal2 UltraStik.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Portal2 UltraStik.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Portal2.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Portal2.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+DS4 for PC.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+DS4 for PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+DS4 for PC.xlsx,Preferences,enable_DS3_emulation,7,,Force Dual Shock 4 emulation
+DS4 for PC.xlsx,Preferences,titan_two,1,,Disable authentication
+T2 USB-A PS4 Full Crossover Default.xlsx,Preferences,enable_usb_a_device,1,,Communicate via USB-A port.
+PS4 with TouchPad for Mac.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+PS4 with TouchPad for Mac.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+PS4 with TouchPad for Mac.xlsx,Preferences,enable_DS3_emulation,4,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+PS4 with TouchPad.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+PS4 with TouchPad.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Rocket League X360CE UltraStik.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Rocket League X360CE UltraStik.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Rocket League X360CE UltraStik.xlsx,Preferences,enable_DS3_emulation,2,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode"
+Rocket League X360CE.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Rocket League X360CE.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Rocket League X360CE.xlsx,Preferences,enable_DS3_emulation,2,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode"
+Shadow of Mordor PC.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Shadow of Mordor PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Shadow of Mordor PC.xlsx,Preferences,sip_puff_delay_soft,300,ms,
+Shadow of Mordor PC.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+Singleton - Flash.xlsx,Preferences,joystick_dead_zone_shape,1,,
+Singleton - Flash.xlsx,Preferences,mouse_response_curve,2,,
+Singleton - Flash.xlsx,Preferences,enable_DS3_emulation,0,flash access,
+Singleton - No Flash.xlsx,Preferences,joystick_dead_zone_shape,1,,
+Singleton - No Flash.xlsx,Preferences,mouse_response_curve,2,,
+Singleton - No Flash.xlsx,Preferences,enable_DS3_emulation,6,no flash,
+Singleton - Reversed Sip Puff.xlsx,Preferences,joystick_dead_zone_shape,1,,
+Singleton - Reversed Sip Puff.xlsx,Preferences,mouse_response_curve,2,,
+Singleton Bluetooth.xlsx,Preferences,joystick_dead_zone_shape,1,,
+Singleton Bluetooth.xlsx,Preferences,mouse_response_curve,2,,
+Singleton.xlsx,Preferences,joystick_dead_zone_shape,1,,
+Singleton.xlsx,Preferences,mouse_response_curve,2,,
+Singleton.xlsx,Preferences,enable_DS3_emulation,0,flash,
+Singleton plus Mouse - WASD.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+Singleton plus Mouse - WASD.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+Singleton plus UltraStik - Portal 2.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Singleton plus UltraStik - Portal 2.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Star Wars Battlefront PC.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Star Wars Battlefront PC.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Star Wars Battlefront PC.xlsx,Preferences,enable_DS3_emulation,3,,XBox 360 emulation
+StarCraft 2 RTSv3.xlsx,Preferences,sip_puff_delay_soft,150,ms,Time delay before detecting Soft Sip/Puff or Inner Joystick Zone
+Steam Lego.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+Steam Lego.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+Super Mario Odyssey  Nintendo Switch.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay
+Super Mario Odyssey  Nintendo Switch.xlsx,Preferences,enable_DS3_emulation,5,Nintendo Switch,"0=Normal PS3 mode, 1=DS3 emulation, 2=X360CE mode, 3=XB360 emulation, 4=PS4, 5=NS"
+Zelda Breath of the Wild.xlsx,Preferences,sip_puff_delay_soft,150,ms,
+Zelda Breath of the Wild.xlsx,Preferences,enable_DS3_emulation,5,,"0=Normal, 1=DS 3, 2=X360CE, 3=XBox 360, 4=DS 4, 5=Switch"
+The Last of Us PS3.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+The Last of Us PS3.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+The Last of Us PS3.xlsx,Preferences,enable_DS3_emulation,1,on/off,Switch to pure Dual Shock 3 emulation
+UltraStik Left XBox 360 PC.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+UltraStik Left XBox 360 PC.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+UltraStik Left XBox 360 PC.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+UltraStik X360CE Default.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+UltraStik X360CE Default.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+UltraStik X360CE Default.xlsx,Preferences,enable_DS3_emulation,2,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode"
+USB A.xlsx,Preferences,enable_usb_a_device,1,,"1=USB-A port active, 0=USB-B port active"
+World of Tanks.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+World of Tanks.xlsx,Preferences,digital_out_2,0,on/off,Initial output state for relay 2
+X360CE Configuration.xlsx,Preferences,digital_out_1,1,on/off,Initial output state for relay 1
+X360CE Configuration.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+X360CE Configuration.xlsx,Preferences,enable_DS3_emulation,2,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode"
+XBox 360 for PC Configuration.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+XBox 360 for PC Configuration.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+XBox 360 for PC Configuration.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+XBox 360 for PC UltraStik with Bluetooth mouse.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+XBox 360 for PC UltraStik.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+XBox 360 for PC UltraStik.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+XBox 360 for PC UltraStik.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
+XBox 360 for PC with Bluetooth Mouse.xlsx,Preferences,digital_out_1,0,on/off,Initial output state for relay 1
+XBox 360 for PC with Bluetooth Mouse.xlsx,Preferences,digital_out_2,1,on/off,Initial output state for relay 2
+XBox 360 for PC with Bluetooth Mouse.xlsx,Preferences,enable_DS3_emulation,3,,"0=Normal composite device mode, 1=Dual Shock 3 emulation, 2=X360CE mode, 3=XBox 360 emulation"
