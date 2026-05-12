@@ -487,8 +487,8 @@ class TouchMouseFragment : Fragment() {
                 override fun onScale(d: ScaleGestureDetector): Boolean {
                     val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
                     val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.3f)
-                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.3f)
+                    view.scaleX = (view.scaleX * fx).coerceIn(0.3f, 3.0f)
+                    view.scaleY = (view.scaleY * fy).coerceIn(0.3f, 3.0f)
                     lastSpanX = d.currentSpanX.coerceAtLeast(1f)
                     lastSpanY = d.currentSpanY.coerceAtLeast(1f)
                     return true
@@ -496,7 +496,6 @@ class TouchMouseFragment : Fragment() {
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
-        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -505,22 +504,36 @@ class TouchMouseFragment : Fragment() {
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
-                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val gridPx = 8f * resources.displayMetrics.density
-                    rawTx += event.rawX - lastRawX
-                    rawTy += event.rawY - lastRawY
-                    view.translationX = round(rawTx / gridPx) * gridPx
-                    view.translationY = round(rawTy / gridPx) * gridPx
-                    rawTx = view.translationX; rawTy = view.translationY
+                    view.translationX += event.rawX - lastRawX
+                    view.translationY += event.rawY - lastRawY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (!wasDragged) showLayoutSheetForMacro(view, index)
+                    val gridPx = 8f * resources.displayMetrics.density
+                    view.translationX = round(view.translationX / gridPx) * gridPx
+                    view.translationY = round(view.translationY / gridPx) * gridPx
+                    if (!wasDragged) {
+                        showLayoutSheetForMacro(view, index)
+                    } else {
+                        val natural = macroNaturalPositions.getOrNull(index) ?: return@OnTouchListener true
+                        val density = resources.displayMetrics.density
+                        val config = viewModel.touchMouseConfig.value
+                        val macros = config.macroButtons.toMutableList()
+                        if (index < macros.size) {
+                            macros[index] = macros[index].copy(
+                                layoutOffsetX = (view.translationX - natural.x) / density,
+                                layoutOffsetY = (view.translationY - natural.y) / density,
+                                layoutScaleX  = view.scaleX,
+                                layoutScaleY  = view.scaleY,
+                            )
+                            viewModel.updateTouchMouseConfig(config.copy(macroButtons = macros))
+                        }
+                    }
                 }
             }
             true

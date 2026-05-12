@@ -26,6 +26,10 @@ import imgIosGamepadPhone  from '../../img/Simulator Screenshot - iPhone Air - 2
 import imgIosHomePhone     from '../../img/Simulator Screenshot - iPhone Air - 2026-05-04 at 17.58.36.png';
 import imgIosAppSettings   from '../../img/Simulator Screenshot - iPhone Air - 2026-05-05 at 09.56.36.png';
 
+import imgIosCommBrowse from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-12 at 18.52.48.png';
+import imgIosCommImport from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-12 at 18.53.11.png';
+import imgIosCommShare  from '../../img/Simulator Screenshot - iPad (A16) - 2026-05-12 at 18.53.29.png';
+
 const FAQS = {
   common: [
     {
@@ -276,6 +280,44 @@ function IosWalkthrough() {
           zones, the shared dynamic follower option keeps their click target in one
           reachable place, and configured macros appear behind the keyboard button
           on the control surface.
+        </Step>
+      </div>
+
+      <div className="walkthrough-block">
+        <div className="walkthrough-block-label">Community Configs</div>
+
+        <Step tag="Browse" title="Find shared configs" imgs={[imgIosCommBrowse]} reverse>
+          Tap <b>Community</b> from the home screen to open the community sheet.
+          The <b>Browse</b> tab lists configs shared by other users. Filter by mode
+          (All Modes, Gamepad, Touch Mouse) or platform (All Platforms, Android, iOS)
+          to narrow the list. Each entry shows the profile name, uploader, device
+          model, and download count.
+          <br /><br />
+          Community content is user-generated; inappropriate content is removed when
+          detected but cannot be guaranteed clean. Browsing only reads public records
+          — no account or identifier is sent.
+        </Step>
+
+        <Step tag="Import" title="Preview and apply a config" imgs={[imgIosCommImport]}>
+          Tap any listing to open the <b>Import Config</b> sheet. A rendered thumbnail
+          shows the control layout at a glance, with tags for orientation, mode, and
+          source device below. Scroll down to review the description and uploader
+          details before applying.
+          <br /><br />
+          Applying a config replaces the matching mode's settings in the currently
+          selected profile. The download count increments publicly when you apply; no
+          other identifying information is sent.
+        </Step>
+
+        <Step tag="Share" title="Share your current config" imgs={[imgIosCommShare]} reverse>
+          Switch to the <b>Share</b> tab to see a summary of your active Gamepad and
+          Touch Mouse configs — button counts, macros, joystick mode, vibration,
+          sensitivity, and scroll state. Tap <b>Share</b> on either mode to upload
+          that config as a public community listing.
+          <br /><br />
+          The upload sends the config JSON, your profile name, app version, device
+          model, OS version, and screen size. No account or analytics identifier is
+          included. Shared configs appear in the Browse list for all users.
         </Step>
       </div>
     </>

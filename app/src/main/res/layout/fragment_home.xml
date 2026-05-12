@@ -166,8 +166,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:textColor="?attr/colorOnPrimary"
                     android:gravity="end">
+
+                    <Button
+                        android:id="@+id/btnHomeDisconnect"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="@string/btn_disconnect" />
 
                     <Button
                         android:id="@+id/btnHomeDiscoverable"

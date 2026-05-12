@@ -95,6 +95,7 @@ class HomeFragment : Fragment() {
         binding.btnHomeDiscoverable.setOnClickListener {
             viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE)
         }
+        binding.btnHomeDisconnect.setOnClickListener { viewModel.disconnect() }
         binding.btnPendingAllow.setOnClickListener { viewModel.approvePendingConnection() }
         binding.btnPendingIgnore.setOnClickListener { viewModel.rejectPendingConnection() }
 
@@ -174,6 +175,9 @@ class HomeFragment : Fragment() {
                 if (hasHosts) R.string.btn_new_pair else R.string.btn_make_discoverable
             )
         }
+
+        // Disconnect button: visible only when connected
+        binding.btnHomeDisconnect.isVisible = connected
     }
 
     private fun updateDeviceNameChip() {
