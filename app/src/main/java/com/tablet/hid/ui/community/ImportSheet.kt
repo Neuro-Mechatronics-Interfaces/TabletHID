@@ -17,6 +17,7 @@ import com.tablet.hid.R
 import com.tablet.hid.databinding.SheetImportBinding
 import com.tablet.hid.model.CommunityConfigRecord
 import com.tablet.hid.model.GamepadConfig
+import com.tablet.hid.model.OrientationPreference
 import com.tablet.hid.model.Profile
 import com.tablet.hid.util.ConfigApiClient
 import com.tablet.hid.util.ConfigMerger
@@ -108,27 +109,37 @@ class ImportSheet : BottomSheetDialogFragment() {
                 JSONObject(record.configJson).optString("orientationPreference", "SYSTEM") != "PORTRAIT"
             } catch (_: Exception) { true }
 
-            // Rescale layout to this device's canvas if source device info is present
+            // Rescale layout to this device's canvas if source device info is present.
+            // All canvas dims are derived in the config's intended orientation so the
+            // layout resolver sees the correct axis sizes for the rescaling math.
             val metrics = resources.displayMetrics
-            val (tgtW, tgtH) = LayoutRescaler.canvasDimsFromMetrics(metrics)
+            val (tgtLong, tgtShort) = LayoutRescaler.canvasDimsFromMetrics(metrics)
+            val tgtW = if (thumbnailLandscape) tgtLong else tgtShort
+            val tgtH = if (thumbnailLandscape) tgtShort else tgtLong
             val srcWpx = record.deviceScreenWidthPx
             val srcHpx = record.deviceScreenHeightPx
             val srcDpi = record.deviceScreenDensityDpi
             val needsRescale = srcWpx != null && srcHpx != null && srcDpi != null &&
                 run {
-                    val (srcW, srcH) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx, srcHpx, srcDpi)
+                    val (srcLong, srcShort) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx, srcHpx, srcDpi)
+                    val srcW = if (thumbnailLandscape) srcLong else srcShort
+                    val srcH = if (thumbnailLandscape) srcShort else srcLong
                     kotlin.math.abs(srcW - tgtW) > 1f || kotlin.math.abs(srcH - tgtH) > 1f
                 }
             if (needsRescale) {
-                val (srcW, srcH) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx!!, srcHpx!!, srcDpi!!)
+                val (srcLong, srcShort) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx!!, srcHpx!!, srcDpi!!)
+                val srcW = if (thumbnailLandscape) srcLong else srcShort
+                val srcH = if (thumbnailLandscape) srcShort else srcLong
                 val srcConfig = GamepadConfigSerializer.fromCanonicalJson(JSONObject(record.configJson))
                 val rescaled = LayoutRescaler.rescaleGamepad(requireContext(), srcConfig, srcW, srcH, tgtW, tgtH)
+                // Store canonical landscape dims; refW/H in the view will orient them via isLandscape.
+                binding.gamepadThumbnail.setCanvasDims(tgtLong, tgtShort)
+                binding.gamepadThumbnail.setLandscape(thumbnailLandscape)
                 binding.gamepadThumbnail.setConfig(rescaled)
-                binding.gamepadThumbnail.setCanvasDims(tgtW, tgtH)
             } else {
+                binding.gamepadThumbnail.setLandscape(thumbnailLandscape)
                 binding.gamepadThumbnail.setConfigJson(record.configJson)
             }
-            binding.gamepadThumbnail.setLandscape(thumbnailLandscape)
             binding.gamepadThumbnail.isVisible = true
             binding.thumbnailOrientRow.isVisible = true
             updateOrientToggleLabel()
@@ -236,8 +247,13 @@ class ImportSheet : BottomSheetDialogFragment() {
         val srcWpx = rec.deviceScreenWidthPx ?: return config
         val srcHpx = rec.deviceScreenHeightPx ?: return config
         val srcDpi = rec.deviceScreenDensityDpi ?: return config
-        val (srcW, srcH) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx, srcHpx, srcDpi)
-        val (tgtW, tgtH) = LayoutRescaler.canvasDimsFromMetrics(ctx.resources.displayMetrics)
+        val isLandscape = config.orientationPreference != OrientationPreference.PORTRAIT
+        val (srcLong, srcShort) = LayoutRescaler.canvasDimsFromScreenPx(srcWpx, srcHpx, srcDpi)
+        val srcW = if (isLandscape) srcLong else srcShort
+        val srcH = if (isLandscape) srcShort else srcLong
+        val (tgtLong, tgtShort) = LayoutRescaler.canvasDimsFromMetrics(ctx.resources.displayMetrics)
+        val tgtW = if (isLandscape) tgtLong else tgtShort
+        val tgtH = if (isLandscape) tgtShort else tgtLong
         return LayoutRescaler.rescaleGamepad(ctx, config, srcW, srcH, tgtW, tgtH)
     }
 

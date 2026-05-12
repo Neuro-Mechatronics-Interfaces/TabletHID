@@ -298,7 +298,8 @@ final class ExperimentalBLEHIDTransport: NSObject, HIDTransport {
             type: UUIDs.pnpID,
             properties: [.read],
             // Source=USB (0x02), VID=0x045E, PID=0x02FD, Version=0x0110.
-            value: Data([0x02, 0x5E, 0x04, 0xFD, 0x02, 0x10, 0x01]),
+            // Source=USB (0x02), VID=0xFABB, PID=0x02FD, Version=0x0110.
+            value: Data([0x02, 0xBB, 0xFA, 0xFD, 0x02, 0x10, 0x01]),
             permissions: [.readable]
         )
         service.characteristics = [manufacturer, pnpID]

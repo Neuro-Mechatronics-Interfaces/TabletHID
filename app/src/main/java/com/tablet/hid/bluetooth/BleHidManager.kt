@@ -298,7 +298,8 @@ class BleHidManager(private val context: Context) {
             BluetoothGattCharacteristic.PERMISSION_READ
         ).also {
             // Source=USB (0x02), VID=0x045E (Microsoft), PID=0x02FD, Version=0x0110
-            charValues[it] = byteArrayOf(0x02, 0x5E, 0x04, 0xFD.toByte(), 0x02, 0x10, 0x01)
+            // Source=USB (0x02), VID=0xFABB (NML), PID=0x02FD, Version=0x0110.
+            charValues[it] = byteArrayOf(0x02, 0xBB.toByte(), 0xFA.toByte(), 0xFD.toByte(), 0x02, 0x10, 0x01)
         })
         return svc
     }
