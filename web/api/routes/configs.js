@@ -12,6 +12,7 @@ import {
   stripControlChars,
 } from '../sanitize.js';
 import { validateTouchMouseConfig, validateGamepadConfig } from '../validate.js';
+import { getConfigGraph, updateConfigGraph } from '../graph.js';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -155,6 +156,29 @@ export async function getConfig(req, res) {
   }
 }
 
+export async function getConfigGraphRoute(req, res) {
+  try {
+    const { id } = req.params;
+    const limitRaw = req.query.limit !== undefined ? Number(req.query.limit) : 24;
+    const limit = Number.isInteger(limitRaw) && limitRaw >= 1 && limitRaw <= 60 ? limitRaw : 24;
+
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+      return res.status(400).json({ error: 'Invalid config ID format.' });
+    }
+
+    const graph = getConfigGraph(db, id, limit);
+    if (!graph) return res.status(404).json({ error: 'Not found.' });
+    return res.json(graph);
+  } catch (err) {
+    console.log(JSON.stringify({
+      level: 'error',
+      event: 'get_config_graph_error',
+      error: err?.message ?? String(err),
+    }));
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+}
+
 export async function uploadConfig(req, res) {
   try {
     const body = req.body ?? {};
@@ -288,6 +312,8 @@ export async function uploadConfig(req, res) {
       device_screen_width_px, device_screen_height_px, device_screen_density_dpi,
       device_screen_diagonal_in,
     );
+
+    updateConfigGraph(db, id);
 
     // 12. Return 201
     return res.status(201).json({ id });

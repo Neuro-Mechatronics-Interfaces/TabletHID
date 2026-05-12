@@ -6,7 +6,8 @@
     "dev": "vite --port 12122 --host",
     "build": "vite build",
     "serve": "node server.js",
-    "start": "npm run build && npm run serve"
+    "start": "npm run build && npm run serve",
+    "graph:rebuild": "node ../scripts/rebuild_config_graph.mjs"
   },
   "license": "MIT",
   "dependencies": {

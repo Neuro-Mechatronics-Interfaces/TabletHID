@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ensureGraphSchema } from './graph.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '..', 'data');
@@ -64,6 +65,17 @@ if (!hasMigration2) {
     INSERT INTO schema_migrations (version, applied_at, description)
     VALUES (2, ?, 'Added category column and index')
   `).run(new Date().toISOString());
+}
+
+const hasMigration3 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 3').get();
+if (!hasMigration3) {
+  ensureGraphSchema(db);
+  db.prepare(`
+    INSERT INTO schema_migrations (version, applied_at, description)
+    VALUES (3, ?, 'Added sparse community config graph edge table')
+  `).run(new Date().toISOString());
+} else {
+  ensureGraphSchema(db);
 }
 
 export default db;

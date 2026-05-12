@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
+import ConfigGraphPanel from './configs/ConfigGraphPanel.jsx';
 import DeviceFrame from './configs/DeviceFrame.jsx';
 import GamepadCanvas from './configs/GamepadCanvas.jsx';
 import DEVICE_PRESETS from './configs/constants/devicePresets.js';
@@ -43,22 +44,25 @@ export default function Configs() {
         >
           Browser
         </button>
-        <button className="configs-tab" disabled title="Coming in a future update">
-          Graph <span className="configs-tab-soon">Soon</span>
+        <button
+          className={'configs-tab' + (tab === 'graph' ? ' active' : '')}
+          onClick={() => setTab('graph')}
+        >
+          Graph
         </button>
       </div>
 
-      {tab === 'browser' && (
-        <div className="configs-layout">
-          <aside className="configs-sidebar">
-            <ConfigBrowserPanel
-              onSelect={setSelectedConfig}
-              selectedId={selectedConfig?.id}
-              activeTag={activeTag}
-              onTagSelect={setActiveTag}
-            />
-          </aside>
+      <div className="configs-layout">
+        <aside className="configs-sidebar">
+          <ConfigBrowserPanel
+            onSelect={setSelectedConfig}
+            selectedId={selectedConfig?.id}
+            activeTag={activeTag}
+            onTagSelect={setActiveTag}
+          />
+        </aside>
 
+        {tab === 'browser' ? (
           <div className="configs-canvas-area">
             <div className="configs-toolbar">
               <select
@@ -144,8 +148,12 @@ export default function Configs() {
               </div>
             )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="configs-canvas-area">
+            <ConfigGraphPanel selectedConfig={selectedConfig} onSelect={setSelectedConfig} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
