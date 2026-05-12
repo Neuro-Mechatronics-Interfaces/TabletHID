@@ -1,5 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
-import { gridForCanvas, gridOverlayStyle, snap, snapPoint } from './gridSnap.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  gridForCanvas,
+  gridOverlayStyle,
+  keyboardGridDelta,
+  shouldIgnoreEditorKey,
+  snap,
+  snapPoint,
+  snapScaleForSize,
+} from './gridSnap.js';
 
 const DRAG_THRESHOLD = 5;
 
@@ -65,8 +73,9 @@ export default function TouchMouseCanvas({
   editMode = false, canvasScale = 1, onConfigChange,
   selectedKey = null, onSelect,
   snapToGrid = false,
+  gridSize = 48,
 }) {
-  const grid = useMemo(() => gridForCanvas(canvasW, canvasH), [canvasW, canvasH]);
+  const grid = useMemo(() => gridForCanvas(canvasW, canvasH, gridSize), [canvasW, canvasH, gridSize]);
   const dragRef = useRef(null);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -134,7 +143,10 @@ export default function TouchMouseCanvas({
     if (!macro) return;
     if (scaleDelta !== 0) {
       const factor = Math.pow(1.5, -scaleDelta / 120);
-      const nextScale = Math.max(0.2, Math.min(4, (macro.layoutScaleX ?? 1) * factor));
+      let nextScale = Math.max(0.2, Math.min(4, (macro.layoutScaleX ?? 1) * factor));
+      if (snapToGrid && !dragRef.current?.altResize) {
+        nextScale = snapScaleForSize(72 * nextScale, 72, grid, 'x');
+      }
       onConfigChange?.(setMacro(config, index, { layoutScaleX: nextScale, layoutScaleY: nextScale }));
     } else {
       const nextX = (macro.layoutOffsetX ?? 0) + dx;
@@ -179,6 +191,7 @@ export default function TouchMouseCanvas({
     } else if (key === 'sniper') {
       updateSniper(dx, dy);
     } else if (key.startsWith('macro:')) {
+      dragRef.current.altResize = e.altKey;
       updateMacro(Number(key.split(':')[1]), dx, dy, e.shiftKey ? screenDY : 0);
     }
   }
@@ -190,6 +203,29 @@ export default function TouchMouseCanvas({
     setActiveKey(null);
     if (!hasMoved) onSelect?.(selectedKey === key ? null : key);
   }
+
+  useEffect(() => {
+    if (!editMode || !snapToGrid || !selectedKey) return undefined;
+
+    function handleKeyDown(event) {
+      if (shouldIgnoreEditorKey(event)) return;
+      const delta = keyboardGridDelta(event, grid);
+      if (!delta) return;
+      event.preventDefault();
+      if (selectedKey === 'leftButton' || selectedKey === 'rightButton') {
+        const button = config?.[selectedKey];
+        if (button?.zoneType === 'DYNAMIC') updateDynamicZone(selectedKey, delta.dx, delta.dy);
+        else updateStaticZone(selectedKey, delta.dx, delta.dy);
+      } else if (selectedKey === 'sniper') {
+        updateSniper(delta.dx, delta.dy);
+      } else if (selectedKey.startsWith('macro:')) {
+        updateMacro(Number(selectedKey.split(':')[1]), delta.dx, delta.dy, 0);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [config, editMode, grid, selectedKey, snapToGrid]);
 
   function selectableStyle(key, base) {
     const selected = editMode && selectedKey === key;

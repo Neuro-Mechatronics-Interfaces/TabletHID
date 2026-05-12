@@ -40,6 +40,7 @@ export default function Admin() {
   const [configJson, setConfigJson] = useState(null);
   const [editLayout, setEditLayout] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
+  const [gridSize, setGridSize] = useState(48);
   const {
     devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty,
   } = useDevicePresets('pixel-tablet');
@@ -329,7 +330,18 @@ export default function Admin() {
 
                   {editLayout && (
                     <div className="clone-edit-hint">
-                      Drag to reposition on the device grid. <strong>Shift+drag</strong> to resize. Click to select.
+                      <span>Drag to reposition on the device grid. <strong>Shift+drag</strong> resizes in half-grid steps; add <strong>Alt</strong> for free resize. WASD/arrows nudge selection.</span>
+                      <label className="layout-grid-slider">
+                        <span>Grid {gridSize}px</span>
+                        <input
+                          type="range"
+                          min="24"
+                          max="96"
+                          step="4"
+                          value={gridSize}
+                          onChange={event => setGridSize(Number(event.target.value))}
+                        />
+                      </label>
                     </div>
                   )}
 
@@ -353,6 +365,7 @@ export default function Admin() {
                           selectedKey={editLayout ? selectedKey : null}
                           onSelect={editLayout ? setSelectedKey : undefined}
                           snapToGrid={editLayout}
+                          gridSize={gridSize}
                         />
                       ) : (
                         <TouchMouseCanvas
@@ -365,6 +378,7 @@ export default function Admin() {
                           selectedKey={editLayout ? selectedKey : null}
                           onSelect={editLayout ? setSelectedKey : undefined}
                           snapToGrid={editLayout}
+                          gridSize={gridSize}
                         />
                       )}
                     </DevicePreviewEditor>

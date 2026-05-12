@@ -1,6 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { resolveLayout } from './constants/layoutResolver.js';
-import { gridForCanvas, gridOverlayStyle, snapPoint } from './gridSnap.js';
+import {
+  gridForCanvas,
+  gridOverlayStyle,
+  keyboardGridDelta,
+  shouldIgnoreEditorKey,
+  snapPoint,
+  snapScaleForSize,
+} from './gridSnap.js';
 
 const BUTTON_COLORS = {
   a: '#4ade80', b: '#f87171', x: '#60a5fa', y: '#fbbf24',
@@ -77,9 +84,10 @@ export default function GamepadCanvas({
   editMode = false, canvasScale = 1, onConfigChange,
   selectedKey = null, onSelect,
   snapToGrid = false,
+  gridSize = 48,
 }) {
   const layout = useMemo(() => resolveLayout(canvasW, canvasH), [canvasW, canvasH]);
-  const grid = useMemo(() => gridForCanvas(canvasW, canvasH), [canvasW, canvasH]);
+  const grid = useMemo(() => gridForCanvas(canvasW, canvasH, gridSize), [canvasW, canvasH, gridSize]);
   const dragRef = useRef(null);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -122,7 +130,10 @@ export default function GamepadCanvas({
       // Shift+drag: uniform scale via vertical movement
       // 120px up → ×1.5; 120px down → ×0.67
       const factor = Math.pow(1.5, -screenDY / 120);
-      const newScale = Math.max(0.2, Math.min(4, startSX * factor));
+      let newScale = Math.max(0.2, Math.min(4, startSX * factor));
+      if (snapToGrid && !e.altKey) {
+        newScale = snapScaleForSize(nat.w * newScale, nat.w, grid, 'x');
+      }
       onConfigChange?.(applyScale(config, key, newScale, newScale));
     } else {
       // Normal drag: translate
@@ -151,6 +162,25 @@ export default function GamepadCanvas({
       onSelect?.(selectedKey === key ? null : key);
     }
   }
+
+  useEffect(() => {
+    if (!editMode || !snapToGrid || !selectedKey) return undefined;
+
+    function handleKeyDown(event) {
+      if (shouldIgnoreEditorKey(event)) return;
+      const delta = keyboardGridDelta(event, grid);
+      if (!delta) return;
+      const nat = layout[selectedKey];
+      if (!nat) return;
+      const { ox, oy, sx, sy } = getElementOffset(config, selectedKey);
+      const { x, y } = clampOffset(nat, ox + delta.dx, oy + delta.dy, sx, sy, canvasW, canvasH);
+      event.preventDefault();
+      onConfigChange?.(applyOffset(config, selectedKey, x, y));
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canvasH, canvasW, config, editMode, grid, layout, onConfigChange, selectedKey, snapToGrid]);
 
   function elementStyle(key, base) {
     const isDragging = editMode && activeKey === key;
