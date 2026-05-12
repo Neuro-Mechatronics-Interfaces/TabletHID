@@ -1,5 +1,6 @@
 package com.tablet.hid.ui.community
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,8 @@ class CommunityFragment : Fragment() {
 
     val viewModel: CommunityViewModel by viewModels()
 
+    private fun isPhone() = resources.configuration.smallestScreenWidthDp < 600
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
@@ -27,10 +30,6 @@ class CommunityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.communityToolbar.setNavigationOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
-        }
 
         val adapter = CommunityPagerAdapter(this)
         binding.communityViewPager.adapter = adapter
@@ -42,6 +41,20 @@ class CommunityFragment : Fragment() {
                 else -> ""
             }
         }.attach()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isPhone()) {
+            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (isPhone()) {
+            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
     }
 
     override fun onDestroyView() {

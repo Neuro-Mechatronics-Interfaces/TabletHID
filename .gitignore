@@ -16,3 +16,7 @@ local.properties
 .claude
 sessions/
 ios/Secrets.xcconfig
+
+# Live SQLite database — never commit; lives only on the server.
+# To seed a fresh DB run: node scripts/import_quadstick_community_configs.mjs
+web/data/tablethid.db

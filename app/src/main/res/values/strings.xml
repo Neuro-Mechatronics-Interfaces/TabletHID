@@ -235,6 +235,7 @@
     <string name="community_mode_note_touch_mouse">This is a touch mouse config.</string>
     <string name="community_downloads">%1$d downloads</string>
     <string name="community_item_os_line">%1$s · %2$s&quot;</string>
+    <string name="community_search_hint">Search configs…</string>
     <string name="community_content_notice">Community content is user-generated and may contain language we do not condone. We review and remove or correct inappropriate content when detected, but cannot guarantee every listing is clean.</string>
 
     <!-- Upload sheet -->

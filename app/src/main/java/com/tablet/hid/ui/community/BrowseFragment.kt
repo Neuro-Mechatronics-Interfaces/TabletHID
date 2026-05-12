@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -53,6 +54,11 @@ class BrowseFragment : Fragment() {
         adapter = ConfigListAdapter { record -> showImportSheet(record) }
         binding.browseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.browseRecyclerView.adapter = adapter
+
+        // ── Search ─────────────────────────────────────────────────────────
+        binding.browseSearchEdit.addTextChangedListener { text ->
+            viewModel.setSearchQuery(text?.toString() ?: "")
+        }
 
         // ── Mode filter chips ───────────────────────────────────────────────
         binding.chipGroupMode.setOnCheckedStateChangeListener { _, checkedIds ->
