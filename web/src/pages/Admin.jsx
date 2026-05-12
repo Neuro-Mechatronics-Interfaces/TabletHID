@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react';
 import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './configs/GamepadCanvas.jsx';
-import DeviceFrame from './configs/DeviceFrame.jsx';
-import DEVICE_PRESETS from './configs/constants/devicePresets.js';
+import DevicePreviewEditor from './configs/DevicePreviewEditor.jsx';
+import useDevicePresets from './configs/useDevicePresets.js';
 
 const MAX_CANVAS_H = 400;
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+function inferLandscape(config, record) {
+  const pref = config?.orientationPreference;
+  if (pref === 'LANDSCAPE') return true;
+  if (pref === 'PORTRAIT') return false;
+  const w = record?.device_screen_width_px;
+  const h = record?.device_screen_height_px;
+  if (Number.isFinite(w) && Number.isFinite(h) && w !== h) return w > h;
+  return true;
+}
+
+function withOrientationPreference(config, landscape) {
+  if (!config) return config;
+  return { ...config, orientationPreference: landscape ? 'LANDSCAPE' : 'PORTRAIT' };
 }
 
 export default function Admin() {
@@ -19,7 +34,9 @@ export default function Admin() {
   const [configJson, setConfigJson] = useState(null);
   const [editLayout, setEditLayout] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
-  const [deviceId, setDeviceId] = useState('pixel-tablet');
+  const {
+    devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty,
+  } = useDevicePresets('pixel-tablet');
   const [landscape, setLandscape] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -49,7 +66,11 @@ export default function Admin() {
       tags: (cfg.tags ?? []).join(', '),
       category: cfg.category ?? '',
     });
-    setConfigJson(cfg.config_json ? deepClone(cfg.config_json) : null);
+    const nextConfig = cfg.config_json ? deepClone(cfg.config_json) : null;
+    const nextLandscape = inferLandscape(nextConfig, cfg);
+    if (cfg.mode === 'gamepad' && nextConfig) nextConfig.orientationPreference = nextLandscape ? 'LANDSCAPE' : 'PORTRAIT';
+    setConfigJson(nextConfig);
+    setLandscape(nextLandscape);
     setEditLayout(false);
     setSelectedKey(null);
     setSaveError(null);
@@ -70,7 +91,15 @@ export default function Admin() {
         category: editState.category || null,
       };
       if (configJson !== null) {
-        body.config_json = configJson;
+        body.config_json = selected.mode === 'gamepad'
+          ? withOrientationPreference(configJson, landscape)
+          : configJson;
+      }
+      if (selected.mode === 'gamepad') {
+        body.device_name = device.name;
+        body.device_screen_width_px = Math.round(canvasW * device.density);
+        body.device_screen_height_px = Math.round(canvasH * device.density);
+        body.device_screen_density_dpi = Math.round(device.density * 160);
       }
       const res = await fetch(`/api/v1/admin/configs/${selected.id}`, {
         method: 'PATCH',
@@ -123,7 +152,6 @@ export default function Admin() {
     setSelectedKey(null);
   }
 
-  const device = DEVICE_PRESETS.find(d => d.id === deviceId) ?? DEVICE_PRESETS[0];
   const canvasW = landscape ? device.heightDp : device.widthDp;
   const canvasH = landscape ? device.widthDp : device.heightDp;
   const canvasScale = Math.min(1, MAX_CANVAS_H / canvasH);
@@ -255,11 +283,17 @@ export default function Admin() {
                       value={deviceId}
                       onChange={e => setDeviceId(e.target.value)}
                     >
-                      {DEVICE_PRESETS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      {devices.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                     <button
                       className={'configs-orient-btn' + (landscape ? ' active' : '')}
-                      onClick={() => setLandscape(l => !l)}
+                      onClick={() => {
+                        setLandscape(l => {
+                          const next = !l;
+                          setConfigJson(c => withOrientationPreference(c, next));
+                          return next;
+                        });
+                      }}
                     >
                       {landscape ? '⟷ Landscape' : '↕ Portrait'}
                     </button>
@@ -281,7 +315,14 @@ export default function Admin() {
                   )}
 
                   <div className="configs-canvas-wrap">
-                    <DeviceFrame device={device} landscape={landscape} maxHeight={MAX_CANVAS_H}>
+                    <DevicePreviewEditor
+                      device={device}
+                      landscape={landscape}
+                      maxHeight={MAX_CANVAS_H}
+                      isDirty={isDirty}
+                      onDimensionChange={updateDevice}
+                      onSaveDevice={saveDraft}
+                    >
                       <GamepadCanvas
                         canvasW={canvasW}
                         canvasH={canvasH}
@@ -292,7 +333,7 @@ export default function Admin() {
                         selectedKey={editLayout ? selectedKey : null}
                         onSelect={editLayout ? setSelectedKey : undefined}
                       />
-                    </DeviceFrame>
+                    </DevicePreviewEditor>
                   </div>
 
                   {editLayout && selectedKey && (() => {

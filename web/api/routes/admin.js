@@ -59,6 +59,42 @@ export function adminPatchConfig(req, res) {
         ? (stripControlChars(trimAndClamp(body.category, 40)) || null)
         : null;
     }
+    if ('device_name' in body) {
+      updates.device_name = body.device_name
+        ? (stripControlChars(trimAndClamp(body.device_name, 80)) || null)
+        : null;
+    }
+    if ('device_screen_width_px' in body) {
+      updates.device_screen_width_px = Number.isInteger(body.device_screen_width_px) && body.device_screen_width_px > 0
+        ? body.device_screen_width_px
+        : null;
+    }
+    if ('device_screen_height_px' in body) {
+      updates.device_screen_height_px = Number.isInteger(body.device_screen_height_px) && body.device_screen_height_px > 0
+        ? body.device_screen_height_px
+        : null;
+    }
+    if ('device_screen_density_dpi' in body) {
+      updates.device_screen_density_dpi = Number.isInteger(body.device_screen_density_dpi) && body.device_screen_density_dpi > 0
+        ? body.device_screen_density_dpi
+        : null;
+    }
+    if (
+      'device_screen_width_px' in body ||
+      'device_screen_height_px' in body ||
+      'device_screen_density_dpi' in body
+    ) {
+      const w = updates.device_screen_width_px;
+      const h = updates.device_screen_height_px;
+      const dpi = updates.device_screen_density_dpi;
+      updates.device_screen_diagonal_in = (
+        Number.isInteger(w) && w > 0 &&
+        Number.isInteger(h) && h > 0 &&
+        Number.isInteger(dpi) && dpi > 0
+      )
+        ? Math.round(Math.sqrt((w / dpi) ** 2 + (h / dpi) ** 2) * 100) / 100
+        : null;
+    }
 
     if ('config_json' in body) {
       const validator = row.mode === 'gamepad' ? validateGamepadConfig : validateTouchMouseConfig;
