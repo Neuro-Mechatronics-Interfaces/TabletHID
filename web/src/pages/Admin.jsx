@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './configs/GamepadCanvas.jsx';
+import MacroEditor from './configs/MacroEditor.jsx';
+import TouchMouseCanvas, {
+  getTouchMouseElementOffset,
+  applyTouchMouseOffset,
+  applyTouchMouseScale,
+} from './configs/TouchMouseCanvas.jsx';
 import DevicePreviewEditor from './configs/DevicePreviewEditor.jsx';
 import useDevicePresets from './configs/useDevicePresets.js';
 
@@ -148,6 +154,15 @@ export default function Admin() {
     }
     if (fresh.leftJoystick)  { fresh.leftJoystick.offsetX  = 0; fresh.leftJoystick.offsetY  = 0; fresh.leftJoystick.scaleX  = 1; fresh.leftJoystick.scaleY  = 1; }
     if (fresh.rightJoystick) { fresh.rightJoystick.offsetX = 0; fresh.rightJoystick.offsetY = 0; fresh.rightJoystick.scaleX = 1; fresh.rightJoystick.scaleY = 1; }
+    if (Array.isArray(fresh.macroButtons)) {
+      fresh.macroButtons = fresh.macroButtons.map(macro => ({
+        ...macro,
+        layoutOffsetX: 0,
+        layoutOffsetY: 0,
+        layoutScaleX: 1,
+        layoutScaleY: 1,
+      }));
+    }
     setConfigJson(fresh);
     setSelectedKey(null);
   }
@@ -272,9 +287,13 @@ export default function Admin() {
                   <div><strong>Uploaded:</strong> {new Date(selected.uploaded_at).toLocaleString()}</div>
                   <div><strong>Downloads:</strong> {selected.download_count}</div>
                 </div>
+
+                {configJson && (
+                  <MacroEditor config={configJson} onConfigChange={setConfigJson} />
+                )}
               </div>
 
-              {selected.mode === 'gamepad' && configJson && (
+              {configJson && (
                 <div className="admin-layout-section">
                   <div className="configs-toolbar">
                     <span className="admin-layout-heading">Layout</span>
@@ -290,7 +309,7 @@ export default function Admin() {
                       onClick={() => {
                         setLandscape(l => {
                           const next = !l;
-                          setConfigJson(c => withOrientationPreference(c, next));
+                          if (selected.mode === 'gamepad') setConfigJson(c => withOrientationPreference(c, next));
                           return next;
                         });
                       }}
@@ -323,43 +342,66 @@ export default function Admin() {
                       onDimensionChange={updateDevice}
                       onSaveDevice={saveDraft}
                     >
-                      <GamepadCanvas
-                        canvasW={canvasW}
-                        canvasH={canvasH}
-                        config={configJson}
-                        editMode={editLayout}
-                        canvasScale={canvasScale}
-                        onConfigChange={setConfigJson}
-                        selectedKey={editLayout ? selectedKey : null}
-                        onSelect={editLayout ? setSelectedKey : undefined}
-                      />
+                      {selected.mode === 'gamepad' ? (
+                        <GamepadCanvas
+                          canvasW={canvasW}
+                          canvasH={canvasH}
+                          config={configJson}
+                          editMode={editLayout}
+                          canvasScale={canvasScale}
+                          onConfigChange={setConfigJson}
+                          selectedKey={editLayout ? selectedKey : null}
+                          onSelect={editLayout ? setSelectedKey : undefined}
+                        />
+                      ) : (
+                        <TouchMouseCanvas
+                          canvasW={canvasW}
+                          canvasH={canvasH}
+                          config={configJson}
+                          editMode={editLayout}
+                          canvasScale={canvasScale}
+                          onConfigChange={setConfigJson}
+                          selectedKey={editLayout ? selectedKey : null}
+                          onSelect={editLayout ? setSelectedKey : undefined}
+                        />
+                      )}
                     </DevicePreviewEditor>
                   </div>
 
                   {editLayout && selectedKey && (() => {
-                    const { ox, oy, sx } = getElementOffset(configJson, selectedKey);
+                    const offsetApi = selected.mode === 'gamepad'
+                      ? { get: getElementOffset, move: applyOffset, scale: applyScale }
+                      : { get: getTouchMouseElementOffset, move: applyTouchMouseOffset, scale: applyTouchMouseScale };
+                    const { ox, oy, sx } = offsetApi.get(configJson, selectedKey);
+                    const canEditNumeric = selected.mode === 'gamepad' || selectedKey.startsWith('macro:');
                     return (
                       <div className="elem-props-bar">
                         <span className="elem-props-key">{selectedKey}</span>
-                        <label className="elem-props-field">
-                          <span>X</span>
-                          <input type="number" step="1" value={Math.round(ox)}
-                            onChange={e => setConfigJson(c => applyOffset(c, selectedKey, Number(e.target.value), oy))} />
-                        </label>
-                        <label className="elem-props-field">
-                          <span>Y</span>
-                          <input type="number" step="1" value={Math.round(oy)}
-                            onChange={e => setConfigJson(c => applyOffset(c, selectedKey, ox, Number(e.target.value)))} />
-                        </label>
-                        <label className="elem-props-field">
-                          <span>Scale</span>
-                          <input type="number" step="0.05" min="0.2" max="4"
-                            value={Number(sx.toFixed(2))}
-                            onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfigJson(c => applyScale(c, selectedKey, v, v)); }} />
-                        </label>
-                        <button className="elem-props-reset" onClick={() => setConfigJson(c => applyScale(applyOffset(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
-                          Reset
-                        </button>
+                        {canEditNumeric ? (
+                          <>
+                            <label className="elem-props-field">
+                              <span>X</span>
+                              <input type="number" step="1" value={Math.round(ox)}
+                                onChange={e => setConfigJson(c => offsetApi.move(c, selectedKey, Number(e.target.value), oy))} />
+                            </label>
+                            <label className="elem-props-field">
+                              <span>Y</span>
+                              <input type="number" step="1" value={Math.round(oy)}
+                                onChange={e => setConfigJson(c => offsetApi.move(c, selectedKey, ox, Number(e.target.value)))} />
+                            </label>
+                            <label className="elem-props-field">
+                              <span>Scale</span>
+                              <input type="number" step="0.05" min="0.2" max="4"
+                                value={Number(sx.toFixed(2))}
+                                onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfigJson(c => offsetApi.scale(c, selectedKey, v, v)); }} />
+                            </label>
+                            <button className="elem-props-reset" onClick={() => setConfigJson(c => offsetApi.scale(offsetApi.move(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
+                              Reset
+                            </button>
+                          </>
+                        ) : (
+                          <span className="elem-props-note">Drag this zone on the preview to reposition it.</span>
+                        )}
                       </div>
                     );
                   })()}

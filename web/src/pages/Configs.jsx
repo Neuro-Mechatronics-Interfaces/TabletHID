@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
+import ConfigDownloadMenu from './configs/ConfigDownloadMenu.jsx';
 import ConfigGraphPanel from './configs/ConfigGraphPanel.jsx';
 import DevicePreviewEditor from './configs/DevicePreviewEditor.jsx';
 import GamepadCanvas from './configs/GamepadCanvas.jsx';
@@ -204,6 +205,7 @@ export default function Configs() {
                   >
                     Clone &amp; Edit
                   </button>
+                  <ConfigDownloadMenu configRecord={selectedConfig} />
                 </>
               )}
             </div>

@@ -239,13 +239,14 @@ export default function TouchMouseCanvas({
     const key = `macro:${index}`;
     const sx = macro.layoutScaleX ?? 1;
     const sy = macro.layoutScaleY ?? 1;
+    const paletteLeft = Math.max(12, canvasW - 190);
     return (
       <div
         key={key}
         onPointerDown={editMode ? e => startDrag(e, key) : undefined}
         style={selectableStyle(key, {
           position: 'absolute',
-          right: 18,
+          left: paletteLeft,
           top: 18,
           minWidth: 72,
           height: 38,

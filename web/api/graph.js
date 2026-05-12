@@ -13,11 +13,13 @@ export function ensureGraphSchema(db) {
       source_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
       target_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
       strength         REAL NOT NULL,
+      dissimilarity    REAL NOT NULL DEFAULT 1,
       shared_tokens    TEXT NOT NULL DEFAULT '[]',
       updated_at       TEXT NOT NULL,
       PRIMARY KEY (source_config_id, target_config_id),
       CHECK (source_config_id <> target_config_id),
-      CHECK (strength >= 0 AND strength <= 1)
+      CHECK (strength >= 0 AND strength <= 1),
+      CHECK (dissimilarity >= 0 AND dissimilarity <= 1)
     );
 
     CREATE INDEX IF NOT EXISTS idx_config_graph_source_strength
@@ -25,6 +27,11 @@ export function ensureGraphSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_config_graph_target
       ON config_graph_edges (target_config_id);
   `);
+
+  const columns = db.prepare('PRAGMA table_info(config_graph_edges)').all().map(column => column.name);
+  if (!columns.includes('dissimilarity')) {
+    db.exec('ALTER TABLE config_graph_edges ADD COLUMN dissimilarity REAL NOT NULL DEFAULT 1');
+  }
 }
 
 function parseJson(value, fallback) {
@@ -93,7 +100,7 @@ export function vectorForConfig(row) {
 
 function similarity(a, b) {
   if (a.magnitude === 0 || b.magnitude === 0) {
-    return { strength: 0, sharedTokens: [] };
+    return { strength: 0, dissimilarity: 1, sharedTokens: [] };
   }
 
   let dot = 0;
@@ -110,8 +117,10 @@ function similarity(a, b) {
   }
 
   shared.sort((x, y) => y[1] - x[1]);
+  const strength = Math.round((dot / (a.magnitude * b.magnitude)) * 10000) / 10000;
   return {
-    strength: Math.round((dot / (a.magnitude * b.magnitude)) * 10000) / 10000,
+    strength,
+    dissimilarity: Math.round((1 - strength) * 10000) / 10000,
     sharedTokens: shared.slice(0, 8).map(([token]) => token),
   };
 }
@@ -124,12 +133,12 @@ function insertEdges(db, edges) {
   const now = new Date().toISOString();
   const insert = db.prepare(`
     INSERT OR REPLACE INTO config_graph_edges (
-      source_config_id, target_config_id, strength, shared_tokens, updated_at
-    ) VALUES (?, ?, ?, ?, ?)
+      source_config_id, target_config_id, strength, dissimilarity, shared_tokens, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?)
   `);
 
   for (const edge of edges) {
-    insert.run(edge.source, edge.target, edge.strength, JSON.stringify(edge.sharedTokens), now);
+    insert.run(edge.source, edge.target, edge.strength, edge.dissimilarity, JSON.stringify(edge.sharedTokens), now);
   }
 }
 
@@ -164,6 +173,7 @@ export function rebuildGraph(db, options = {}) {
         a: vectors[i].id,
         b: vectors[j].id,
         strength: result.strength,
+        dissimilarity: result.dissimilarity,
         sharedTokens: result.sharedTokens,
       });
     }
@@ -171,8 +181,8 @@ export function rebuildGraph(db, options = {}) {
 
   const directedEdges = [];
   for (const edge of undirectedEdges) {
-    directedEdges.push({ source: edge.a, target: edge.b, strength: edge.strength, sharedTokens: edge.sharedTokens });
-    directedEdges.push({ source: edge.b, target: edge.a, strength: edge.strength, sharedTokens: edge.sharedTokens });
+    directedEdges.push({ source: edge.a, target: edge.b, strength: edge.strength, dissimilarity: edge.dissimilarity, sharedTokens: edge.sharedTokens });
+    directedEdges.push({ source: edge.b, target: edge.a, strength: edge.strength, dissimilarity: edge.dissimilarity, sharedTokens: edge.sharedTokens });
   }
 
   const pruned = pruneEdgesForSource(directedEdges, maxEdgesPerConfig);
@@ -199,8 +209,8 @@ export function updateConfigGraph(db, configId, options = {}) {
   for (const candidate of candidates) {
     const result = similarity(source, candidate);
     if (result.strength < threshold) continue;
-    edges.push({ source: source.id, target: candidate.id, strength: result.strength, sharedTokens: result.sharedTokens });
-    edges.push({ source: candidate.id, target: source.id, strength: result.strength, sharedTokens: result.sharedTokens });
+    edges.push({ source: source.id, target: candidate.id, strength: result.strength, dissimilarity: result.dissimilarity, sharedTokens: result.sharedTokens });
+    edges.push({ source: candidate.id, target: source.id, strength: result.strength, dissimilarity: result.dissimilarity, sharedTokens: result.sharedTokens });
   }
 
   const pruned = pruneEdgesForSource(edges, maxEdgesPerConfig);
@@ -240,12 +250,25 @@ export function getConfigGraph(db, configId, limit = 24) {
   const placeholders = nodeIds.map(() => '?').join(',');
   const neighborEdges = nodeIds.length > 1
     ? db.prepare(`
-        SELECT source_config_id, target_config_id, strength, shared_tokens
+        SELECT source_config_id, target_config_id, strength, dissimilarity, shared_tokens
         FROM config_graph_edges
         WHERE source_config_id IN (${placeholders})
           AND target_config_id IN (${placeholders})
       `).all(...nodeIds, ...nodeIds)
     : [];
+  const nodeRows = [center, ...edges];
+  const vectors = nodeRows.map(row => vectorForConfig(row));
+  const dissimilarities = [];
+  for (let i = 0; i < vectors.length; i++) {
+    for (let j = i + 1; j < vectors.length; j++) {
+      const result = similarity(vectors[i], vectors[j]);
+      dissimilarities.push({
+        source: vectors[i].id,
+        target: vectors[j].id,
+        dissimilarity: result.dissimilarity,
+      });
+    }
+  }
 
   return {
     center: parseRow(center),
@@ -261,7 +284,9 @@ export function getConfigGraph(db, configId, limit = 24) {
       source: edge.source_config_id,
       target: edge.target_config_id,
       strength: edge.strength,
+      dissimilarity: edge.dissimilarity,
       shared_tokens: parseJson(edge.shared_tokens, []),
     })),
+    dissimilarities,
   };
 }

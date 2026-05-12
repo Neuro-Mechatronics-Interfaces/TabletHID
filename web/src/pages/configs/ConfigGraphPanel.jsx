@@ -51,6 +51,12 @@ function forceLayout(graph) {
   const edges = undirectedEdges(graph.edges)
     .map(edge => ({ ...edge, sourceNode: byId.get(edge.source), targetNode: byId.get(edge.target) }))
     .filter(edge => edge.sourceNode && edge.targetNode);
+  const dissimilarityByPair = new Map(
+    (graph.dissimilarities ?? []).map(item => [
+      [item.source, item.target].sort().join(':'),
+      clamp(item.dissimilarity ?? 0, 0, 1),
+    ]),
+  );
 
   for (let tick = 0; tick < 320; tick++) {
     for (let i = 0; i < nodes.length; i++) {
@@ -61,7 +67,9 @@ function forceLayout(graph) {
         const dy = b.y - a.y;
         const distSq = Math.max(900, dx * dx + dy * dy);
         const dist = Math.sqrt(distSq);
-        const force = 2400 / distSq;
+        const pairKey = [a.id, b.id].sort().join(':');
+        const dissimilarity = dissimilarityByPair.get(pairKey) ?? 0;
+        const force = (2400 + dissimilarity * dissimilarity * 7200) / distSq;
         const fx = (dx / dist) * force;
         const fy = (dy / dist) * force;
         if (!a.center) {

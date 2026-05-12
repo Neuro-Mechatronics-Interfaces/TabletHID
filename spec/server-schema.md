@@ -102,12 +102,15 @@ Response:
     { "config": { "...ConfigRecord": "..." }, "strength": 0.42, "shared_tokens": ["assassin", "mouse"] }
   ],
   "edges": [
-    { "source": "<config-id>", "target": "<config-id>", "strength": 0.42, "shared_tokens": ["assassin", "mouse"] }
+    { "source": "<config-id>", "target": "<config-id>", "strength": 0.42, "dissimilarity": 0.58, "shared_tokens": ["assassin", "mouse"] }
+  ],
+  "dissimilarities": [
+    { "source": "<config-id>", "target": "<config-id>", "dissimilarity": 0.91 }
   ]
 }
 ```
 
-`strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
+`strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. `dissimilarity` is `1 - strength`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. For a zoomed-in graph response, the API also returns complete pairwise `dissimilarities` among only the visible nodes so the web force layout can push unlike configs apart without drawing extra edges. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
 
 ### GET /api/v1/devices
 
@@ -216,11 +219,13 @@ CREATE TABLE IF NOT EXISTS config_graph_edges (
   source_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
   target_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
   strength         REAL NOT NULL,              -- cosine similarity, 0..1
+  dissimilarity    REAL NOT NULL DEFAULT 1,    -- 1 - strength, 0..1
   shared_tokens    TEXT NOT NULL DEFAULT '[]', -- JSON array of strongest shared token strings
   updated_at       TEXT NOT NULL,
   PRIMARY KEY (source_config_id, target_config_id),
   CHECK (source_config_id <> target_config_id),
-  CHECK (strength >= 0 AND strength <= 1)
+  CHECK (strength >= 0 AND strength <= 1),
+  CHECK (dissimilarity >= 0 AND dissimilarity <= 1)
 );
 
 CREATE INDEX IF NOT EXISTS idx_config_graph_source_strength
@@ -434,6 +439,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 | — | v1 | 2026-05 | DB migration 2: added `category` column and index (additive, no API version bump) |
 | — | v1 | 2026-05 | DB migration 3: added sparse `config_graph_edges` table and indexes for nearby-config graph queries |
 | — | v1 | 2026-05 | DB migration 4: added `device_presets` table seeded with web preview defaults |
+| — | v1 | 2026-05 | DB migration 5: added `dissimilarity` to sparse graph edge rows and graph API visible-node dissimilarity response |
 | 2 | v1 | 2026-05 | Added optional `orientationPreference` field to `gamepad` `config_json`; defaults to `"SYSTEM"`; backward-compatible additive change |
 
 ---

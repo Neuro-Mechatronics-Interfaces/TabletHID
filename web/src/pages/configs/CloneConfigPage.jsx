@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import ConfigDownloadMenu from './ConfigDownloadMenu.jsx';
 import ConfigOptionsPanel from './ConfigOptionsPanel.jsx';
 import DevicePreviewEditor from './DevicePreviewEditor.jsx';
 import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './GamepadCanvas.jsx';
@@ -57,6 +58,17 @@ export default function CloneConfigPage() {
   const canvasW = landscape ? device.heightDp : device.widthDp;
   const canvasH = landscape ? device.widthDp : device.heightDp;
   const canvasScale = Math.min(1, MAX_CANVAS_H / canvasH);
+  const draftDownloadRecord = source && config ? {
+    ...source,
+    platform: meta.platform,
+    profile_name: meta.profile_name || source.profile_name,
+    description: meta.description,
+    tags: meta.tags.split(',').map(t => t.trim()).filter(Boolean),
+    category: meta.category,
+    config_json: source.mode === 'gamepad'
+      ? withOrientationPreference(config, landscape)
+      : config,
+  } : null;
 
   useEffect(() => {
     fetch(`/api/v1/configs/${id}`)
@@ -235,6 +247,7 @@ export default function CloneConfigPage() {
             {editLayout && (
               <button className="configs-orient-btn" onClick={resetLayout}>Reset Layout</button>
             )}
+            <ConfigDownloadMenu configRecord={draftDownloadRecord} />
           </div>
 
           {editLayout && (
