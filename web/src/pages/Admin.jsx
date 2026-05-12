@@ -1,4 +1,13 @@
 import { useState, useEffect } from 'react';
+import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './configs/GamepadCanvas.jsx';
+import DeviceFrame from './configs/DeviceFrame.jsx';
+import DEVICE_PRESETS from './configs/constants/devicePresets.js';
+
+const MAX_CANVAS_H = 400;
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 export default function Admin() {
   const [me, setMe] = useState(null);
@@ -7,6 +16,11 @@ export default function Admin() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
   const [editState, setEditState] = useState(null);
+  const [configJson, setConfigJson] = useState(null);
+  const [editLayout, setEditLayout] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
+  const [deviceId, setDeviceId] = useState('pixel-tablet');
+  const [landscape, setLandscape] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -35,6 +49,9 @@ export default function Admin() {
       tags: (cfg.tags ?? []).join(', '),
       category: cfg.category ?? '',
     });
+    setConfigJson(cfg.config_json ? deepClone(cfg.config_json) : null);
+    setEditLayout(false);
+    setSelectedKey(null);
     setSaveError(null);
     setSaveSuccess(false);
     setConfirmDelete(false);
@@ -52,6 +69,9 @@ export default function Admin() {
         tags: editState.tags.split(',').map(t => t.trim()).filter(Boolean),
         category: editState.category || null,
       };
+      if (configJson !== null) {
+        body.config_json = configJson;
+      }
       const res = await fetch(`/api/v1/admin/configs/${selected.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -61,6 +81,7 @@ export default function Admin() {
       if (!res.ok) throw new Error(data.error ?? `${res.status}`);
       setConfigs(prev => prev.map(c => c.id === data.id ? data : c));
       setSelected(data);
+      if (data.config_json) setConfigJson(deepClone(data.config_json));
       setSaveSuccess(true);
     } catch (e) {
       setSaveError(e.message);
@@ -76,6 +97,9 @@ export default function Admin() {
       setConfigs(prev => prev.filter(c => c.id !== selected.id));
       setSelected(null);
       setEditState(null);
+      setConfigJson(null);
+      setEditLayout(false);
+      setSelectedKey(null);
       setConfirmDelete(false);
     } else {
       const data = await res.json().catch(() => ({}));
@@ -83,6 +107,26 @@ export default function Admin() {
       setConfirmDelete(false);
     }
   }
+
+  function resetLayout() {
+    if (!configJson) return;
+    const fresh = deepClone(configJson);
+    if (fresh.buttons) {
+      for (const key of Object.keys(fresh.buttons)) {
+        fresh.buttons[key].offsetX = 0; fresh.buttons[key].offsetY = 0;
+        fresh.buttons[key].scaleX = 1;  fresh.buttons[key].scaleY = 1;
+      }
+    }
+    if (fresh.leftJoystick)  { fresh.leftJoystick.offsetX  = 0; fresh.leftJoystick.offsetY  = 0; fresh.leftJoystick.scaleX  = 1; fresh.leftJoystick.scaleY  = 1; }
+    if (fresh.rightJoystick) { fresh.rightJoystick.offsetX = 0; fresh.rightJoystick.offsetY = 0; fresh.rightJoystick.scaleX = 1; fresh.rightJoystick.scaleY = 1; }
+    setConfigJson(fresh);
+    setSelectedKey(null);
+  }
+
+  const device = DEVICE_PRESETS.find(d => d.id === deviceId) ?? DEVICE_PRESETS[0];
+  const canvasW = landscape ? device.heightDp : device.widthDp;
+  const canvasH = landscape ? device.widthDp : device.heightDp;
+  const canvasScale = Math.min(1, MAX_CANVAS_H / canvasH);
 
   const filtered = configs.filter(c => {
     const q = search.toLowerCase();
@@ -152,53 +196,134 @@ export default function Admin() {
           {!selected ? (
             <div className="admin-empty-state">Select a config to edit</div>
           ) : (
-            <div className="admin-edit-form">
-              <div className="admin-edit-id">ID: <code>{selected.id}</code></div>
+            <>
+              <div className="admin-edit-form">
+                <div className="admin-edit-id">ID: <code>{selected.id}</code></div>
 
-              <label className="cfg-opt-label">
-                Profile Name
-                <input
-                  className="cfg-opt-input"
-                  value={editState.profile_name}
-                  maxLength={80}
-                  onChange={e => setEditState(p => ({ ...p, profile_name: e.target.value }))}
-                />
-              </label>
-              <label className="cfg-opt-label">
-                Description
-                <textarea
-                  className="cfg-opt-input cfg-opt-textarea"
-                  value={editState.description}
-                  maxLength={400}
-                  rows={4}
-                  onChange={e => setEditState(p => ({ ...p, description: e.target.value }))}
-                />
-              </label>
-              <label className="cfg-opt-label">
-                Tags <span className="cfg-opt-hint">(comma-separated)</span>
-                <input
-                  className="cfg-opt-input"
-                  value={editState.tags}
-                  onChange={e => setEditState(p => ({ ...p, tags: e.target.value }))}
-                />
-              </label>
-              <label className="cfg-opt-label">
-                Category
-                <input
-                  className="cfg-opt-input"
-                  value={editState.category}
-                  maxLength={40}
-                  onChange={e => setEditState(p => ({ ...p, category: e.target.value }))}
-                />
-              </label>
+                <label className="cfg-opt-label">
+                  Profile Name
+                  <input
+                    className="cfg-opt-input"
+                    value={editState.profile_name}
+                    maxLength={80}
+                    onChange={e => setEditState(p => ({ ...p, profile_name: e.target.value }))}
+                  />
+                </label>
+                <label className="cfg-opt-label">
+                  Description
+                  <textarea
+                    className="cfg-opt-input cfg-opt-textarea"
+                    value={editState.description}
+                    maxLength={400}
+                    rows={4}
+                    onChange={e => setEditState(p => ({ ...p, description: e.target.value }))}
+                  />
+                </label>
+                <label className="cfg-opt-label">
+                  Tags <span className="cfg-opt-hint">(comma-separated)</span>
+                  <input
+                    className="cfg-opt-input"
+                    value={editState.tags}
+                    onChange={e => setEditState(p => ({ ...p, tags: e.target.value }))}
+                  />
+                </label>
+                <label className="cfg-opt-label">
+                  Category
+                  <input
+                    className="cfg-opt-input"
+                    value={editState.category}
+                    maxLength={40}
+                    onChange={e => setEditState(p => ({ ...p, category: e.target.value }))}
+                  />
+                </label>
 
-              <div className="admin-edit-readonly">
-                <div><strong>Platform:</strong> {selected.platform}</div>
-                <div><strong>Mode:</strong> {selected.mode}</div>
-                <div><strong>Device:</strong> {selected.device_name ?? '—'}</div>
-                <div><strong>Uploaded:</strong> {new Date(selected.uploaded_at).toLocaleString()}</div>
-                <div><strong>Downloads:</strong> {selected.download_count}</div>
+                <div className="admin-edit-readonly">
+                  <div><strong>Platform:</strong> {selected.platform}</div>
+                  <div><strong>Mode:</strong> {selected.mode}</div>
+                  <div><strong>Device:</strong> {selected.device_name ?? '—'}</div>
+                  <div><strong>Uploaded:</strong> {new Date(selected.uploaded_at).toLocaleString()}</div>
+                  <div><strong>Downloads:</strong> {selected.download_count}</div>
+                </div>
               </div>
+
+              {selected.mode === 'gamepad' && configJson && (
+                <div className="admin-layout-section">
+                  <div className="configs-toolbar">
+                    <span className="admin-layout-heading">Layout</span>
+                    <select
+                      className="configs-device-picker"
+                      value={deviceId}
+                      onChange={e => setDeviceId(e.target.value)}
+                    >
+                      {DEVICE_PRESETS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                    <button
+                      className={'configs-orient-btn' + (landscape ? ' active' : '')}
+                      onClick={() => setLandscape(l => !l)}
+                    >
+                      {landscape ? '⟷ Landscape' : '↕ Portrait'}
+                    </button>
+                    <button
+                      className={'configs-orient-btn' + (editLayout ? ' active' : '')}
+                      onClick={() => { setEditLayout(m => !m); setSelectedKey(null); }}
+                    >
+                      {editLayout ? 'Done Editing' : 'Edit Layout'}
+                    </button>
+                    {editLayout && (
+                      <button className="configs-orient-btn" onClick={resetLayout}>Reset Layout</button>
+                    )}
+                  </div>
+
+                  {editLayout && (
+                    <div className="clone-edit-hint">
+                      Drag to reposition. <strong>Shift+drag</strong> to resize. Click to select.
+                    </div>
+                  )}
+
+                  <div className="configs-canvas-wrap">
+                    <DeviceFrame device={device} landscape={landscape} maxHeight={MAX_CANVAS_H}>
+                      <GamepadCanvas
+                        canvasW={canvasW}
+                        canvasH={canvasH}
+                        config={configJson}
+                        editMode={editLayout}
+                        canvasScale={canvasScale}
+                        onConfigChange={setConfigJson}
+                        selectedKey={editLayout ? selectedKey : null}
+                        onSelect={editLayout ? setSelectedKey : undefined}
+                      />
+                    </DeviceFrame>
+                  </div>
+
+                  {editLayout && selectedKey && (() => {
+                    const { ox, oy, sx } = getElementOffset(configJson, selectedKey);
+                    return (
+                      <div className="elem-props-bar">
+                        <span className="elem-props-key">{selectedKey}</span>
+                        <label className="elem-props-field">
+                          <span>X</span>
+                          <input type="number" step="1" value={Math.round(ox)}
+                            onChange={e => setConfigJson(c => applyOffset(c, selectedKey, Number(e.target.value), oy))} />
+                        </label>
+                        <label className="elem-props-field">
+                          <span>Y</span>
+                          <input type="number" step="1" value={Math.round(oy)}
+                            onChange={e => setConfigJson(c => applyOffset(c, selectedKey, ox, Number(e.target.value)))} />
+                        </label>
+                        <label className="elem-props-field">
+                          <span>Scale</span>
+                          <input type="number" step="0.05" min="0.2" max="4"
+                            value={Number(sx.toFixed(2))}
+                            onChange={e => { const v = Math.max(0.2, Math.min(4, Number(e.target.value))); setConfigJson(c => applyScale(c, selectedKey, v, v)); }} />
+                        </label>
+                        <button className="elem-props-reset" onClick={() => setConfigJson(c => applyScale(applyOffset(c, selectedKey, 0, 0), selectedKey, 1, 1))}>
+                          Reset
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {saveError && <p className="admin-save-error">{saveError}</p>}
               {saveSuccess && <p className="admin-save-ok">Saved.</p>}
@@ -221,7 +346,7 @@ export default function Admin() {
                   </>
                 )}
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

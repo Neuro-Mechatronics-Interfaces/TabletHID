@@ -1,5 +1,6 @@
 import db from '../db.js';
 import { trimAndClamp, sanitizeTags, stripControlChars } from '../sanitize.js';
+import { validateGamepadConfig, validateTouchMouseConfig } from '../validate.js';
 
 function parseRow(row) {
   if (!row) return row;
@@ -32,7 +33,7 @@ export function adminGetConfig(req, res) {
 export function adminPatchConfig(req, res) {
   try {
     const { id } = req.params;
-    const row = db.prepare('SELECT id FROM configs WHERE id = ?').get(id);
+    const row = db.prepare('SELECT id, mode FROM configs WHERE id = ?').get(id);
     if (!row) return res.status(404).json({ error: 'Not found.' });
 
     const body = req.body ?? {};
@@ -56,6 +57,13 @@ export function adminPatchConfig(req, res) {
       updates.category = body.category
         ? (stripControlChars(trimAndClamp(body.category, 40)) || null)
         : null;
+    }
+
+    if ('config_json' in body) {
+      const validator = row.mode === 'gamepad' ? validateGamepadConfig : validateTouchMouseConfig;
+      const err = validator(body.config_json);
+      if (err) return res.status(400).json({ error: `config_json invalid: ${err}` });
+      updates.config_json = JSON.stringify(body.config_json);
     }
 
     if (Object.keys(updates).length === 0) {
