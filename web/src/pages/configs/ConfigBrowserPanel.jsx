@@ -4,7 +4,7 @@ import ConfigCard from './ConfigCard.jsx';
 const FETCH_LIMIT = 100;
 const MAX_CARDS = 50;
 
-export default function ConfigBrowserPanel({ onSelect, selectedId }) {
+export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, onTagSelect }) {
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +12,6 @@ export default function ConfigBrowserPanel({ onSelect, selectedId }) {
   const [platform, setPlatform] = useState('');
   const [sort, setSort] = useState('recent');
   const [category, setCategory] = useState('');
-  const [activeTag, setActiveTag] = useState('');
   const [search, setSearch] = useState('');
 
   const fetchConfigs = useCallback(async () => {
@@ -116,7 +115,7 @@ export default function ConfigBrowserPanel({ onSelect, selectedId }) {
                 <button
                   key={t}
                   className={'cfg-chip cfg-tag-chip' + (activeTag === t ? ' active' : '')}
-                  onClick={() => setActiveTag(activeTag === t ? '' : t)}
+                  onClick={() => onTagSelect(activeTag === t ? '' : t)}
                 >
                   {t}
                 </button>
