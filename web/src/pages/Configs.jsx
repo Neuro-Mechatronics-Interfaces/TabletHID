@@ -11,8 +11,12 @@ export default function Configs() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('browser');
   const [selectedConfig, setSelectedConfig] = useState(null);
-  const [deviceId, setDeviceId] = useState(DEFAULT_DEVICE_ID);
-  const [landscape, setLandscape] = useState(true);
+  const [deviceId, setDeviceId] = useState(
+    () => localStorage.getItem('configs:deviceId') ?? DEFAULT_DEVICE_ID,
+  );
+  const [landscape, setLandscape] = useState(
+    () => localStorage.getItem('configs:landscape') !== 'false',
+  );
 
   const device = DEVICE_PRESETS.find(d => d.id === deviceId) ?? DEVICE_PRESETS[0];
   const canvasW = landscape ? device.heightDp : device.widthDp;
@@ -54,7 +58,10 @@ export default function Configs() {
               <select
                 className="configs-device-picker"
                 value={deviceId}
-                onChange={e => setDeviceId(e.target.value)}
+                onChange={e => {
+                  setDeviceId(e.target.value);
+                  localStorage.setItem('configs:deviceId', e.target.value);
+                }}
                 aria-label="Device"
               >
                 {DEVICE_PRESETS.map(d => (
@@ -63,7 +70,10 @@ export default function Configs() {
               </select>
               <button
                 className={'configs-orient-btn' + (landscape ? ' active' : '')}
-                onClick={() => setLandscape(l => !l)}
+                onClick={() => setLandscape(l => {
+                  localStorage.setItem('configs:landscape', String(!l));
+                  return !l;
+                })}
                 title="Toggle orientation"
               >
                 {landscape ? '⟷ Landscape' : '↕ Portrait'}

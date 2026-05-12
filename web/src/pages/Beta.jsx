@@ -9,10 +9,30 @@ export default function Beta() {
     osVersion: '', deviceModel: '', comments: '',
     honeypot: '',
   });
+  const [platformEmailDirty, setPlatformEmailDirty] = useState(false);
   const [status, setStatus]   = useState('idle'); // idle | submitting | success | error
   const [errorMsg, setErrorMsg] = useState('');
 
   const set = field => e => setForm(f => ({ ...f, [field]: e.target.value }));
+
+  const handleContactEmailChange = e => {
+    const val = e.target.value;
+    setForm(f => ({
+      ...f,
+      email: val,
+      platformEmail: platformEmailDirty ? f.platformEmail : val,
+    }));
+  };
+
+  const handlePlatformEmailChange = e => {
+    setPlatformEmailDirty(true);
+    setForm(f => ({ ...f, platformEmail: e.target.value }));
+  };
+
+  const handlePlatformChange = e => {
+    setPlatformEmailDirty(false);
+    setForm(f => ({ ...f, platform: e.target.value, platformEmail: f.email, osVersion: '', deviceModel: '' }));
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -112,16 +132,14 @@ export default function Beta() {
             autoComplete="email"
             placeholder="jane@example.com"
             value={form.email}
-            onChange={set('email')}
+            onChange={handleContactEmailChange}
           />
           <span className="beta-hint">Used to follow up only — not shared.</span>
         </label>
 
         <label className="beta-field">
           <span>Platform</span>
-          <select required value={form.platform} onChange={e => {
-            setForm(f => ({ ...f, platform: e.target.value, platformEmail: '', osVersion: '', deviceModel: '' }));
-          }}>
+          <select required value={form.platform} onChange={handlePlatformChange}>
             <option value="" disabled>Select a platform…</option>
             <option value="google_play">Google Play (Android)</option>
             <option value="testflight">Apple TestFlight (iOS)</option>
@@ -138,7 +156,7 @@ export default function Beta() {
                 maxLength={200}
                 placeholder="jane@gmail.com"
                 value={form.platformEmail}
-                onChange={set('platformEmail')}
+                onChange={handlePlatformEmailChange}
               />
               <span className="beta-hint">
                 Must be the email linked to your Google Play account — this is what gets added to the tester list.
@@ -200,7 +218,7 @@ export default function Beta() {
                 maxLength={200}
                 placeholder="jane@icloud.com"
                 value={form.platformEmail}
-                onChange={set('platformEmail')}
+                onChange={handlePlatformEmailChange}
               />
               <span className="beta-hint">
                 Must match your Apple ID — this is where the TestFlight invite will be sent.
