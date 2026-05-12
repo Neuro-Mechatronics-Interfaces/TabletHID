@@ -12,7 +12,7 @@ import {
   stripControlChars,
 } from '../sanitize.js';
 import { validateTouchMouseConfig, validateGamepadConfig } from '../validate.js';
-import { getConfigGraph, updateConfigGraph } from '../graph.js';
+import { getConfigGraph, patchGraphCluster, updateConfigGraph } from '../graph.js';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -173,6 +173,30 @@ export async function getConfigGraphRoute(req, res) {
     console.log(JSON.stringify({
       level: 'error',
       event: 'get_config_graph_error',
+      error: err?.message ?? String(err),
+    }));
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+}
+
+export async function patchConfigGraphCluster(req, res) {
+  try {
+    const { id } = req.params;
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+      return res.status(400).json({ error: 'Invalid cluster ID format.' });
+    }
+
+    const body = req.body ?? {};
+    const updated = patchGraphCluster(db, id, {
+      name: body.name,
+      description: body.description,
+    });
+    if (!updated) return res.status(404).json({ error: 'Not found.' });
+    return res.json(updated);
+  } catch (err) {
+    console.log(JSON.stringify({
+      level: 'error',
+      event: 'patch_graph_cluster_error',
       error: err?.message ?? String(err),
     }));
     return res.status(500).json({ error: 'Internal server error.' });

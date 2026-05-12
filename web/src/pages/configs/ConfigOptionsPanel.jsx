@@ -1,3 +1,5 @@
+import MacroEditor from './MacroEditor.jsx';
+
 const BUTTON_KEYS = [
   ['a', 'A'], ['b', 'B'], ['x', 'X'], ['y', 'Y'],
   ['lb', 'LB'], ['rb', 'RB'], ['lt', 'LT'], ['rt', 'RT'],
@@ -41,14 +43,6 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
       ...prev,
       sniper: { ...(prev?.sniper ?? {}), [field]: val },
     }));
-  }
-
-  function setMacro(index, field, val) {
-    onConfigChange(prev => {
-      const macroButtons = [...(prev?.macroButtons ?? [])];
-      macroButtons[index] = { ...(macroButtons[index] ?? {}), [field]: val };
-      return { ...prev, macroButtons };
-    });
   }
 
   const isGamepad = mode === 'gamepad';
@@ -207,6 +201,8 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
               ))}
             </div>
           </section>
+
+          <MacroEditor config={config} onConfigChange={onConfigChange} />
         </>
       )}
 
@@ -311,25 +307,7 @@ export default function ConfigOptionsPanel({ meta, onMetaChange, config, onConfi
             </label>
           </section>
 
-          <section className="cfg-opt-section">
-            <h3 className="cfg-opt-heading">Keyboard Macros</h3>
-            {(config?.macroButtons ?? []).length === 0 ? (
-              <p className="cfg-opt-hint">No keyboard macros in this config.</p>
-            ) : (
-              <div className="cfg-macro-list">
-                {config.macroButtons.map((macro, index) => (
-                  <label key={index} className="cfg-opt-label">
-                    Macro {index + 1}
-                    <input
-                      className="cfg-opt-input"
-                      value={macro.label ?? ''}
-                      onChange={e => setMacro(index, 'label', e.target.value)}
-                    />
-                  </label>
-                ))}
-              </div>
-            )}
-          </section>
+          <MacroEditor config={config} onConfigChange={onConfigChange} />
         </>
       )}
     </div>
