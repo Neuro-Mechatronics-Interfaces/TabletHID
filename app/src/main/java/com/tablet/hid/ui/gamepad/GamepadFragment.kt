@@ -33,6 +33,7 @@ import com.tablet.hid.bluetooth.HidReportDescriptors.BTN_Y
 import com.tablet.hid.databinding.FragmentGamepadBinding
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickSide
+import com.tablet.hid.model.OrientationPreference
 import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.OrientationStore
 import kotlinx.coroutines.launch
@@ -110,8 +111,7 @@ class GamepadFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().requestedOrientation =
-            OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
+        applyConfigOrientation(viewModel.gamepadConfig.value)
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
 
         stateManager = GamepadStateManager(
@@ -194,7 +194,16 @@ class GamepadFragment : Fragment() {
 
     // ── Config application ───────────────────────────────────────────────────
 
+    private fun applyConfigOrientation(cfg: GamepadConfig) {
+        requireActivity().requestedOrientation = when (cfg.orientationPreference) {
+            OrientationPreference.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            OrientationPreference.PORTRAIT  -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            OrientationPreference.SYSTEM    -> OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
+        }
+    }
+
     private fun applyConfig(cfg: GamepadConfig) {
+        applyConfigOrientation(cfg)
         val density = resources.displayMetrics.density
         fun View.applyLayout(ox: Float, oy: Float, sx: Float, sy: Float) {
             translationX = ox * density; translationY = oy * density

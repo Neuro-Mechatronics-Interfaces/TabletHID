@@ -248,5 +248,12 @@ export function validateGamepadConfig(obj) {
     }
   }
 
+  if ('orientationPreference' in obj &&
+      obj.orientationPreference !== 'SYSTEM' &&
+      obj.orientationPreference !== 'LANDSCAPE' &&
+      obj.orientationPreference !== 'PORTRAIT') {
+    return 'orientationPreference must be "SYSTEM", "LANDSCAPE", or "PORTRAIT"';
+  }
+
   return null;
 }

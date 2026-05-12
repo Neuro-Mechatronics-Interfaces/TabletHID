@@ -4,6 +4,7 @@ import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.ButtonZoneConfig
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
+import com.tablet.hid.model.OrientationPreference
 import com.tablet.hid.model.TouchMouseConfig
 
 object ConfigMerger {
@@ -106,6 +107,7 @@ object ConfigMerger {
             dpadDown  = applyBehaviorToButton(target.dpadDown,  source.dpadDown,  isTrigger = false),
             dpadLeft  = applyBehaviorToButton(target.dpadLeft,  source.dpadLeft,  isTrigger = false),
             dpadRight = applyBehaviorToButton(target.dpadRight, source.dpadRight, isTrigger = false),
+            orientationPreference = source.orientationPreference,
         )
 
     private fun applyJoystickSettings(target: GamepadConfig, source: GamepadConfig): GamepadConfig =

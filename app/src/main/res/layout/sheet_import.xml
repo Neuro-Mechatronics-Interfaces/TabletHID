@@ -64,6 +64,36 @@
             android:visibility="gone"
             android:textAppearance="?attr/textAppearanceBodyMedium" />
 
+        <!-- ── Gamepad layout preview (gamepad mode only) ─────────────────── -->
+        <LinearLayout
+            android:id="@+id/thumbnailOrientRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="12dp"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnThumbnailOrient"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⟷ Landscape"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <com.tablet.hid.ui.community.GamepadThumbnailView
+            android:id="@+id/gamepadThumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="4dp"
+            android:clipToOutline="true"
+            android:visibility="gone" />
+
         <!-- ── Import target profile ───────────────────────────────────────── -->
         <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"

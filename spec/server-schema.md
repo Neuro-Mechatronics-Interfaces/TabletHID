@@ -286,6 +286,7 @@ Top-level `config_json` object:
 | `macroButtons` | `KeyboardMacroButtonConfig[]` | `[]` |
 | `vibrationIntensity` | `"OFF"` \| `"LIGHT"` \| `"MEDIUM"` \| `"STRONG"` | `"OFF"` |
 | `customButtonLabels` | `{ [buttonKey]: string }` | `{}` |
+| `orientationPreference` | `"SYSTEM"` \| `"LANDSCAPE"` \| `"PORTRAIT"` | `"SYSTEM"` | Preferred screen orientation when in Gamepad mode; `SYSTEM` defers to device/app setting |
 
 `buttons` keys: `a`, `b`, `x`, `y`, `lb`, `rb`, `lt`, `rt`, `back`, `start`, `dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight`.  
 Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and `triggerAxis`.
@@ -330,6 +331,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 |---------------|-------------|------|---------|
 | 1 | v1 | 2026-05 | Initial schema: `touch_mouse` and `gamepad` configs as defined above |
 | — | v1 | 2026-05 | DB migration 2: added `category` column and index (additive, no API version bump) |
+| 2 | v1 | 2026-05 | Added optional `orientationPreference` field to `gamepad` `config_json`; defaults to `"SYSTEM"`; backward-compatible additive change |
 
 ---
 

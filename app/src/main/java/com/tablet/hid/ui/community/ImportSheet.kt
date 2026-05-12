@@ -49,6 +49,8 @@ class ImportSheet : BottomSheetDialogFragment() {
     // Guards preset-chip listener from reacting to programmatic checkbox changes.
     private var applyingPreset = false
 
+    private var thumbnailLandscape = true
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View {
@@ -97,6 +99,25 @@ class ImportSheet : BottomSheetDialogFragment() {
             binding.importDescription.isVisible = true
         }
 
+        // ── Gamepad layout preview ───────────────────────────────────────────
+        if (record.mode == "gamepad" && record.configJson.isNotBlank()) {
+            // Init orientation from embedded preference; default to landscape when SYSTEM
+            thumbnailLandscape = try {
+                JSONObject(record.configJson).optString("orientationPreference", "SYSTEM") != "PORTRAIT"
+            } catch (_: Exception) { true }
+
+            binding.gamepadThumbnail.setConfigJson(record.configJson)
+            binding.gamepadThumbnail.setLandscape(thumbnailLandscape)
+            binding.gamepadThumbnail.isVisible = true
+            binding.thumbnailOrientRow.isVisible = true
+            updateOrientToggleLabel()
+            binding.btnThumbnailOrient.setOnClickListener {
+                thumbnailLandscape = !thumbnailLandscape
+                binding.gamepadThumbnail.setLandscape(thumbnailLandscape)
+                updateOrientToggleLabel()
+            }
+        }
+
         // ── Profile target chip ──────────────────────────────────────────────
         binding.chipImportProfile.text = targetProfile.name
         binding.chipImportProfile.setOnClickListener { showProfilePicker() }
@@ -132,6 +153,10 @@ class ImportSheet : BottomSheetDialogFragment() {
 
         // ── Apply button ─────────────────────────────────────────────────────
         binding.btnApplyImport.setOnClickListener { performApply() }
+    }
+
+    private fun updateOrientToggleLabel() {
+        binding.btnThumbnailOrient.text = if (thumbnailLandscape) "⟷ Landscape" else "↕ Portrait"
     }
 
     private fun applyPreset(kind: PresetKind) {

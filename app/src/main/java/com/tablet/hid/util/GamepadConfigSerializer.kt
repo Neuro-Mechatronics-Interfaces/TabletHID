@@ -7,6 +7,7 @@ import com.tablet.hid.model.JoystickConfig
 import com.tablet.hid.model.JoystickSide
 import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.model.MacroHostDefaults
+import com.tablet.hid.model.OrientationPreference
 import com.tablet.hid.model.TriggerDragAxis
 import com.tablet.hid.model.VibrationIntensity
 import org.json.JSONArray
@@ -48,6 +49,7 @@ object GamepadConfigSerializer {
         root.put("macroHostDefaults", config.macroHostDefaults.name)
         root.put("macroButtons", macrosToJson(config.macroButtons))
         root.put("vibrationIntensity", config.vibrationIntensity.name)
+        root.put("orientationPreference", config.orientationPreference.name)
         val labels = JSONObject()
         config.customButtonLabels.forEach { (k, v) -> labels.put(k, v) }
         root.put("customButtonLabels", labels)
@@ -92,6 +94,10 @@ object GamepadConfigSerializer {
             ),
             customButtonLabels = labelsFromJson(json.optJSONObject("customButtonLabels")),
             singleJoystickSideBtn = buttonFromJson(buttons.optJSONObject("singleJoystickToggle"), isTrigger = false),
+            orientationPreference = enumValueOrDefault(
+                json.optString("orientationPreference"),
+                OrientationPreference.SYSTEM,
+            ),
         )
     }
 

@@ -6,6 +6,8 @@ enum class JoystickSide { LEFT, RIGHT }
 
 enum class VibrationIntensity { OFF, LIGHT, MEDIUM, STRONG }
 
+enum class OrientationPreference { SYSTEM, LANDSCAPE, PORTRAIT }
+
 data class ButtonConfig(
     val enabled: Boolean = true,
     val behavior: ClickBehavior = ClickBehavior.MOMENTARY,
@@ -56,4 +58,5 @@ data class GamepadConfig(
     val vibrationIntensity: VibrationIntensity = VibrationIntensity.OFF,
     val customButtonLabels: Map<String, String> = emptyMap(),
     val singleJoystickSideBtn: ButtonConfig = ButtonConfig(),
+    val orientationPreference: OrientationPreference = OrientationPreference.SYSTEM,
 )
