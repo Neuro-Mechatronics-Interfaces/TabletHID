@@ -20,8 +20,10 @@ API route modules live in `web/api/`:
 | `web/api/validate.js` | Canonical JSON schema validators for each config mode |
 | `web/api/graph.js` | Weighted token-vector graph builder and sparse edge query helpers |
 | `web/api/middleware.js` | Rate limiter, request size cap, security headers |
-| `web/api/routes/configs.js` | Route handler functions |
-| `web/api/router.js` | Express Router — mounts all three routes |
+| `web/api/routes/configs.js` | Community config route handler functions |
+| `web/api/routes/devices.js` | Web preview device preset route handler functions |
+| `web/api/routes/beta.js` | Beta signup notification route; sends email only and does not write SQLite rows |
+| `web/api/router.js` | Express Router — mounts config, graph, device, beta signup, and admin routes |
 
 `web/server.js` imports and mounts the router at `/api/v1` before the SPA fallback.
 
@@ -43,6 +45,9 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `POST` | `/api/v1/configs` | Upload a config |
 | `GET`  | `/api/v1/devices` | List saved device presets for web config previews |
 | `POST` | `/api/v1/devices` | Save a custom device preset |
+| `POST` | `/api/v1/beta-signup` | Send a beta signup notification email; no database persistence |
+
+`/api/v1/beta-signup` is intentionally outside the persisted community config schema. The route validates the website form, rate-limits submissions, and sends a Resend email notification. It does not create a beta signup table or any other SQLite rows.
 
 ### GET /api/v1/configs — query parameters
 
