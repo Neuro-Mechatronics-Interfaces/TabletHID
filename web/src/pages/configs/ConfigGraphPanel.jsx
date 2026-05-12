@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 const GRAPH_VISIBLE_NEIGHBORS = 24;
 const GRAPH_FETCH_LIMIT = 60;
-const WORLD_SIZE = 1600;
+const WORLD_SIZE = 2400;
 const MIN_ZOOM = 0.35;
 const MAX_ZOOM = 2.6;
 const CLUSTER_STRENGTH = 0.86;
 const CLUSTER_MIN_SIZE = 3;
+const LAYOUT_TICKS = 420;
+const SEPARATION_TICKS = 90;
 
 function shortName(name) {
   if (!name) return 'Config';
@@ -192,7 +194,7 @@ function forceLayout(graph) {
 
   const nodes = graph.nodes.map((node, index) => {
     const angle = index === 0 ? 0 : (-Math.PI / 2) + ((index - 1) / Math.max(1, graph.nodes.length - 1)) * Math.PI * 2;
-    const radius = index === 0 ? 0 : 250 + (1 - Math.min(1, node.strength)) * 180;
+    const radius = index === 0 ? 0 : 330 + (1 - Math.min(1, node.strength)) * 320;
     return {
       node,
       id: node.config.id,
@@ -215,18 +217,23 @@ function forceLayout(graph) {
     ]),
   );
 
-  for (let tick = 0; tick < 320; tick++) {
+  const clampNode = node => {
+    node.x = clamp(node.x, -WORLD_SIZE / 2 + 150, WORLD_SIZE / 2 - 150);
+    node.y = clamp(node.y, -WORLD_SIZE / 2 + 110, WORLD_SIZE / 2 - 110);
+  };
+
+  for (let tick = 0; tick < LAYOUT_TICKS; tick++) {
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i];
         const b = nodes[j];
         const dx = b.x - a.x;
         const dy = b.y - a.y;
-        const distSq = Math.max(900, dx * dx + dy * dy);
+        const distSq = Math.max(2500, dx * dx + dy * dy);
         const dist = Math.sqrt(distSq);
         const pairKey = [a.id, b.id].sort().join(':');
         const dissimilarity = dissimilarityByPair.get(pairKey) ?? 0;
-        const force = (5200 + dissimilarity * 32000) / distSq;
+        const force = (9000 + dissimilarity * 65000) / distSq;
         const fx = (dx / dist) * force;
         const fy = (dy / dist) * force;
         if (!a.center) {
@@ -247,8 +254,8 @@ function forceLayout(graph) {
       const dy = b.y - a.y;
       const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
       const strength = clamp(edge.strength, 0.05, 1);
-      const targetDistance = 460 - strength * 290;
-      const spring = (dist - targetDistance) * (0.0018 + strength * 0.014);
+      const targetDistance = 560 - strength * 330;
+      const spring = (dist - targetDistance) * (0.0012 + strength * 0.01);
       const fx = (dx / dist) * spring;
       const fy = (dy / dist) * spring;
       if (!a.center) {
@@ -269,12 +276,48 @@ function forceLayout(graph) {
         node.vy = 0;
         continue;
       }
-      node.vx += -node.x * 0.0008;
-      node.vy += -node.y * 0.0008;
+      node.vx += -node.x * 0.00035;
+      node.vy += -node.y * 0.00035;
       node.vx *= 0.88;
       node.vy *= 0.88;
-      node.x = clamp(node.x + node.vx, -WORLD_SIZE / 2 + 90, WORLD_SIZE / 2 - 90);
-      node.y = clamp(node.y + node.vy, -WORLD_SIZE / 2 + 60, WORLD_SIZE / 2 - 60);
+      node.x += node.vx;
+      node.y += node.vy;
+      clampNode(node);
+    }
+  }
+
+  for (let tick = 0; tick < SEPARATION_TICKS; tick++) {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i];
+        const b = nodes[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        const pairKey = [a.id, b.id].sort().join(':');
+        const dissimilarity = dissimilarityByPair.get(pairKey) ?? 0;
+        const baseDistance = a.node.cluster || b.node.cluster ? 330 : 235;
+        const desiredDistance = baseDistance + dissimilarity * 170;
+        if (dist >= desiredDistance) continue;
+
+        const push = ((desiredDistance - dist) / dist) * 0.42;
+        const fx = dx * push;
+        const fy = dy * push;
+        if (a.center) {
+          b.x += fx;
+          b.y += fy;
+        } else if (b.center) {
+          a.x -= fx;
+          a.y -= fy;
+        } else {
+          a.x -= fx * 0.5;
+          a.y -= fy * 0.5;
+          b.x += fx * 0.5;
+          b.y += fy * 0.5;
+        }
+        clampNode(a);
+        clampNode(b);
+      }
     }
   }
 

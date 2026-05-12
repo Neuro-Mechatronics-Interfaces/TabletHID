@@ -612,8 +612,8 @@ body {
   will-change: transform;
 }
 .graph-edges {
-  position: absolute; left: -800px; top: -800px;
-  width: 1600px; height: 1600px;
+  position: absolute; left: -1200px; top: -1200px;
+  width: 2400px; height: 2400px;
   color: rgba(79,70,229,.75);
   overflow: visible; pointer-events: none;
 }
