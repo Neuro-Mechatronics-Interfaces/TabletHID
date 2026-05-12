@@ -242,10 +242,7 @@ class HomeFragment : Fragment() {
         row.addView(nameView)
 
         fun textBtn(label: String, cd: String, onClick: () -> Unit): MaterialButton =
-            MaterialButton(
-                ContextThemeWrapper(ctx, com.google.android.material.R.style.Widget_Material3_Button_TextButton),
-                null, 0
-            ).apply {
+            MaterialButton(ctx, null, android.R.attr.borderlessButtonStyle).apply {
                 text = label
                 contentDescription = cd
                 insetTop = 0
@@ -260,10 +257,7 @@ class HomeFragment : Fragment() {
             showRenameHostDialog(host)
         })
 
-        val ta = ctx.theme.obtainStyledAttributes(intArrayOf(R.attr.forgetButtonStyle))
-        val forgetStyle = ta.getResourceId(0, com.google.android.material.R.style.Widget_Material3_Button_TextButton)
-        ta.recycle()
-        val forgetBtn = MaterialButton(ContextThemeWrapper(ctx, forgetStyle), null, 0).apply {
+        val forgetBtn = MaterialButton(ctx, null, R.attr.forgetButtonStyle).apply {
             text = getString(R.string.home_btn_forget)
             contentDescription = getString(R.string.home_cd_forget)
             insetTop = 0
