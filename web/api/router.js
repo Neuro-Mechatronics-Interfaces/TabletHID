@@ -4,6 +4,7 @@ import { listConfigs, getConfig, getConfigGraphRoute, uploadConfig } from './rou
 import { adminMe, adminListConfigs, adminGetConfig, adminPatchConfig, adminDeleteConfig } from './routes/admin.js';
 import { requireAdmin } from './adminAuth.js';
 import { betaSignup } from './routes/beta.js';
+import { createDevice, listDevices } from './routes/devices.js';
 
 const router = Router();
 router.use(securityHeaders);
@@ -12,6 +13,8 @@ router.get('/configs',     listConfigs);
 router.get('/configs/:id/graph', getConfigGraphRoute);
 router.get('/configs/:id', getConfig);
 router.post('/configs',    bodySizeLimit, uploadRateLimiter, uploadConfig);
+router.get('/devices', listDevices);
+router.post('/devices', bodySizeLimit, createDevice);
 
 router.post('/beta-signup', bodySizeLimit, betaRateLimiter, betaSignup);
 

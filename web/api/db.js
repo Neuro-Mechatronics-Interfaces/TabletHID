@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ensureGraphSchema } from './graph.js';
+import { DEFAULT_DEVICES } from './defaultDevices.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(__dirname, '..', 'data');
@@ -76,6 +77,44 @@ if (!hasMigration3) {
   `).run(new Date().toISOString());
 } else {
   ensureGraphSchema(db);
+}
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS device_presets (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  class      TEXT NOT NULL,
+  width_dp   INTEGER NOT NULL,
+  height_dp  INTEGER NOT NULL,
+  density    REAL NOT NULL,
+  is_builtin INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+
+  CHECK (class IN ('phone', 'tablet')),
+  CHECK (width_dp > 0),
+  CHECK (height_dp > 0),
+  CHECK (density > 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_device_presets_name ON device_presets (name);
+`);
+
+const hasMigration4 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 4').get();
+if (!hasMigration4) {
+  const now = new Date().toISOString();
+  const insert = db.prepare(`
+    INSERT OR IGNORE INTO device_presets (
+      id, name, class, width_dp, height_dp, density, is_builtin, created_at, updated_at
+    ) VALUES (
+      @id, @name, @class, @width_dp, @height_dp, @density, 1, @now, @now
+    )
+  `);
+  for (const device of DEFAULT_DEVICES) insert.run({ ...device, now });
+  db.prepare(`
+    INSERT INTO schema_migrations (version, applied_at, description)
+    VALUES (4, ?, 'Added device presets table with seeded defaults')
+  `).run(now);
 }
 
 export default db;

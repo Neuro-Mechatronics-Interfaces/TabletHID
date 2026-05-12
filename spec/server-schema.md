@@ -41,6 +41,8 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` and returns the incremented count |
 | `GET`  | `/api/v1/configs/:id/graph` | Fetch nearby config graph nodes/edges for one config |
 | `POST` | `/api/v1/configs` | Upload a config |
+| `GET`  | `/api/v1/devices` | List saved device presets for web config previews |
+| `POST` | `/api/v1/devices` | Save a custom device preset |
 
 ### GET /api/v1/configs — query parameters
 
@@ -101,6 +103,32 @@ Response:
 ```
 
 `strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
+
+### GET /api/v1/devices
+
+Returns saved preview device presets:
+
+```json
+{
+  "devices": [
+    { "id": "pixel-tablet", "name": "Pixel Tablet", "class": "tablet", "widthDp": 1280, "heightDp": 800, "density": 2, "isBuiltin": true }
+  ]
+}
+```
+
+### POST /api/v1/devices
+
+Request body:
+
+| Field | Required | Type | Notes |
+|-------|----------|------|-------|
+| `name` | yes | string, max 80 chars | Display name for the dropdown |
+| `class` | no | `"phone"` \| `"tablet"` | Defaults to `"tablet"` |
+| `widthDp` | yes | integer 120-3000 | Portrait/native width in dp |
+| `heightDp` | yes | integer 120-3000 | Portrait/native height in dp |
+| `density` | no | float 0.5-5 | Android-style density multiplier; defaults to `2` |
+
+Custom device presets are public to the local web instance and are used by the `/configs` preview dropdown.
 
 ### POST /api/v1/configs
 
@@ -194,6 +222,27 @@ CREATE INDEX IF NOT EXISTS idx_config_graph_source_strength
   ON config_graph_edges (source_config_id, strength DESC);
 CREATE INDEX IF NOT EXISTS idx_config_graph_target
   ON config_graph_edges (target_config_id);
+
+-- Device presets used by the web config preview. Seeded with built-in defaults,
+-- then extended by user-saved custom devices.
+CREATE TABLE IF NOT EXISTS device_presets (
+  id         TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  class      TEXT NOT NULL, -- 'phone' | 'tablet'
+  width_dp   INTEGER NOT NULL,
+  height_dp  INTEGER NOT NULL,
+  density    REAL NOT NULL,
+  is_builtin INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+
+  CHECK (class IN ('phone', 'tablet')),
+  CHECK (width_dp > 0),
+  CHECK (height_dp > 0),
+  CHECK (density > 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_device_presets_name ON device_presets (name);
 ```
 
 ---
@@ -379,6 +428,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 | 1 | v1 | 2026-05 | Initial schema: `touch_mouse` and `gamepad` configs as defined above |
 | — | v1 | 2026-05 | DB migration 2: added `category` column and index (additive, no API version bump) |
 | — | v1 | 2026-05 | DB migration 3: added sparse `config_graph_edges` table and indexes for nearby-config graph queries |
+| — | v1 | 2026-05 | DB migration 4: added `device_presets` table seeded with web preview defaults |
 | 2 | v1 | 2026-05 | Added optional `orientationPreference` field to `gamepad` `config_json`; defaults to `"SYSTEM"`; backward-compatible additive change |
 
 ---

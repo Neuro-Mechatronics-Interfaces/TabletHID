@@ -28,6 +28,7 @@ export const DEFAULT_GAMEPAD_CONFIG = {
   singleJoystickMode: false,
   singleJoystickSideToggleEnabled: false,
   singleJoystickOutputSide: 'LEFT',
+  orientationPreference: 'LANDSCAPE',
   macroHostDefaults: 'WINDOWS',
   macroButtons: [],
   vibrationIntensity: 'OFF',

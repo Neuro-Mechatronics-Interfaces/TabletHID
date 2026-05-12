@@ -524,6 +524,40 @@ body {
   flex: 1;
 }
 
+.device-editor {
+  display: inline-flex; flex-direction: column; align-items: center;
+  gap: 8px; max-width: 100%;
+}
+.device-frame-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; max-width: 100%;
+}
+.device-dim {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted);
+}
+.device-dim input {
+  width: 76px; padding: 4px 6px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: #fff; color: var(--text); font-size: .78rem;
+}
+.device-dim-height {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.device-dim-height input {
+  writing-mode: horizontal-tb;
+  transform: rotate(180deg);
+}
+.device-save-btn {
+  border: 1px solid var(--primary); border-radius: 7px;
+  background: var(--primary-lt); color: var(--primary);
+  font-size: .78rem; font-weight: 800;
+  padding: 5px 10px; cursor: pointer;
+}
+.device-save-btn:hover { background: #e0e7ff; }
+
 .canvas-empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 12px; height: 300px; color: var(--text-muted);

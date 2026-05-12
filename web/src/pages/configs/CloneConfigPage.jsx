@@ -1,15 +1,30 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ConfigOptionsPanel from './ConfigOptionsPanel.jsx';
-import DeviceFrame from './DeviceFrame.jsx';
+import DevicePreviewEditor from './DevicePreviewEditor.jsx';
 import GamepadCanvas, { getElementOffset, applyOffset, applyScale } from './GamepadCanvas.jsx';
-import DEVICE_PRESETS from './constants/devicePresets.js';
+import useDevicePresets from './useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
 const MAX_CANVAS_H = 480;
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+function inferLandscape(config, record) {
+  const pref = config?.orientationPreference;
+  if (pref === 'LANDSCAPE') return true;
+  if (pref === 'PORTRAIT') return false;
+  const w = record?.device_screen_width_px;
+  const h = record?.device_screen_height_px;
+  if (Number.isFinite(w) && Number.isFinite(h) && w !== h) return w > h;
+  return true;
+}
+
+function withOrientationPreference(config, landscape) {
+  if (!config) return config;
+  return { ...config, orientationPreference: landscape ? 'LANDSCAPE' : 'PORTRAIT' };
 }
 
 export default function CloneConfigPage() {
@@ -24,7 +39,9 @@ export default function CloneConfigPage() {
     category: '', platform: 'android',
     device_name: '', device_os_version: '',
   });
-  const [deviceId, setDeviceId] = useState(DEFAULT_DEVICE_ID);
+  const {
+    devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty,
+  } = useDevicePresets(DEFAULT_DEVICE_ID);
   const [landscape, setLandscape] = useState(true);
   const [editLayout, setEditLayout] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
@@ -32,7 +49,6 @@ export default function CloneConfigPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(null);
 
-  const device = DEVICE_PRESETS.find(d => d.id === deviceId) ?? DEVICE_PRESETS[0];
   const canvasW = landscape ? device.heightDp : device.widthDp;
   const canvasH = landscape ? device.widthDp : device.heightDp;
   const canvasScale = Math.min(1, MAX_CANVAS_H / canvasH);
@@ -42,7 +58,11 @@ export default function CloneConfigPage() {
       .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
       .then(data => {
         setSource(data);
-        setConfig(deepClone(data.config_json));
+        const nextConfig = deepClone(data.config_json);
+        const nextLandscape = inferLandscape(nextConfig, data);
+        if (data.mode === 'gamepad') nextConfig.orientationPreference = nextLandscape ? 'LANDSCAPE' : 'PORTRAIT';
+        setConfig(nextConfig);
+        setLandscape(nextLandscape);
         setMeta({
           profile_name: `${data.profile_name} (Copy)`,
           description: data.description ?? '',
@@ -83,13 +103,17 @@ export default function CloneConfigPage() {
         platform: meta.platform,
         mode: source.mode,
         profile_name: meta.profile_name.trim(),
-        config_json: config,
+        config_json: source.mode === 'gamepad' ? withOrientationPreference(config, landscape) : config,
       };
       if (meta.description.trim()) body.description = meta.description.trim();
       if (meta.tags.trim()) body.tags = meta.tags.split(',').map(t => t.trim()).filter(Boolean);
       if (meta.category.trim()) body.category = meta.category.trim();
       if (meta.device_name.trim()) body.device_name = meta.device_name.trim();
       if (meta.device_os_version.trim()) body.device_os_version = meta.device_os_version.trim();
+      body.device_name = meta.device_name.trim() || device.name;
+      body.device_screen_width_px = Math.round(canvasW * device.density);
+      body.device_screen_height_px = Math.round(canvasH * device.density);
+      body.device_screen_density_dpi = Math.round(device.density * 160);
 
       const res = await fetch('/api/v1/configs', {
         method: 'POST',
@@ -167,13 +191,24 @@ export default function CloneConfigPage() {
             <select
               className="configs-device-picker"
               value={deviceId}
-              onChange={e => setDeviceId(e.target.value)}
+              onChange={e => {
+                const nextId = e.target.value;
+                setDeviceId(nextId);
+                const nextDevice = devices.find(d => d.id === nextId);
+                if (nextDevice) setMeta(prev => ({ ...prev, device_name: nextDevice.name }));
+              }}
             >
-              {DEVICE_PRESETS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {devices.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
             <button
               className={'configs-orient-btn' + (landscape ? ' active' : '')}
-              onClick={() => setLandscape(l => !l)}
+              onClick={() => {
+                setLandscape(l => {
+                  const next = !l;
+                  if (isGamepad) setConfig(c => withOrientationPreference(c, next));
+                  return next;
+                });
+              }}
             >
               {landscape ? '⟷ Landscape' : '↕ Portrait'}
             </button>
@@ -199,7 +234,14 @@ export default function CloneConfigPage() {
           )}
 
           <div className="configs-canvas-wrap">
-            <DeviceFrame device={device} landscape={landscape} maxHeight={MAX_CANVAS_H}>
+            <DevicePreviewEditor
+              device={device}
+              landscape={landscape}
+              maxHeight={MAX_CANVAS_H}
+              isDirty={isDirty}
+              onDimensionChange={updateDevice}
+              onSaveDevice={saveDraft}
+            >
               {isGamepad ? (
                 <GamepadCanvas
                   canvasW={canvasW}
@@ -214,7 +256,7 @@ export default function CloneConfigPage() {
               ) : (
                 <div className="canvas-phase-stub">Touch Mouse canvas — coming soon</div>
               )}
-            </DeviceFrame>
+            </DevicePreviewEditor>
           </div>
 
           {editLayout && selectedKey && (() => {

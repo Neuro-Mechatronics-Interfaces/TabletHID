@@ -147,6 +147,7 @@ The iOS BLE HID report map now includes the keyboard Report ID 3 collection and 
 | Canonical JSON serialisers | Implemented (`GamepadConfigSerializer`, `TouchMouseConfigSerializer`); canonical field names matching `spec/server-schema.md` | Implemented (`GamepadConfigSerializer`, `TouchMouseConfigSerializer`); identical field names and nesting structure |
 | QuadStick sheet import tooling | Implemented in `scripts/import_quadstick_community_configs.mjs`; converts scraped sheet metadata into clustered gamepad/touch-mouse Community Config rows tagged for future Graph grouping | Implemented as shared backend data; imported rows are normal v1 community records and can be browsed/imported by iOS clients |
 | Community config graph | Server/web implemented with sparse token-similarity edge table, rebuild script, incremental upload/admin-update hooks, and `/configs` Graph tab; Android app does not query graph yet | Server/web implemented; iOS app does not query graph yet |
+| Web preview device presets | Server/web implemented with `device_presets` table, `/api/v1/devices`, side-bound width/height inputs, and custom preset save action | Server/web implemented; iOS app uses uploaded device metadata but does not manage web preview presets |
 
 ## Quality
 

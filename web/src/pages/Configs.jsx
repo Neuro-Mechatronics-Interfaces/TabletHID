@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
 import ConfigGraphPanel from './configs/ConfigGraphPanel.jsx';
-import DeviceFrame from './configs/DeviceFrame.jsx';
+import DevicePreviewEditor from './configs/DevicePreviewEditor.jsx';
 import GamepadCanvas from './configs/GamepadCanvas.jsx';
-import DEVICE_PRESETS from './configs/constants/devicePresets.js';
+import useDevicePresets from './configs/useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
 const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
@@ -30,12 +30,12 @@ function inferLandscapeFromConfig(config) {
   return null;
 }
 
-function matchDevicePreset(config) {
+function matchDevicePreset(config, devices) {
   if (!config) return null;
 
   const deviceName = norm(config.device_name);
   if (deviceName) {
-    const byName = DEVICE_PRESETS.find(device => {
+    const byName = devices.find(device => {
       const presetName = norm(device.name);
       return deviceName.includes(presetName) || presetName.includes(deviceName);
     });
@@ -52,7 +52,7 @@ function matchDevicePreset(config) {
     const observedLong = Math.max(w, h);
     let best = null;
 
-    for (const device of DEVICE_PRESETS) {
+    for (const device of devices) {
       const presetW = device.widthDp * device.density;
       const presetH = device.heightDp * device.density;
       const presetShort = Math.min(presetW, presetH);
@@ -74,7 +74,7 @@ function matchDevicePreset(config) {
   }
 
   if (Number.isFinite(diag) && diag > 0) {
-    return DEVICE_PRESETS
+    return devices
       .map(device => ({ device, score: Math.abs(diag - diagonalForPreset(device)) }))
       .sort((a, b) => a.score - b.score)[0]?.device ?? null;
   }
@@ -87,14 +87,13 @@ export default function Configs() {
   const [tab, setTab] = useState('browser');
   const [selectedConfig, setSelectedConfig] = useState(null);
   const [activeTag, setActiveTag] = useState('');
-  const [deviceId, setDeviceId] = useState(
-    () => localStorage.getItem('configs:deviceId') ?? DEFAULT_DEVICE_ID,
-  );
+  const initialDeviceId = localStorage.getItem('configs:deviceId') ?? DEFAULT_DEVICE_ID;
+  const {
+    devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty,
+  } = useDevicePresets(initialDeviceId);
   const [landscape, setLandscape] = useState(
     () => localStorage.getItem('configs:landscape') !== 'false',
   );
-
-  const device = DEVICE_PRESETS.find(d => d.id === deviceId) ?? DEVICE_PRESETS[0];
   const canvasW = landscape ? device.heightDp : device.widthDp;
   const canvasH = landscape ? device.widthDp : device.heightDp;
 
@@ -106,7 +105,7 @@ export default function Configs() {
   useEffect(() => {
     if (!selectedConfig) return;
 
-    const matchedDevice = matchDevicePreset(selectedConfig);
+    const matchedDevice = matchDevicePreset(selectedConfig, devices);
     if (matchedDevice && matchedDevice.id !== deviceId) {
       setDeviceId(matchedDevice.id);
       localStorage.setItem('configs:deviceId', matchedDevice.id);
@@ -117,7 +116,7 @@ export default function Configs() {
       setLandscape(matchedLandscape);
       localStorage.setItem('configs:landscape', String(matchedLandscape));
     }
-  }, [selectedConfig, deviceId, landscape]);
+  }, [selectedConfig, deviceId, landscape, devices, setDeviceId]);
 
   return (
     <div className="configs-page">
@@ -163,7 +162,7 @@ export default function Configs() {
                 }}
                 aria-label="Device"
               >
-                {DEVICE_PRESETS.map(d => (
+                {devices.map(d => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
@@ -192,7 +191,14 @@ export default function Configs() {
 
             <div className="configs-canvas-wrap">
               {selectedConfig ? (
-                <DeviceFrame device={device} landscape={landscape} maxHeight={500}>
+                <DevicePreviewEditor
+                  device={device}
+                  landscape={landscape}
+                  maxHeight={500}
+                  isDirty={isDirty}
+                  onDimensionChange={updateDevice}
+                  onSaveDevice={saveDraft}
+                >
                   {isGamepad ? (
                     <GamepadCanvas canvasW={canvasW} canvasH={canvasH} config={configJson} />
                   ) : (
@@ -200,7 +206,7 @@ export default function Configs() {
                       Touch Mouse canvas — coming soon
                     </div>
                   )}
-                </DeviceFrame>
+                </DevicePreviewEditor>
               ) : (
                 <div className="canvas-empty">
                   <div className="canvas-empty-icon">🎮</div>

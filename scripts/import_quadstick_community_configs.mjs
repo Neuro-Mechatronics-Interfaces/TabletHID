@@ -212,6 +212,7 @@ function emptyGamepadConfig() {
     singleJoystickMode: false,
     singleJoystickSideToggleEnabled: false,
     singleJoystickOutputSide: 'LEFT',
+    orientationPreference: 'LANDSCAPE',
     macroHostDefaults: 'WINDOWS',
     macroButtons: [],
     vibrationIntensity: 'OFF',
