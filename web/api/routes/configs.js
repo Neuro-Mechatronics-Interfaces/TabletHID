@@ -160,7 +160,7 @@ export async function getConfigGraphRoute(req, res) {
   try {
     const { id } = req.params;
     const limitRaw = req.query.limit !== undefined ? Number(req.query.limit) : 24;
-    const limit = Number.isInteger(limitRaw) && limitRaw >= 1 && limitRaw <= 60 ? limitRaw : 24;
+    const limit = Number.isInteger(limitRaw) && limitRaw >= 1 && limitRaw <= 120 ? limitRaw : 24;
 
     if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
       return res.status(400).json({ error: 'Invalid config ID format.' });

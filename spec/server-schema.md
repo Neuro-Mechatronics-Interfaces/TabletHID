@@ -92,7 +92,7 @@ Returns a zoomed-in sparse graph around one config, using precomputed edges from
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `limit` | integer, default 24, max 60 | Maximum nearby configs to return |
+| `limit` | integer, default 24, max 120 | Maximum nearby configs to return |
 
 Response:
 ```json

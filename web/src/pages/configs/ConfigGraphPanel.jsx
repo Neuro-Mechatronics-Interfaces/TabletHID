@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const GRAPH_VISIBLE_NEIGHBORS = 24;
-const GRAPH_FETCH_LIMIT = 60;
+const GRAPH_FETCH_LIMIT = 96;
 const WORLD_SIZE = 2400;
 const MIN_ZOOM = 0.35;
 const MAX_ZOOM = 2.6;
 const CLUSTER_STRENGTH = 0.86;
 const CLUSTER_MIN_SIZE = 3;
+const CLUSTER_SPLIT_SIZE = 12;
 const LAYOUT_TICKS = 420;
 const SEPARATION_TICKS = 90;
 
@@ -43,6 +44,80 @@ function pairKey(a, b) {
 function average(values) {
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function edgeStrengthMap(edges) {
+  const map = new Map();
+  for (const edge of edges ?? []) {
+    const key = pairKey(edge.source, edge.target);
+    map.set(key, Math.max(map.get(key) ?? 0, edge.strength ?? 0));
+  }
+  return map;
+}
+
+function connectedComponents(ids, strengthByPair, threshold) {
+  const idSet = new Set(ids);
+  const adjacency = new Map(ids.map(id => [id, []]));
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const strength = strengthByPair.get(pairKey(ids[i], ids[j])) ?? 0;
+      if (strength < threshold) continue;
+      adjacency.get(ids[i]).push(ids[j]);
+      adjacency.get(ids[j]).push(ids[i]);
+    }
+  }
+
+  const visited = new Set();
+  const components = [];
+  for (const id of idSet) {
+    if (visited.has(id)) continue;
+    const stack = [id];
+    const component = [];
+    visited.add(id);
+    while (stack.length) {
+      const current = stack.pop();
+      component.push(current);
+      for (const next of adjacency.get(current) ?? []) {
+        if (visited.has(next)) continue;
+        visited.add(next);
+        stack.push(next);
+      }
+    }
+    components.push(component);
+  }
+  return components.sort((a, b) => b.length - a.length);
+}
+
+function splitCluster(cluster, graph, nodeById) {
+  if (cluster.members.length <= CLUSTER_SPLIT_SIZE) return [cluster];
+
+  const strengthByPair = edgeStrengthMap(graph.edges);
+  for (const threshold of [0.96, 0.93, 0.9, 0.86]) {
+    const components = connectedComponents(cluster.members, strengthByPair, threshold);
+    if (components.length <= 1) continue;
+    return components.flatMap((members, index) => {
+      if (members.length <= CLUSTER_SPLIT_SIZE) {
+        return [{ ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, members }];
+      }
+      return splitCluster(
+        { ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, members },
+        graph,
+        nodeById,
+      );
+    });
+  }
+
+  return cluster.members
+    .map(id => nodeById.get(id))
+    .filter(Boolean)
+    .sort((a, b) => (b.strength ?? 0) - (a.strength ?? 0))
+    .reduce((chunks, node, index) => {
+      const chunkIndex = Math.floor(index / CLUSTER_SPLIT_SIZE);
+      chunks[chunkIndex] = chunks[chunkIndex] ?? [];
+      chunks[chunkIndex].push(node.config.id);
+      return chunks;
+    }, [])
+    .map((members, index) => ({ ...cluster, id: `${cluster.id}:chunk:${index}`, parentClusterId: cluster.id, members }));
 }
 
 function clusterGraph(graph, expandedClusters) {
@@ -94,6 +169,10 @@ function clusterGraph(graph, expandedClusters) {
     }
   }
 
+  clusters = clusters
+    .flatMap(cluster => splitCluster(cluster, graph, nodeById))
+    .filter(cluster => cluster.members.length >= CLUSTER_MIN_SIZE);
+
   const collapsedClusters = clusters.filter(cluster => !expandedClusters.has(cluster.id));
   if (!collapsedClusters.length) return graph;
 
@@ -111,10 +190,14 @@ function clusterGraph(graph, expandedClusters) {
     const strengths = memberNodes.map(node => node.strength ?? 0);
     const modes = new Set(memberNodes.map(node => node.config.mode));
     const names = memberNodes.map(node => node.config.profile_name).slice(0, 5);
-    const displayName = cluster.name || `${memberNodes.length} similar configs`;
+    const splitLabel = cluster.parentClusterId ? ` group ${cluster.id.split(':').at(-1)}` : '';
+    const displayName = cluster.name
+      ? `${cluster.name}${splitLabel}`
+      : `${memberNodes.length} similar configs${splitLabel}`;
     visibleNodeById.set(cluster.id, {
       cluster: true,
       clusterId: cluster.id,
+      parentClusterId: cluster.parentClusterId,
       clusterName: cluster.name,
       members: memberNodes,
       strength: average(strengths),
@@ -364,31 +447,35 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     return () => { cancelled = true; };
   }, [selectedConfig?.id]);
 
+  const handleWheel = useCallback(e => {
+    const nativeEvent = e.nativeEvent ?? e;
+    if (nativeEvent.__tablethidGraphWheelHandled) return;
+    nativeEvent.__tablethidGraphWheelHandled = true;
+
+    const node = e.target.closest?.('.graph-node');
+    if (node) {
+      const description = node.querySelector('.graph-node-description');
+      if (description && description.scrollHeight > description.clientHeight) {
+        e.preventDefault();
+        e.stopPropagation();
+        description.scrollTop += e.deltaY;
+        return;
+      }
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    setViewport(prev => ({ ...prev, zoom: clamp(prev.zoom * factor, MIN_ZOOM, MAX_ZOOM) }));
+  }, []);
+
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return undefined;
 
-    function onWheel(e) {
-      const node = e.target.closest?.('.graph-node');
-      if (node) {
-        const description = node.querySelector('.graph-node-description');
-        if (description && description.scrollHeight > description.clientHeight) {
-          e.preventDefault();
-          e.stopPropagation();
-          description.scrollTop += e.deltaY;
-          return;
-        }
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-      const factor = e.deltaY > 0 ? 0.9 : 1.1;
-      setViewport(prev => ({ ...prev, zoom: clamp(prev.zoom * factor, MIN_ZOOM, MAX_ZOOM) }));
-    }
-
-    stage.addEventListener('wheel', onWheel, { passive: false });
-    return () => stage.removeEventListener('wheel', onWheel);
-  }, [graph?.nodes?.length]);
+    stage.addEventListener('wheel', handleWheel, { passive: false });
+    return () => stage.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   const visibleGraph = useMemo(
     () => limitVisibleGraph(clusterGraph(graph, expandedClusters), GRAPH_VISIBLE_NEIGHBORS),
@@ -444,12 +531,14 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
   }
 
   const visibleEdges = undirectedEdges(visibleGraph.edges).filter(edge => byId.has(edge.source) && byId.has(edge.target));
+  const childEdges = visibleEdges.filter(edge => edge.source === selectedConfig.id || edge.target === selectedConfig.id);
   const collapsedClusterCount = visibleGraph.collapsedClusterCount ?? 0;
 
   async function nameCluster(node) {
     const name = window.prompt('Cluster name', node.clusterName ?? '');
     if (name === null) return;
-    const res = await fetch(`/api/v1/graph/clusters/${node.clusterId}`, {
+    const targetClusterId = node.parentClusterId ?? node.clusterId;
+    const res = await fetch(`/api/v1/graph/clusters/${targetClusterId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
@@ -496,6 +585,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
       <div
         ref={stageRef}
         className="graph-stage"
+        onWheelCapture={handleWheel}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -506,7 +596,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
           style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}
         >
           <svg className="graph-edges" viewBox={`${-WORLD_SIZE / 2} ${-WORLD_SIZE / 2} ${WORLD_SIZE} ${WORLD_SIZE}`} aria-hidden="true">
-            {visibleEdges.map(edge => {
+            {childEdges.map(edge => {
               const source = byId.get(edge.source);
               const target = byId.get(edge.target);
               const opacity = Math.max(0.12, Math.min(0.82, edge.strength));
