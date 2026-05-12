@@ -103,7 +103,7 @@ export default function Home() {
               <AppleLogo />
               {hasIosOptedIn ? 'Joined TestFlight ✓' : 'Join iOS TestFlight'}
             </a>
-            <span 
+            <a 
             href={IOS_APP_STORE_URL} 
             className="badge badge-primary" 
             aria-label="Install the iOS app from Apple's app store."
@@ -111,7 +111,7 @@ export default function Home() {
             rel="noreferrer">
               <AppleLogo />
               App Store
-            </span>
+            </a>
           </div>
 
           {/* Android: two-step opt-in flow */}
