@@ -145,6 +145,7 @@ The iOS BLE HID report map now includes the keyboard Report ID 3 collection and 
 | Community config cache | Implemented (`CommunityConfigCache`); SharedPreferences-backed; `latest_at` delta cursor; merge-insert on incremental sync | Implemented (`CommunityConfigCache`); `UserDefaults`-backed; `community_latest_at` cursor; `community_cache_v1` JSON array; 500-record cap with uploadedAt trim |
 | Config merge subsets | Implemented (`ConfigMerger`); six gamepad subsets and four touch-mouse subsets; returns new config without mutating inputs | Implemented (`ConfigMerger`); same six gamepad and four touch-mouse subsets; same field-level mappings as Android |
 | Canonical JSON serialisers | Implemented (`GamepadConfigSerializer`, `TouchMouseConfigSerializer`); canonical field names matching `spec/server-schema.md` | Implemented (`GamepadConfigSerializer`, `TouchMouseConfigSerializer`); identical field names and nesting structure |
+| QuadStick sheet import tooling | Implemented in `scripts/import_quadstick_community_configs.mjs`; converts scraped sheet metadata into clustered gamepad/touch-mouse Community Config rows tagged for future Graph grouping | Implemented as shared backend data; imported rows are normal v1 community records and can be browsed/imported by iOS clients |
 
 ## Quality
 
