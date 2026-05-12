@@ -20,16 +20,29 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, selectedConfi
   const fetchConfigs = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams({ sort, limit: FETCH_LIMIT, offset: 0 });
-    if (mode) params.set('mode', mode);
-    if (platform) params.set('platform', platform);
-    if (category) params.set('category', category);
-    if (activeTag) params.set('tags', activeTag);
     try {
-      const res = await fetch(`/api/v1/configs?${params}`);
-      if (!res.ok) throw new Error(`${res.status}`);
-      const data = await res.json();
-      setConfigs(data.configs);
+      const allConfigs = [];
+      let offset = 0;
+      let total = null;
+
+      while (total === null || allConfigs.length < total) {
+        const params = new URLSearchParams({ sort, limit: FETCH_LIMIT, offset });
+        if (mode) params.set('mode', mode);
+        if (platform) params.set('platform', platform);
+        if (category) params.set('category', category);
+        if (activeTag) params.set('tags', activeTag);
+
+        const res = await fetch(`/api/v1/configs?${params}`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        const page = data.configs ?? [];
+        allConfigs.push(...page);
+        total = Number.isFinite(data.total) ? data.total : allConfigs.length;
+        if (page.length < FETCH_LIMIT) break;
+        offset += FETCH_LIMIT;
+      }
+
+      setConfigs(allConfigs);
     } catch (e) {
       setError(e.message);
     } finally {
