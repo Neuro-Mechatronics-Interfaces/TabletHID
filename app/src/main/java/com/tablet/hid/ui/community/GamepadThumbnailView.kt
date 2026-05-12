@@ -6,9 +6,12 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.util.GamepadElementRect
 import com.tablet.hid.util.GamepadLayoutResolver
 import org.json.JSONObject
+import kotlin.math.max
+import kotlin.math.min
 
 class GamepadThumbnailView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
@@ -31,6 +34,8 @@ class GamepadThumbnailView @JvmOverloads constructor(
     }
 
     private var isLandscape = true
+    private var customCanvasW: Float? = null
+    private var customCanvasH: Float? = null
     private var layout: Map<String, GamepadElementRect> = emptyMap()
     private val buttonEnabled = mutableMapOf<String, Boolean>()
     private val buttonOX = mutableMapOf<String, Float>()
@@ -53,6 +58,53 @@ class GamepadThumbnailView @JvmOverloads constructor(
         isLandscape = landscape
         layout = emptyMap()
         requestLayout()
+        invalidate()
+    }
+
+    /** Override the reference canvas dimensions. Pass null to reset to default REF_LONG/REF_SHORT. */
+    fun setCanvasDims(w: Float?, h: Float?) {
+        customCanvasW = w
+        customCanvasH = h
+        layout = emptyMap()
+        requestLayout()
+        invalidate()
+    }
+
+    fun setConfig(config: GamepadConfig) {
+        val buttons = mapOf(
+            "a"         to config.btnA,
+            "b"         to config.btnB,
+            "x"         to config.btnX,
+            "y"         to config.btnY,
+            "lb"        to config.btnLb,
+            "rb"        to config.btnRb,
+            "lt"        to config.btnLt,
+            "rt"        to config.btnRt,
+            "back"      to config.btnBack,
+            "start"     to config.btnStart,
+            "dpadUp"    to config.dpadUp,
+            "dpadDown"  to config.dpadDown,
+            "dpadLeft"  to config.dpadLeft,
+            "dpadRight" to config.dpadRight,
+        )
+        for ((key, btn) in buttons) {
+            buttonEnabled[key] = btn.enabled
+            buttonOX[key] = btn.offsetX
+            buttonOY[key] = btn.offsetY
+            buttonSX[key] = btn.scaleX
+            buttonSY[key] = btn.scaleY
+        }
+        leftJoyEnabled = config.leftJoystick.enabled
+        rightJoyEnabled = config.rightJoystick.enabled
+        singleMode = config.singleJoystickMode
+        leftOX = config.leftJoystick.offsetX
+        leftOY = config.leftJoystick.offsetY
+        leftSX = config.leftJoystick.scaleX
+        rightOX = config.rightJoystick.offsetX
+        rightOY = config.rightJoystick.offsetY
+        rightSX = config.rightJoystick.scaleX
+        layout = emptyMap()
+        ensureLayout()
         invalidate()
     }
 
@@ -85,8 +137,17 @@ class GamepadThumbnailView @JvmOverloads constructor(
         invalidate()
     }
 
-    private fun refW() = if (isLandscape) REF_LONG else REF_SHORT
-    private fun refH() = if (isLandscape) REF_SHORT else REF_LONG
+    private fun refW(): Float {
+        val cw = customCanvasW; val ch = customCanvasH
+        return if (cw != null && ch != null) (if (isLandscape) max(cw, ch) else min(cw, ch))
+               else (if (isLandscape) REF_LONG else REF_SHORT)
+    }
+
+    private fun refH(): Float {
+        val cw = customCanvasW; val ch = customCanvasH
+        return if (cw != null && ch != null) (if (isLandscape) min(cw, ch) else max(cw, ch))
+               else (if (isLandscape) REF_SHORT else REF_LONG)
+    }
 
     private fun ensureLayout() {
         if (layout.isEmpty()) {
