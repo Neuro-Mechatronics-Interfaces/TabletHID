@@ -1,5 +1,6 @@
 import db from '../db.js';
 import { trimAndClamp, sanitizeTags, stripControlChars } from '../sanitize.js';
+import { deleteConfigGraph, updateConfigGraph } from '../graph.js';
 
 function parseRow(row) {
   if (!row) return row;
@@ -67,6 +68,7 @@ export function adminPatchConfig(req, res) {
     params.push(id);
 
     db.prepare(`UPDATE configs SET ${setClauses} WHERE id = ?`).run(...params);
+    updateConfigGraph(db, id);
 
     const updated = db.prepare('SELECT * FROM configs WHERE id = ?').get(id);
     return res.json(parseRow(updated));
@@ -80,6 +82,7 @@ export function adminDeleteConfig(req, res) {
     const { id } = req.params;
     const row = db.prepare('SELECT id FROM configs WHERE id = ?').get(id);
     if (!row) return res.status(404).json({ error: 'Not found.' });
+    deleteConfigGraph(db, id);
     db.prepare('DELETE FROM configs WHERE id = ?').run(id);
     return res.status(204).send();
   } catch (err) {
