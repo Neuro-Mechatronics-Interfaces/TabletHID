@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ConfigBrowserPanel from './configs/ConfigBrowserPanel.jsx';
 import ConfigGraphPanel from './configs/ConfigGraphPanel.jsx';
@@ -7,6 +7,7 @@ import GamepadCanvas from './configs/GamepadCanvas.jsx';
 import useDevicePresets from './configs/useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
+const SELECTED_CONFIG_KEY = 'configs:selectedConfigId';
 const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
 
 function norm(value) {
@@ -86,14 +87,19 @@ export default function Configs() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('browser');
   const [selectedConfig, setSelectedConfig] = useState(null);
+  const [selectedConfigId, setSelectedConfigId] = useState(
+    () => localStorage.getItem(SELECTED_CONFIG_KEY) ?? '',
+  );
   const [activeTag, setActiveTag] = useState('');
   const initialDeviceId = localStorage.getItem('configs:deviceId') ?? DEFAULT_DEVICE_ID;
   const {
-    devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty,
+    devices, device, deviceId, setDeviceId, updateDevice, saveDraft, isDirty, loaded: devicesLoaded,
   } = useDevicePresets(initialDeviceId);
   const [landscape, setLandscape] = useState(
     () => localStorage.getItem('configs:landscape') !== 'false',
   );
+  const orientationSyncedIdRef = useRef('');
+  const deviceSyncedIdRef = useRef('');
   const canvasW = landscape ? device.heightDp : device.widthDp;
   const canvasH = landscape ? device.widthDp : device.heightDp;
 
@@ -102,21 +108,35 @@ export default function Configs() {
 
   const configTags = (selectedConfig?.tags ?? []).map(t => t.toLowerCase().trim()).filter(Boolean);
 
+  function handleSelectConfig(config) {
+    setSelectedConfig(config);
+    setSelectedConfigId(config?.id ?? '');
+    if (config?.id) localStorage.setItem(SELECTED_CONFIG_KEY, config.id);
+    else localStorage.removeItem(SELECTED_CONFIG_KEY);
+  }
+
   useEffect(() => {
     if (!selectedConfig) return;
-
-    const matchedDevice = matchDevicePreset(selectedConfig, devices);
-    if (matchedDevice && matchedDevice.id !== deviceId) {
-      setDeviceId(matchedDevice.id);
-      localStorage.setItem('configs:deviceId', matchedDevice.id);
-    }
-
+    if (orientationSyncedIdRef.current === selectedConfig.id) return;
+    orientationSyncedIdRef.current = selectedConfig.id;
     const matchedLandscape = inferLandscapeFromConfig(selectedConfig);
-    if (matchedLandscape !== null && matchedLandscape !== landscape) {
+    if (matchedLandscape !== null) {
       setLandscape(matchedLandscape);
       localStorage.setItem('configs:landscape', String(matchedLandscape));
     }
-  }, [selectedConfig, deviceId, landscape, devices, setDeviceId]);
+  }, [selectedConfig]);
+
+  useEffect(() => {
+    if (!selectedConfig || !devicesLoaded) return;
+    if (deviceSyncedIdRef.current === selectedConfig.id) return;
+
+    const matchedDevice = matchDevicePreset(selectedConfig, devices);
+    if (!matchedDevice) return;
+
+    deviceSyncedIdRef.current = selectedConfig.id;
+    setDeviceId(matchedDevice.id);
+    localStorage.setItem('configs:deviceId', matchedDevice.id);
+  }, [selectedConfig, devices, devicesLoaded, setDeviceId]);
 
   return (
     <div className="configs-page">
@@ -143,8 +163,8 @@ export default function Configs() {
       <div className="configs-layout">
         <aside className="configs-sidebar">
           <ConfigBrowserPanel
-            onSelect={setSelectedConfig}
-            selectedId={selectedConfig?.id}
+            onSelect={handleSelectConfig}
+            selectedId={selectedConfig?.id ?? selectedConfigId}
             activeTag={activeTag}
             onTagSelect={setActiveTag}
           />
@@ -245,7 +265,7 @@ export default function Configs() {
           </div>
         ) : (
           <div className="configs-canvas-area">
-            <ConfigGraphPanel selectedConfig={selectedConfig} onSelect={setSelectedConfig} />
+            <ConfigGraphPanel selectedConfig={selectedConfig} onSelect={handleSelectConfig} />
           </div>
         )}
       </div>

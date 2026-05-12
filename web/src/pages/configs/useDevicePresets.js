@@ -13,6 +13,7 @@ export default function useDevicePresets(initialId = 'pixel-tablet') {
   const [devices, setDevices] = useState([FALLBACK_DEVICE]);
   const [deviceId, setDeviceId] = useState(initialId);
   const [draft, setDraft] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/v1/devices')
@@ -21,8 +22,12 @@ export default function useDevicePresets(initialId = 'pixel-tablet') {
         const next = data.devices?.length ? data.devices : [FALLBACK_DEVICE];
         setDevices(next);
         setDeviceId(id => next.some(d => d.id === id) ? id : next[0].id);
+        setLoaded(true);
       })
-      .catch(() => setDevices([FALLBACK_DEVICE]));
+      .catch(() => {
+        setDevices([FALLBACK_DEVICE]);
+        setLoaded(true);
+      });
   }, []);
 
   const selectedPreset = useMemo(
@@ -72,5 +77,6 @@ export default function useDevicePresets(initialId = 'pixel-tablet') {
     updateDevice,
     saveDraft,
     isDirty,
+    loaded,
   };
 }

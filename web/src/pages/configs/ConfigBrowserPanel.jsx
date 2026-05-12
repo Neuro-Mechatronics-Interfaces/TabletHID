@@ -3,6 +3,7 @@ import ConfigCard from './ConfigCard.jsx';
 
 const FETCH_LIMIT = 100;
 const MAX_CARDS = FETCH_LIMIT;
+const FILTERS_OPEN_KEY = 'configs:filtersOpen';
 
 export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, onTagSelect }) {
   const [configs, setConfigs] = useState([]);
@@ -13,7 +14,9 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
   const [sort, setSort] = useState('recent');
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => localStorage.getItem(FILTERS_OPEN_KEY) !== 'false',
+  );
 
   const fetchConfigs = useCallback(async () => {
     setLoading(true);
@@ -36,6 +39,16 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
   }, [mode, platform, sort, category, activeTag]);
 
   useEffect(() => { fetchConfigs(); }, [fetchConfigs]);
+
+  useEffect(() => {
+    localStorage.setItem(FILTERS_OPEN_KEY, String(filtersOpen));
+  }, [filtersOpen]);
+
+  useEffect(() => {
+    if (!selectedId || configs.length === 0) return;
+    const selected = configs.find(c => c.id === selectedId);
+    if (selected) onSelect(selected);
+  }, [configs, onSelect, selectedId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
