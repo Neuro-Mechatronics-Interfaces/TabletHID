@@ -8,7 +8,6 @@ import useDevicePresets from './configs/useDevicePresets.js';
 
 const DEFAULT_DEVICE_ID = 'pixel-tablet';
 const SELECTED_CONFIG_KEY = 'configs:selectedConfigId';
-const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
 
 function norm(value) {
   return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
@@ -106,8 +105,6 @@ export default function Configs() {
   const configJson = selectedConfig?.config_json ?? null;
   const isGamepad = !selectedConfig || selectedConfig.mode === 'gamepad';
 
-  const configTags = (selectedConfig?.tags ?? []).map(t => t.toLowerCase().trim()).filter(Boolean);
-
   function handleSelectConfig(config) {
     setSelectedConfig(config);
     setSelectedConfigId(config?.id ?? '');
@@ -165,6 +162,7 @@ export default function Configs() {
           <ConfigBrowserPanel
             onSelect={handleSelectConfig}
             selectedId={selectedConfig?.id ?? selectedConfigId}
+            selectedConfig={selectedConfig}
             activeTag={activeTag}
             onTagSelect={setActiveTag}
           />
@@ -234,34 +232,6 @@ export default function Configs() {
                 </div>
               )}
             </div>
-
-            {selectedConfig && (
-              <div className="configs-meta">
-                <span className={'configs-meta-badge mode-' + selectedConfig.mode}>
-                  {selectedConfig.mode === 'gamepad' ? 'Gamepad' : 'Touch Mouse'}
-                </span>
-                {selectedConfig.platform && (
-                  <span className={'configs-meta-badge platform-' + selectedConfig.platform}>
-                    {selectedConfig.platform === 'ios' ? 'iOS' : 'Android'}
-                  </span>
-                )}
-                {selectedConfig.category && (
-                  <span className="configs-meta-badge category">
-                    {toTitleCase(selectedConfig.category.trim())}
-                  </span>
-                )}
-                {configTags.map(t => (
-                  <button
-                    key={t}
-                    className={'configs-meta-tag' + (activeTag === t ? ' active' : '')}
-                    onClick={() => setActiveTag(activeTag === t ? '' : t)}
-                    title={activeTag === t ? 'Clear tag filter' : `Filter by "${t}"`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         ) : (
           <div className="configs-canvas-area">

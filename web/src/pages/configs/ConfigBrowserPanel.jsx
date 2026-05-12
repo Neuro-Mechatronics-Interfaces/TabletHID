@@ -4,7 +4,7 @@ import ConfigCard from './ConfigCard.jsx';
 const FETCH_LIMIT = 100;
 const FILTERS_OPEN_KEY = 'configs:filtersOpen';
 
-export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, onTagSelect }) {
+export default function ConfigBrowserPanel({ onSelect, selectedId, selectedConfig, activeTag, onTagSelect }) {
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -176,6 +176,12 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
           {filtered.length} config{filtered.length !== 1 ? 's' : ''}
         </div>
       )}
+
+      <SelectedConfigMeta
+        config={selectedConfig}
+        activeTag={activeTag}
+        onTagSelect={onTagSelect}
+      />
     </div>
   );
 }
@@ -195,6 +201,47 @@ function FilterRow({ label, chips, value, onChange }) {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function SelectedConfigMeta({ config, activeTag, onTagSelect }) {
+  if (!config) {
+    return (
+      <div className="configs-meta configs-meta-sidebar configs-meta-empty">
+        Select a config to see its tags and category.
+      </div>
+    );
+  }
+
+  const tags = (config.tags ?? []).map(t => t.toLowerCase().trim()).filter(Boolean);
+  const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
+
+  return (
+    <div className="configs-meta configs-meta-sidebar">
+      <span className={'configs-meta-badge mode-' + config.mode}>
+        {config.mode === 'gamepad' ? 'Gamepad' : 'Touch Mouse'}
+      </span>
+      {config.platform && (
+        <span className={'configs-meta-badge platform-' + config.platform}>
+          {config.platform === 'ios' ? 'iOS' : 'Android'}
+        </span>
+      )}
+      {config.category && (
+        <span className="configs-meta-badge category">
+          {toTitleCase(config.category.trim())}
+        </span>
+      )}
+      {tags.map(t => (
+        <button
+          key={t}
+          className={'configs-meta-tag' + (activeTag === t ? ' active' : '')}
+          onClick={() => onTagSelect(activeTag === t ? '' : t)}
+          title={activeTag === t ? 'Clear tag filter' : `Filter by "${t}"`}
+        >
+          {t}
+        </button>
+      ))}
     </div>
   );
 }
