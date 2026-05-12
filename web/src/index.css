@@ -695,6 +695,20 @@ body {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
   margin-top: 14px;
 }
+.configs-meta-sidebar {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  max-height: 132px;
+  overflow-y: auto;
+}
+.configs-meta-empty {
+  font-size: .78rem;
+  line-height: 1.35;
+  color: var(--text-light);
+}
 .configs-meta-badge {
   padding: 3px 10px; border-radius: 20px;
   font-size: .75rem; font-weight: 600;
