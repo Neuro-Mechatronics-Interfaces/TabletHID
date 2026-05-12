@@ -15,6 +15,7 @@ import com.tablet.hid.util.AppearanceStore
 import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.LoggingStore
 import com.tablet.hid.util.OrientationStore
+import com.tablet.hid.util.UiPaletteStore
 
 class SettingsFragment : Fragment() {
 
@@ -72,6 +73,15 @@ class SettingsFragment : Fragment() {
             else                        -> binding.radioOrientationSystem.isChecked   = true
         }
 
+        // ── Gaming Colors ────────────────────────────────────────────────────────
+        when (UiPaletteStore.getIndex(ctx)) {
+            1    -> binding.radioPaletteNeon.isChecked       = true
+            2    -> binding.radioPaletteFire.isChecked       = true
+            3    -> binding.radioPaletteIce.isChecked        = true
+            4    -> binding.radioPaletteMonochrome.isChecked = true
+            else -> binding.radioPaletteDefault.isChecked    = true
+        }
+
         // ── Screen Pinning ───────────────────────────────────────────────────────
         binding.switchScreenPinning.isChecked = HidPrefs.isScreenPinningEnabled(ctx)
 
@@ -109,6 +119,15 @@ class SettingsFragment : Fragment() {
         }
         OrientationStore.set(ctx, newOrientation)
         requireActivity().requestedOrientation = OrientationStore.toActivityOrientation(newOrientation)
+
+        val paletteIndex = when {
+            binding.radioPaletteNeon.isChecked       -> 1
+            binding.radioPaletteFire.isChecked       -> 2
+            binding.radioPaletteIce.isChecked        -> 3
+            binding.radioPaletteMonochrome.isChecked -> 4
+            else                                     -> 0
+        }
+        UiPaletteStore.setIndex(ctx, paletteIndex)
 
         HidPrefs.setScreenPinningEnabled(ctx, binding.switchScreenPinning.isChecked)
 

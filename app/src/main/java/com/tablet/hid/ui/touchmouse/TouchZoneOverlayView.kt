@@ -16,6 +16,7 @@ import com.tablet.hid.model.TouchMode
 import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.model.TouchMouseSubRegionConfig
 import com.tablet.hid.model.ZoneType
+import com.tablet.hid.util.UiPalette
 
 class TouchZoneOverlayView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -39,6 +40,9 @@ class TouchZoneOverlayView @JvmOverloads constructor(
 
     var sniperActive: Boolean = false
         set(value) { if (field != value) { field = value; invalidate() } }
+
+    var palette: UiPalette = UiPalette.ENTRIES[0]
+        set(value) { field = value; invalidate() }
 
     var editDragStart: PointF? = null
     var editDragEnd: PointF? = null
@@ -67,17 +71,6 @@ class TouchZoneOverlayView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    companion object {
-        val LEFT_IDLE   = Color.argb(100,  30, 140, 255)
-        val LEFT_ACTIVE = Color.argb(215,   0, 190, 255)
-        val RIGHT_IDLE   = Color.argb(100, 255, 120,  20)
-        val RIGHT_ACTIVE = Color.argb(215, 255, 170,   0)
-        val SNIPER_IDLE   = Color.argb(100,   0, 190, 120)
-        val SNIPER_ACTIVE = Color.argb(215,   0, 230, 140)
-        // Touch-mode right-click zone colour
-        private val RC_IDLE   = Color.argb(26,  255,  68, 68)
-        private val RC_ACTIVE = Color.argb(80,  255,  68, 68)
-    }
 
     init { setWillNotDraw(false) }
 
@@ -223,10 +216,8 @@ class TouchZoneOverlayView @JvmOverloads constructor(
         (cfg.leftButton.enabled && cfg.leftButton.zoneType == ZoneType.DYNAMIC && leftActive) ||
             (cfg.rightButton.enabled && cfg.rightButton.zoneType == ZoneType.DYNAMIC && rightActive)
 
-    private fun sharedDynamicColor(cfg: TouchMouseConfig): Int {
-        if (sharedDynamicActive(cfg)) return Color.argb(215, 130, 210, 255)
-        return Color.argb(105, 130, 190, 255)
-    }
+    private fun sharedDynamicColor(cfg: TouchMouseConfig): Int =
+        if (sharedDynamicActive(cfg)) palette.sharedActive else palette.sharedIdle
 
     override fun onDraw(canvas: Canvas) {
         val cfg = config ?: return
@@ -235,12 +226,12 @@ class TouchZoneOverlayView @JvmOverloads constructor(
             TouchMode.TOUCH -> drawTouchModeZone(canvas)
             TouchMode.MOUSE -> {
                 if (cfg.leftButton.enabled && (!cfg.sharedDynamicZone || cfg.leftButton.zoneType != ZoneType.DYNAMIC))
-                    drawZone(canvas, cfg.leftButton, "L", leftActive, LEFT_IDLE, LEFT_ACTIVE)
+                    drawZone(canvas, cfg.leftButton, "L", leftActive, palette.leftIdle, palette.leftActive)
                 if (cfg.rightButton.enabled && (!cfg.sharedDynamicZone || cfg.rightButton.zoneType != ZoneType.DYNAMIC))
-                    drawZone(canvas, cfg.rightButton, "R", rightActive, RIGHT_IDLE, RIGHT_ACTIVE)
+                    drawZone(canvas, cfg.rightButton, "R", rightActive, palette.rightIdle, palette.rightActive)
                 if (cfg.sharedDynamicZone && hasDynamicZones(cfg)) drawSharedDynamicZone(canvas, cfg)
-                drawSubRegions(canvas, cfg.leftButton, LEFT_ACTIVE)
-                drawSubRegions(canvas, cfg.rightButton, RIGHT_ACTIVE)
+                drawSubRegions(canvas, cfg.leftButton, palette.leftActive)
+                drawSubRegions(canvas, cfg.rightButton, palette.rightActive)
                 if (cfg.sniperEnabled) drawSniperZone(canvas, cfg)
             }
         }
@@ -255,14 +246,14 @@ class TouchZoneOverlayView @JvmOverloads constructor(
             maxOf(start.x, end.x), maxOf(start.y, end.y)
         )
         editFillPaint.color = when {
-            editingSniper -> Color.argb(55, 0, 190, 120)
-            editing       -> Color.argb(55, 30, 140, 255)
-            else          -> Color.argb(55, 255, 120, 20)
+            editingSniper -> palette.sniperWithAlpha(55)
+            editing       -> palette.leftWithAlpha(55)
+            else          -> palette.rightWithAlpha(55)
         }
         editStrokePaint.color = when {
-            editingSniper -> SNIPER_ACTIVE
-            editing       -> LEFT_ACTIVE
-            else          -> RIGHT_ACTIVE
+            editingSniper -> palette.sniperActive
+            editing       -> palette.leftActive
+            else          -> palette.rightActive
         }
         canvas.drawRoundRect(rect, 16f, 16f, editFillPaint)
         canvas.drawRoundRect(rect, 16f, 16f, editStrokePaint)
@@ -279,9 +270,9 @@ class TouchZoneOverlayView @JvmOverloads constructor(
     private fun drawTouchModeZone(canvas: Canvas) {
         val zoneTop = height * 0.82f
         val rect = RectF(0f, zoneTop, width.toFloat(), height.toFloat())
-        fillPaint.color = if (rightActive) RC_ACTIVE else RC_IDLE
+        fillPaint.color = if (rightActive) palette.rightWithAlpha(80) else palette.rightWithAlpha(26)
         canvas.drawRect(rect, fillPaint)
-        strokePaint.color = Color.argb(60, 255, 68, 68)
+        strokePaint.color = palette.rightWithAlpha(60)
         canvas.drawLine(0f, zoneTop, width.toFloat(), zoneTop, strokePaint)
         strokePaint.color = Color.argb(200, 255, 255, 255)
 
@@ -339,7 +330,7 @@ class TouchZoneOverlayView @JvmOverloads constructor(
             cfg.sniperLeft * width, cfg.sniperTop * height,
             cfg.sniperRight * width, cfg.sniperBottom * height
         )
-        fillPaint.color = if (sniperActive) SNIPER_ACTIVE else SNIPER_IDLE
+        fillPaint.color = if (sniperActive) palette.sniperActive else palette.sniperIdle
         canvas.drawRoundRect(rect, 20f, 20f, fillPaint)
         canvas.drawRoundRect(rect, 20f, 20f, strokePaint)
         labelPaint.textSize = minOf(rect.width(), rect.height()) * 0.35f

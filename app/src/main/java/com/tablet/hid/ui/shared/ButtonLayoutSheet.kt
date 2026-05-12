@@ -10,6 +10,8 @@ import android.view.WindowManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.slider.Slider
 import com.tablet.hid.databinding.SheetButtonLayoutBinding
+import com.tablet.hid.util.UiPaletteStore
+import kotlin.math.round
 
 /**
  * Bottom sheet with four sliders (X offset, Y offset, width scale, height scale) for
@@ -61,11 +63,11 @@ class ButtonLayoutSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Rounded-rect marker that moves with the X/Y sliders.
+        // Rounded-rect marker that moves with the X/Y sliders. Color from active palette.
         binding.previewDot.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = 6f * resources.displayMetrics.density
-            setColor(0xCC5C6BC0.toInt())
+            setColor(UiPaletteStore.get(requireContext()).previewDotArgb)
         }
         // Compute how many pixels in the preview correspond to 1 dp of slider travel,
         // once the area is measured.
@@ -85,13 +87,21 @@ class ButtonLayoutSheet : BottomSheetDialogFragment() {
         binding.sheetTitle.text = elementTitle
 
         ignoreChanges = true
-        binding.sliderOffsetX.value = initialOffsetX.coerceIn(-400f, 400f)
-        binding.sliderOffsetY.value = initialOffsetY.coerceIn(-400f, 400f)
+        applySnapStep(snap = true)
+        binding.sliderOffsetX.value = roundToSnapStep(initialOffsetX.coerceIn(-400f, 400f))
+        binding.sliderOffsetY.value = roundToSnapStep(initialOffsetY.coerceIn(-400f, 400f))
         binding.sliderScaleX.value  = initialScaleX.coerceIn(0.3f, 3.0f)
         binding.sliderScaleY.value  = initialScaleY.coerceIn(0.3f, 3.0f)
         ignoreChanges = false
 
         updateLabels()
+
+        binding.chipSnapToGrid.setOnCheckedChangeListener { _, isChecked ->
+            applySnapStep(isChecked)
+            updateLabels()
+            updatePreview()
+            fireUpdate()
+        }
 
         val listener = Slider.OnChangeListener { _, _, _ ->
             if (ignoreChanges) return@OnChangeListener
@@ -116,6 +126,23 @@ class ButtonLayoutSheet : BottomSheetDialogFragment() {
             fireUpdate()
         }
     }
+
+    private fun applySnapStep(snap: Boolean) {
+        val step = if (snap) 8f else 2f
+        ignoreChanges = true
+        val rx = roundToStep(binding.sliderOffsetX.value, step)
+        val ry = roundToStep(binding.sliderOffsetY.value, step)
+        binding.sliderOffsetX.stepSize = step
+        binding.sliderOffsetY.stepSize = step
+        binding.sliderOffsetX.value = rx
+        binding.sliderOffsetY.value = ry
+        ignoreChanges = false
+    }
+
+    private fun roundToSnapStep(v: Float) = roundToStep(v, 8f)
+
+    private fun roundToStep(v: Float, step: Float): Float =
+        (round(v / step) * step).coerceIn(-400f, 400f)
 
     private fun updatePreview() {
         if (xPreviewScale == 0f) return

@@ -70,6 +70,8 @@ class GamepadFragment : Fragment() {
         if (HidPrefs.isScreenPinningEnabled(requireContext())) {
             activity?.startLockTask()
         }
+        // Refresh macro button palette in case user changed it in Settings.
+        editController.renderMacroButtons(viewModel.gamepadConfig.value)
     }
 
     override fun onPause() {

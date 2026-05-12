@@ -35,7 +35,9 @@ import com.tablet.hid.model.TouchMouseConfig
 import com.tablet.hid.ui.shared.ButtonLayoutSheet
 import com.tablet.hid.util.HidPrefs
 import com.tablet.hid.util.OrientationStore
+import com.tablet.hid.util.UiPaletteStore
 import kotlin.math.abs
+import kotlin.math.round
 import kotlinx.coroutines.launch
 
 class TouchMouseFragment : Fragment() {
@@ -93,6 +95,9 @@ class TouchMouseFragment : Fragment() {
         if (HidPrefs.isScreenPinningEnabled(requireContext())) {
             activity?.startLockTask()
         }
+        // Refresh palette in case user changed it in Settings.
+        binding.touchZoneOverlay.palette = UiPaletteStore.get(requireContext())
+        renderMacroButtons(viewModel.touchMouseConfig.value)
     }
 
     override fun onPause() {
@@ -315,6 +320,7 @@ class TouchMouseFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.touchMouseConfig.collect { config ->
                     binding.touchZoneOverlay.config = config
+                    binding.touchZoneOverlay.palette = UiPaletteStore.get(requireContext())
                     renderMacroButtons(config)
                     renderShortcutPanel(config)
 
@@ -343,6 +349,7 @@ class TouchMouseFragment : Fragment() {
         if (config.macroButtons.isEmpty()) return
         val dp = resources.displayMetrics.density
         config.macroButtons.forEach { macro ->
+            val macroTint = UiPaletteStore.get(requireContext()).macroButtonTint
             val button = MaterialButton(requireContext()).apply {
                 text = macro.label
                 minHeight = resources.getDimensionPixelSize(R.dimen.macro_button_height)
@@ -350,6 +357,7 @@ class TouchMouseFragment : Fragment() {
                 setPadding(18, 0, 18, 0)
                 scaleX = macro.layoutScaleX
                 scaleY = macro.layoutScaleY
+                backgroundTintList = android.content.res.ColorStateList.valueOf(macroTint)
                 setMacroNormalListener(macro)
             }
             binding.macroOverlay.addView(button, android.widget.FrameLayout.LayoutParams(
@@ -435,6 +443,8 @@ class TouchMouseFragment : Fragment() {
 
     private fun showLayoutSheetForMacro(view: View, index: Int) {
         if (index >= macroNaturalPositions.size || index >= macroButtonViews.size) return
+        (childFragmentManager.findFragmentByTag("macroLayout") as? ButtonLayoutSheet)
+            ?.dismissAllowingStateLoss()
         val density = resources.displayMetrics.density
         val natural = macroNaturalPositions[index]
         val (_, macro) = macroButtonViews[index]
@@ -486,6 +496,7 @@ class TouchMouseFragment : Fragment() {
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
+        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -494,11 +505,16 @@ class TouchMouseFragment : Fragment() {
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
+                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
+                    val gridPx = 8f * resources.displayMetrics.density
+                    rawTx += event.rawX - lastRawX
+                    rawTy += event.rawY - lastRawY
+                    view.translationX = round(rawTx / gridPx) * gridPx
+                    view.translationY = round(rawTy / gridPx) * gridPx
+                    rawTx = view.translationX; rawTy = view.translationY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true

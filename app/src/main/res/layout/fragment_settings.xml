@@ -108,6 +108,66 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
 
+        <!-- ── Gaming Colors ──────────────────────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="Gaming Colors"
+            android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+            android:textColor="?attr/colorPrimary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Color theme for touch zones and macro buttons."
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupPalette"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radioPaletteDefault"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Default  (blue / orange / teal)" />
+
+            <RadioButton
+                android:id="@+id/radioPaletteNeon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Neon  (cyan / magenta / lime)" />
+
+            <RadioButton
+                android:id="@+id/radioPaletteFire"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fire  (red / amber / gold)" />
+
+            <RadioButton
+                android:id="@+id/radioPaletteIce"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ice  (sky blue / light blue / frost)" />
+
+            <RadioButton
+                android:id="@+id/radioPaletteMonochrome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Monochrome  (white / gray)" />
+
+        </RadioGroup>
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
         <!-- ── Session Logging ────────────────────────────────────────────── -->
         <TextView
             android:layout_width="wrap_content"

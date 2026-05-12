@@ -49,6 +49,9 @@
     <!-- Shortcut panel side-drawer background (slightly more opaque than status bar) -->
     <color name="overlay_gaming_side_panel">#D91a1a1a</color>
 
+    <!-- Macro / layout-edit UI (default palette; runtime value from UiPaletteStore) -->
+    <color name="layout_preview_dot">#CC5C6BC0</color>
+
     <!-- Home-screen widget -->
     <color name="widget_button_tint">#AA2979FF</color>
 </resources>

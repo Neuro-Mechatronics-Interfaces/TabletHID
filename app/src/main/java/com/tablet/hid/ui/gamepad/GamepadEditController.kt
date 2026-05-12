@@ -14,7 +14,9 @@ import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
 import com.tablet.hid.model.KeyboardMacroButtonConfig
 import com.tablet.hid.ui.shared.ButtonLayoutSheet
+import com.tablet.hid.util.UiPaletteStore
 import kotlin.math.abs
+import kotlin.math.round
 
 class GamepadEditController(
     private val binding: FragmentGamepadBinding,
@@ -26,6 +28,7 @@ class GamepadEditController(
 
     companion object {
         private const val TAP_THRESHOLD_DP = 8f
+        private const val GRID_SIZE_DP = 8f
     }
 
     var editMode = false
@@ -104,6 +107,7 @@ class GamepadEditController(
             return
         }
         val dp = resources.displayMetrics.density
+        val macroTint = UiPaletteStore.get(binding.root.context).macroButtonTint
         cfg.macroButtons.forEach { macro ->
             val button = MaterialButton(binding.root.context).apply {
                 text = macro.label
@@ -112,6 +116,7 @@ class GamepadEditController(
                 setPadding(18, 0, 18, 0)
                 scaleX = macro.layoutScaleX
                 scaleY = macro.layoutScaleY
+                backgroundTintList = android.content.res.ColorStateList.valueOf(macroTint)
                 setMacroNormalListener(macro)
             }
             binding.macroOverlay.addView(button, android.widget.FrameLayout.LayoutParams(
@@ -169,6 +174,11 @@ class GamepadEditController(
 
     // ── Sheet helpers ─────────────────────────────────────────────────────────
 
+    private fun dismissExistingSheet() {
+        (fragmentManager.findFragmentByTag("buttonLayout") as? ButtonLayoutSheet)
+            ?.dismissAllowingStateLoss()
+    }
+
     private fun showLayoutSheetForButton(
         view: View,
         getConfig: () -> ButtonConfig,
@@ -177,6 +187,7 @@ class GamepadEditController(
         val label = (view as? android.widget.Button)?.text?.toString() ?: "Button"
         val density = resources.displayMetrics.density
         val cfg = getConfig()
+        dismissExistingSheet()
         ButtonLayoutSheet().apply {
             elementTitle = label
             initialOffsetX = cfg.offsetX.coerceIn(-400f, 400f)
@@ -205,6 +216,7 @@ class GamepadEditController(
     ) {
         val density = resources.displayMetrics.density
         val cfg = getConfig()
+        dismissExistingSheet()
         ButtonLayoutSheet().apply {
             elementTitle = label
             initialOffsetX = cfg.offsetX.coerceIn(-400f, 400f)
@@ -230,6 +242,7 @@ class GamepadEditController(
         val density = resources.displayMetrics.density
         val natural = macroNaturalPositions[index]
         val (_, macro) = macroButtonViews[index]
+        dismissExistingSheet()
         ButtonLayoutSheet().apply {
             elementTitle = macro.label
             initialOffsetX = macro.layoutOffsetX.coerceIn(-400f, 400f)
@@ -293,6 +306,7 @@ class GamepadEditController(
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
+        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -301,12 +315,17 @@ class GamepadEditController(
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
+                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
+                    val gridPx = GRID_SIZE_DP * resources.displayMetrics.density
+                    rawTx += event.rawX - lastRawX
+                    rawTy += event.rawY - lastRawY
+                    view.translationX = round(rawTx / gridPx) * gridPx
+                    view.translationY = round(rawTy / gridPx) * gridPx
                     clampTranslationToParent(view)
+                    rawTx = view.translationX; rawTy = view.translationY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -362,6 +381,7 @@ class GamepadEditController(
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
+        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -370,12 +390,17 @@ class GamepadEditController(
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
+                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
+                    val gridPx = GRID_SIZE_DP * resources.displayMetrics.density
+                    rawTx += event.rawX - lastRawX
+                    rawTy += event.rawY - lastRawY
+                    view.translationX = round(rawTx / gridPx) * gridPx
+                    view.translationY = round(rawTy / gridPx) * gridPx
                     clampTranslationToParent(view)
+                    rawTx = view.translationX; rawTy = view.translationY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -426,6 +451,7 @@ class GamepadEditController(
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
+        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -434,12 +460,17 @@ class GamepadEditController(
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
+                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    view.translationX += event.rawX - lastRawX
-                    view.translationY += event.rawY - lastRawY
+                    val gridPx = GRID_SIZE_DP * resources.displayMetrics.density
+                    rawTx += event.rawX - lastRawX
+                    rawTy += event.rawY - lastRawY
+                    view.translationX = round(rawTx / gridPx) * gridPx
+                    view.translationY = round(rawTy / gridPx) * gridPx
                     clampTranslationToParent(view)
+                    rawTx = view.translationX; rawTy = view.translationY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
