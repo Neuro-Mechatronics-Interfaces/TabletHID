@@ -2,7 +2,6 @@ package com.tablet.hid.ui.gamepad
 
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -165,12 +164,12 @@ class GamepadFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    val ledColor = when (state) {
-                        is BleHidManager.State.Connected -> Color.parseColor("#4CAF50")
+                    val ledColor = requireContext().getColor(when (state) {
+                        is BleHidManager.State.Connected -> R.color.led_connected
                         is BleHidManager.State.Idle,
-                        is BleHidManager.State.Error     -> Color.parseColor("#F44336")
-                        else                             -> Color.parseColor("#FF9800")
-                    }
+                        is BleHidManager.State.Error     -> R.color.led_disconnected
+                        else                             -> R.color.led_connecting
+                    })
                     binding.ledStatus.backgroundTintList = ColorStateList.valueOf(ledColor)
                     binding.textConnStatus.text = when (state) {
                         is BleHidManager.State.Connected          -> getString(R.string.status_connected)
@@ -258,14 +257,16 @@ class GamepadFragment : Fragment() {
         )
 
         // Tint the joystick ring to match the current output side when the toggle is active.
-        val joystickAccent = if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled) {
-            if (cfg.singleJoystickOutputSide == JoystickSide.LEFT)
-                Color.parseColor("#886699FF")   // blue — outputting left stick
-            else
-                Color.parseColor("#88FFAA44")   // amber — outputting right stick
-        } else {
-            Color.parseColor("#66FFFFFF")
-        }
+        val joystickAccent = requireContext().getColor(
+            if (cfg.singleJoystickMode && cfg.singleJoystickSideToggleEnabled) {
+                if (cfg.singleJoystickOutputSide == JoystickSide.LEFT)
+                    R.color.joystick_accent_left
+                else
+                    R.color.joystick_accent_right
+            } else {
+                R.color.overlay_white_40
+            }
+        )
         binding.leftJoystick.accentColor = joystickAccent
 
         editController.renderMacroButtons(cfg)

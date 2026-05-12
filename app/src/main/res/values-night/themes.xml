@@ -3,6 +3,11 @@
     <style name="Base.Theme.TabletHID" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="forgetButtonStyle">@style/Widget.App.Button.Forget</item>
+    </style>
+
+    <style name="Theme.TabletHID" parent="Base.Theme.TabletHID">
+        <item name="colorError">#F2B8B5</item>
     </style>
 
     <style name="Theme.TabletHID.HighContrast" parent="Base.Theme.TabletHID">

@@ -61,7 +61,7 @@
                         android:layout_height="10dp"
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/shape_led"
-                        android:backgroundTint="#F44336" />
+                        android:backgroundTint="@color/led_disconnected" />
 
                     <TextView
                         android:id="@+id/homeConnStatus"
@@ -166,13 +166,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:textColor="?attr/colorOnPrimary"
                     android:gravity="end">
 
                     <Button
                         android:id="@+id/btnHomeDiscoverable"
-                        style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textColor="?attr/colorOnPrimary"
                         android:text="@string/btn_make_discoverable" />
 
                 </LinearLayout>

@@ -15,7 +15,7 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="12dp"
         android:paddingVertical="6dp"
-        android:background="#CC1a1a1a"
+        android:background="@color/overlay_gaming_status_bar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -27,7 +27,7 @@
             android:layout_height="10dp"
             android:layout_marginEnd="8dp"
             android:background="@drawable/shape_led"
-            android:backgroundTint="#F44336" />
+            android:backgroundTint="@color/led_disconnected" />
 
         <TextView
             android:id="@+id/textConnStatus"
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/status_disconnected"
-            android:textColor="#99FFFFFF"
+            android:textColor="@color/overlay_white_60"
             android:textSize="12sp" />
 
         <!-- Orientation lock button -->
@@ -79,7 +79,7 @@
         android:id="@+id/touchZoneOverlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#0A0A0A"
+        android:background="@color/surface_touchpad"
         android:clickable="true"
         android:focusable="true"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -93,7 +93,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/touch_mouse_hint"
-        android:textColor="#33FFFFFF"
+        android:textColor="@color/overlay_white_20"
         android:textSize="13sp"
         android:gravity="center"
         android:importantForAccessibility="no"
@@ -125,7 +125,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#EE0D0D1A"
+        android:background="@color/overlay_gaming_panel"
         android:paddingStart="12dp"
         android:paddingEnd="8dp"
         android:paddingTop="8dp"
@@ -141,7 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/macro_edit_layout_hint"
-            android:textColor="#FFDD88"
+            android:textColor="@color/text_gaming_info"
             android:textSize="11sp" />
 
         <com.google.android.material.button.MaterialButton
@@ -161,7 +161,7 @@
         android:layout_width="190dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:background="#D91a1a1a"
+        android:background="@color/overlay_gaming_side_panel"
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone"
@@ -197,7 +197,7 @@
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:padding="16dp"
-        android:background="#B3000000"
+        android:background="@color/overlay_gaming_scrim"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -234,7 +234,7 @@
         android:orientation="vertical"
         android:gravity="center_horizontal"
         android:padding="16dp"
-        android:background="#B3000000"
+        android:background="@color/overlay_gaming_scrim"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

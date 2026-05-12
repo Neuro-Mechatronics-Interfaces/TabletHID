@@ -5,4 +5,50 @@
     <color name="white">#FFFFFFFF</color>
     <color name="high_contrast_accent">#005FCC</color>
     <color name="high_contrast_accent_dark">#FFD43B</color>
+
+    <!-- Status indicator LED (connected / disconnected / in-progress) -->
+    <color name="led_connected">#4CAF50</color>
+    <color name="led_disconnected">#F44336</color>
+    <color name="led_connecting">#FF9800</color>
+
+    <!-- Gaming UI surface backgrounds -->
+    <color name="surface_gaming">#1A1A2E</color>
+    <color name="surface_touchpad">#0A0A0A</color>
+
+    <!-- Semi-transparent white overlays used on dark gaming surfaces -->
+    <color name="overlay_white_20">#33FFFFFF</color>
+    <color name="overlay_white_40">#66FFFFFF</color>
+    <color name="overlay_white_60">#99FFFFFF</color>
+    <color name="overlay_white_80">#CCFFFFFF</color>
+
+    <!-- Dark overlay backgrounds shared by gaming fragments -->
+    <color name="overlay_gaming_status_bar">#CC1a1a1a</color>
+    <color name="overlay_gaming_panel">#EE0D0D1A</color>
+    <color name="overlay_gaming_scrim">#B3000000</color>
+
+    <!-- Info/warning text on dark gaming surfaces -->
+    <color name="text_gaming_info">#FFDD88</color>
+
+    <!-- Gamepad face-button tints (Y / X / B / A) -->
+    <color name="btn_gamepad_y">#F5C518</color>
+    <color name="btn_gamepad_x">#3B82F6</color>
+    <color name="btn_gamepad_b">#EF4444</color>
+    <color name="btn_gamepad_a">#22C55E</color>
+
+    <!-- Touch-zone circle drawables -->
+    <color name="zone_circle_left">#1E8CFF</color>
+    <color name="zone_circle_right">#FF7814</color>
+
+    <!-- Joystick accent in single-joystick toggle mode -->
+    <color name="joystick_accent_left">#886699FF</color>
+    <color name="joystick_accent_right">#88FFAA44</color>
+
+    <!-- Shortcut panel icon tint when panel is open -->
+    <color name="panel_active_tint">#4FC3F7</color>
+
+    <!-- Shortcut panel side-drawer background (slightly more opaque than status bar) -->
+    <color name="overlay_gaming_side_panel">#D91a1a1a</color>
+
+    <!-- Home-screen widget -->
+    <color name="widget_button_tint">#AA2979FF</color>
 </resources>

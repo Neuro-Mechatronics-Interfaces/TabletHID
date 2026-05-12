@@ -1,7 +1,6 @@
 package com.tablet.hid.ui.home
 
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -149,7 +148,7 @@ class HomeFragment : Fragment() {
         val pending = state is BleHidManager.State.PendingApproval
 
         binding.homeLedStatus.backgroundTintList = ColorStateList.valueOf(
-            if (connected) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
+            requireContext().getColor(if (connected) R.color.led_connected else R.color.led_disconnected)
         )
         binding.homeConnStatus.text = when (state) {
             is BleHidManager.State.Idle               -> getString(R.string.status_disconnected)
@@ -261,18 +260,14 @@ class HomeFragment : Fragment() {
             showRenameHostDialog(host)
         })
 
-        val forgetBtn = MaterialButton(
-            ContextThemeWrapper(ctx, com.google.android.material.R.style.Widget_Material3_Button_TextButton),
-            null, 0
-        ).apply {
+        val ta = ctx.theme.obtainStyledAttributes(intArrayOf(R.attr.forgetButtonStyle))
+        val forgetStyle = ta.getResourceId(0, com.google.android.material.R.style.Widget_Material3_Button_TextButton)
+        ta.recycle()
+        val forgetBtn = MaterialButton(ContextThemeWrapper(ctx, forgetStyle), null, 0).apply {
             text = getString(R.string.home_btn_forget)
             contentDescription = getString(R.string.home_cd_forget)
             insetTop = 0
             insetBottom = 0
-            val errorColor = com.google.android.material.color.MaterialColors.getColor(
-                ctx, com.google.android.material.R.attr.colorError, android.graphics.Color.RED
-            )
-            setTextColor(errorColor)
             setOnClickListener { viewModel.forgetHost(host) }
         }
         row.addView(forgetBtn)

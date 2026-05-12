@@ -2,7 +2,6 @@ package com.tablet.hid.ui.touchmouse
 
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -244,7 +243,7 @@ class TouchMouseFragment : Fragment() {
     private fun toggleShortcutPanel() {
         val panel = binding.shortcutPanel
         panel.isVisible = !panel.isVisible
-        val tint = if (panel.isVisible) 0xFF4FC3F7.toInt() else android.graphics.Color.WHITE
+        val tint = requireContext().getColor(if (panel.isVisible) R.color.panel_active_tint else R.color.white)
         binding.btnShortcutPanel.iconTint = android.content.res.ColorStateList.valueOf(tint)
     }
 
@@ -292,12 +291,12 @@ class TouchMouseFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state ->
-                    val ledColor = when (state) {
-                        is BleHidManager.State.Connected -> Color.parseColor("#4CAF50")
+                    val ledColor = requireContext().getColor(when (state) {
+                        is BleHidManager.State.Connected -> R.color.led_connected
                         is BleHidManager.State.Idle,
-                        is BleHidManager.State.Error     -> Color.parseColor("#F44336")
-                        else                             -> Color.parseColor("#FF9800")
-                    }
+                        is BleHidManager.State.Error     -> R.color.led_disconnected
+                        else                             -> R.color.led_connecting
+                    })
                     binding.ledStatus.backgroundTintList = ColorStateList.valueOf(ledColor)
                     binding.textConnStatus.text = when (state) {
                         is BleHidManager.State.Connected          -> getString(R.string.status_connected)

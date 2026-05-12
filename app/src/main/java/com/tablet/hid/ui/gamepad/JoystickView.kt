@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import com.tablet.hid.R
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.atan2
@@ -33,7 +34,7 @@ class JoystickView @JvmOverloads constructor(
 
     /** Tints the outer ring and fill. Alpha of the ring color is used as-is;
      *  fill alpha is half of ring alpha so the two layers stay distinct. */
-    var accentColor: Int = Color.parseColor("#66FFFFFF")
+    var accentColor: Int = context.getColor(R.color.overlay_white_40)
         set(value) {
             field = value
             outerRingPaint.color = value
@@ -48,18 +49,18 @@ class JoystickView @JvmOverloads constructor(
     private var activePointerId = -1
 
     private val outerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#33FFFFFF")
+        color = context.getColor(R.color.overlay_white_20)
         style = Paint.Style.FILL
     }
 
     private val outerRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#66FFFFFF")
+        color = context.getColor(R.color.overlay_white_40)
         style = Paint.Style.STROKE
         strokeWidth = 3f
     }
 
     private val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#CCFFFFFF")
+        color = context.getColor(R.color.overlay_white_80)
         style = Paint.Style.FILL
     }
 
