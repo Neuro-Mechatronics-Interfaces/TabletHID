@@ -144,7 +144,7 @@ export default function Home() {
         <div className="page">
           <div className="section-label">
             <h2>Two Modes, One App</h2>
-            <p>Both platforms use BLE HID-over-GATT. The Android implementation is fully validated; iOS is experimental pending physical-device testing.</p>
+            <p>Both platforms use BLE HID-over-GATT.</p>
           </div>
           <div className="cards">
             <div className="card">
@@ -155,6 +155,7 @@ export default function Home() {
                 <li>Touch and Mouse input modes</li>
                 <li>Static, dynamic, or shared follower click zones</li>
                 <li>Momentary and latching clicks</li>
+                <li>Windows and Mac keyboard macro buttons</li>
                 <li>Sensitivity 1–10 slider</li>
                 <li>Keyboard shortcut panel when macros are configured</li>
               </ul>

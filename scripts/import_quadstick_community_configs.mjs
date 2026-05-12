@@ -110,6 +110,7 @@ function parseArgs(argv) {
     limit: null,
     dryRun: false,
     replace: false,
+    macrosOnly: false,
     since: '2026-05-01T00:00:00.000Z',
     clusterThreshold: DEFAULT_CLUSTER_THRESHOLD,
   };
@@ -121,6 +122,7 @@ function parseArgs(argv) {
     else if (arg === '--limit') args.limit = Number.parseInt(argv[++i], 10);
     else if (arg === '--dry-run') args.dryRun = true;
     else if (arg === '--replace') args.replace = true;
+    else if (arg === '--macros-only') args.macrosOnly = true;
     else if (arg === '--since') args.since = argv[++i];
     else if (arg === '--cluster-threshold') args.clusterThreshold = Number.parseFloat(argv[++i]);
     else if (arg === '--help' || arg === '-h') {
@@ -153,6 +155,7 @@ Options:
   --limit N       Convert at most N source configs
   --dry-run       Print conversion summary without writing target DB
   --replace       Replace deterministic QuadStick import IDs if they already exist
+  --macros-only   Re-derive and patch only macroButtons on existing rows; preserves all other metadata
   --since ISO     Base uploaded_at timestamp for deterministic ordering
   --cluster-threshold N
                  Minimum Jaccard overlap for shared layouts (default: ${DEFAULT_CLUSTER_THRESHOLD})
@@ -435,19 +438,21 @@ function macroLabel(output, inputs) {
 }
 
 function macroButtonsForControls(controls, macroInputsByOutput) {
-  return [...controls]
+  const outputs = [...controls]
     .filter(control => control.startsWith('macro:'))
     .map(control => control.slice('macro:'.length))
-    .sort()
-    .map((output, index) => ({
-      label: macroLabel(output, [...(macroInputsByOutput.get(output) ?? [])]),
-      modifiers: 0,
-      keyUsages: [KEYBOARD_USAGE.get(output)],
-      layoutOffsetX: 0,
-      layoutOffsetY: index * 8,
-      layoutScaleX: 1,
-      layoutScaleY: 1,
-    }));
+    .sort();
+
+  return outputs.map((output, index) => ({
+    label: macroLabel(output, [...(macroInputsByOutput.get(output) ?? [])]),
+    modifiers: 0,
+    keyUsages: [KEYBOARD_USAGE.get(output)],
+    // 2-column grid; 90dp between columns, 56dp between rows (~44dp button height + 12dp gap)
+    layoutOffsetX: (index % 2) * 90,
+    layoutOffsetY: Math.floor(index / 2) * 56,
+    layoutScaleX: 1,
+    layoutScaleY: 1,
+  }));
 }
 
 function jaccard(a, b) {
@@ -506,7 +511,7 @@ function clusterSources(items, threshold) {
 
 function convertGamepadConfig(sourceConfig, bindings, cluster) {
   const config = emptyGamepadConfig();
-  const { inputsByButton, macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
+  const { controls, inputsByButton, macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
 
   for (const button of BUTTON_KEYS) {
     if (!cluster.unionControls.has(button)) continue;
@@ -515,7 +520,7 @@ function convertGamepadConfig(sourceConfig, bindings, cluster) {
   }
 
   applyLayoutHints(config, cluster.layout, cluster.unionControls);
-  config.macroButtons = macroButtonsForControls(cluster.unionControls, macroInputsByOutput);
+  config.macroButtons = macroButtonsForControls(controls, macroInputsByOutput);
 
   const error = validateGamepadConfig(config);
   if (error !== null) {
@@ -527,7 +532,7 @@ function convertGamepadConfig(sourceConfig, bindings, cluster) {
 
 function convertTouchMouseConfig(sourceConfig, bindings, cluster) {
   const config = emptyTouchMouseConfig();
-  const { macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
+  const { controls, macroInputsByOutput, unsupportedOutputs } = controlsForBindings(bindings);
   config.mode = cluster.unionControls.has('touchMovement') ? 'MOUSE' : 'TOUCH';
   config.leftButton.enabled = cluster.unionControls.has('touchLeftButton');
   config.rightButton.enabled = cluster.unionControls.has('touchRightButton');
@@ -543,7 +548,7 @@ function convertTouchMouseConfig(sourceConfig, bindings, cluster) {
     });
   }
 
-  config.macroButtons = macroButtonsForControls(cluster.unionControls, macroInputsByOutput);
+  config.macroButtons = macroButtonsForControls(controls, macroInputsByOutput);
 
   const error = validateTouchMouseConfig(config);
   if (error !== null) {
@@ -724,6 +729,45 @@ function main() {
         config_json: JSON.parse(rows[0].config_json),
       }, null, 2));
     }
+    qsDb.close();
+    return;
+  }
+
+  if (args.macrosOnly) {
+    const targetDb = new Database(args.target);
+    const getStmt = targetDb.prepare('SELECT config_json FROM configs WHERE id = ?');
+    const updateStmt = targetDb.prepare('UPDATE configs SET config_json = ? WHERE id = ?');
+
+    let patched = 0, unchanged = 0, absent = 0;
+    const patchAll = targetDb.transaction(items => {
+      for (const row of items) {
+        const existing = getStmt.get(row.id);
+        if (!existing) { absent++; continue; }
+        const existingConfig = JSON.parse(existing.config_json);
+        const newConfig = JSON.parse(row.config_json);
+        const oldSig = JSON.stringify(existingConfig.macroButtons ?? []);
+        const newSig = JSON.stringify(newConfig.macroButtons);
+        if (oldSig === newSig) { unchanged++; continue; }
+        existingConfig.macroButtons = newConfig.macroButtons;
+        updateStmt.run(JSON.stringify(existingConfig), row.id);
+        patched++;
+      }
+    });
+    patchAll(rows);
+
+    console.log(`Patched macroButtons: ${patched} updated, ${unchanged} unchanged, ${absent} not in target DB`);
+    if (patched > 0) {
+      console.log('\nSample of patched configs (first 5):');
+      let shown = 0;
+      for (const row of rows) {
+        if (shown >= 5) break;
+        const newConfig = JSON.parse(row.config_json);
+        if (!newConfig.macroButtons.length) continue;
+        console.log(`  ${row.id}  ${row.profile_name}  →  [${newConfig.macroButtons.map(m => m.label).join(', ')}]`);
+        shown++;
+      }
+    }
+    targetDb.close();
     qsDb.close();
     return;
   }
