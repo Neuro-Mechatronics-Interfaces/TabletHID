@@ -154,6 +154,32 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     return () => { cancelled = true; };
   }, [selectedConfig?.id]);
 
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+
+    function onWheel(e) {
+      const node = e.target.closest?.('.graph-node');
+      if (node) {
+        const description = node.querySelector('.graph-node-description');
+        if (description && description.scrollHeight > description.clientHeight) {
+          e.preventDefault();
+          e.stopPropagation();
+          description.scrollTop += e.deltaY;
+          return;
+        }
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      setViewport(prev => ({ ...prev, zoom: clamp(prev.zoom * factor, MIN_ZOOM, MAX_ZOOM) }));
+    }
+
+    stage.addEventListener('wheel', onWheel, { passive: false });
+    return () => stage.removeEventListener('wheel', onWheel);
+  }, [graph?.nodes?.length]);
+
   const layout = useMemo(() => forceLayout(graph), [graph]);
 
   const byId = useMemo(() => {
@@ -180,22 +206,6 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     if (dragRef.current?.pointerId === e.pointerId) {
       dragRef.current = null;
     }
-  }
-
-  function handleStageWheel(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const factor = e.deltaY > 0 ? 0.9 : 1.1;
-    setViewport(prev => ({ ...prev, zoom: clamp(prev.zoom * factor, MIN_ZOOM, MAX_ZOOM) }));
-  }
-
-  function handleNodeWheel(e) {
-    const description = e.currentTarget.querySelector('.graph-node-description');
-    if (!description || description.scrollHeight <= description.clientHeight) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    description.scrollTop += e.deltaY;
   }
 
   if (!selectedConfig) {
@@ -236,7 +246,6 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onWheel={handleStageWheel}
       >
         <div
           className="graph-viewport"
@@ -270,7 +279,6 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
                 className={'graph-node' + (center ? ' center' : '') + ` ${cfg.mode}`}
                 style={{ left: x, top: y }}
                 onClick={() => onSelect(cfg)}
-                onWheel={handleNodeWheel}
                 title={`${cfg.profile_name} (${Math.round(node.strength * 100)}%)`}
               >
                 <span className="graph-node-title">{shortName(cfg.profile_name)}</span>
