@@ -33,6 +33,7 @@ enum GamepadConfigSerializer {
         root["macroHostDefaults"] = config.macroHostDefaults.rawValue.uppercased()
         root["macroButtons"] = config.macroButtons.map { macroToJson($0) }
         root["vibrationIntensity"] = config.vibrationIntensity.rawValue.uppercased()
+        root["orientationPreference"] = config.orientationPreference.rawValue.uppercased()
         var labels: [String: String] = [:]
         config.customButtonLabels.forEach { labels[$0.key] = $0.value }
         root["customButtonLabels"] = labels
@@ -68,6 +69,7 @@ enum GamepadConfigSerializer {
         config.macroHostDefaults = macroHost(from: json["macroHostDefaults"] as? String) ?? .windows
         config.macroButtons = (json["macroButtons"] as? [[String: Any]] ?? []).compactMap { macroFromJson($0) }
         config.vibrationIntensity = vibrationIntensity(from: json["vibrationIntensity"] as? String) ?? .off
+        config.orientationPreference = orientationPref(from: json["orientationPreference"] as? String) ?? .system
         config.customButtonLabels = json["customButtonLabels"] as? [String: String] ?? [:]
         return config
     }
@@ -209,6 +211,15 @@ enum GamepadConfigSerializer {
         case "MEDIUM": return .medium
         case "STRONG": return .strong
         default:       return nil
+        }
+    }
+
+    private static func orientationPref(from raw: String?) -> OrientationPreference? {
+        switch raw?.uppercased() {
+        case "SYSTEM":    return .system
+        case "LANDSCAPE": return .landscape
+        case "PORTRAIT":  return .portrait
+        default:          return nil
         }
     }
 }

@@ -3,11 +3,13 @@ import SwiftUI
 /// Bottom sheet for importing a community config into a local profile.
 ///
 /// Behaviour mirrors the Android ImportSheet:
+/// - Gamepad layout preview with landscape/portrait toggle (gamepad configs only).
 /// - Metadata section at top.
 /// - "Import to" profile picker.
 /// - Quick-select preset chips (Everything, Layout, Macros, Behaviors, Custom).
 /// - Individual subset toggles that update the quick-select chip.
-/// - Apply: deserialise config_json → merge selected subsets → save → dismiss.
+/// - Apply: deserialise config_json → rescale offsets if source device differs → merge
+///   selected subsets → save → dismiss.
 struct ImportSheet: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -22,19 +24,31 @@ struct ImportSheet: View {
     @State private var touchSubsets: Set<TouchMouseSubset>   = Set(TouchMouseSubset.allCases)
     @State private var isApplying = false
     @State private var applyError: String? = nil
-    @State private var showSuccess = false
+    @State private var thumbnailLandscape = true
 
     init(record: CommunityConfigRecord, viewModel: CommunityViewModel) {
         self.record = record
         self.viewModel = viewModel
-        // Default target is the active profile — resolved properly in onAppear.
         _targetProfile = State(initialValue: Profile.defaultProfile)
+        // Init thumbnail orientation from config JSON; default landscape when SYSTEM.
+        let isLandscape: Bool = {
+            guard record.mode == "gamepad", !record.configJson.isEmpty,
+                  let data = record.configJson.data(using: .utf8),
+                  let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let pref = root["orientationPreference"] as? String
+            else { return true }
+            return pref.uppercased() != "PORTRAIT"
+        }()
+        _thumbnailLandscape = State(initialValue: isLandscape)
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    if record.mode == "gamepad" && !record.configJson.isEmpty {
+                        thumbnailSection
+                    }
                     metadataSection
                     profilePickerRow
                     quickSelectSection
@@ -63,6 +77,60 @@ struct ImportSheet: View {
         .sheet(isPresented: $showProfilePicker) {
             profilePickerSheet
         }
+    }
+
+    // MARK: - Thumbnail
+
+    private var thumbnailSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            GamepadThumbnailView(
+                configJson: record.configJson,
+                isLandscape: thumbnailLandscape,
+                customCanvasLong: thumbnailCanvasLong,
+                customCanvasShort: thumbnailCanvasShort
+            )
+            .cornerRadius(10)
+
+            Button {
+                thumbnailLandscape.toggle()
+            } label: {
+                Label(thumbnailLandscape ? "Landscape" : "Portrait",
+                      systemImage: thumbnailLandscape ? "rectangle.landscape" : "rectangle.portrait")
+                    .font(.caption.weight(.medium))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+    }
+
+    /// Returns the rescaled canvas long/short to use for thumbnail rendering,
+    /// or nil to use the default 600/340 reference.
+    private var thumbnailCanvasLong: Double? {
+        #if canImport(UIKit)
+        guard let srcW = record.deviceScreenWidthPx,
+              let srcH = record.deviceScreenHeightPx,
+              let srcDpi = record.deviceScreenDensityDpi
+        else { return nil }
+        let (tgtLong, tgtShort) = LayoutRescaler.canvasDimsFromScreen()
+        let (srcLong, srcShort) = LayoutRescaler.canvasDimsFromScreenPx(widthPx: srcW, heightPx: srcH, densityDpi: srcDpi)
+        let srcW2 = thumbnailLandscape ? srcLong : srcShort
+        let tgtW2 = thumbnailLandscape ? tgtLong : tgtShort
+        let srcH2 = thumbnailLandscape ? srcShort : srcLong
+        let tgtH2 = thumbnailLandscape ? tgtShort : tgtLong
+        guard abs(srcW2 - tgtW2) > 1.0 || abs(srcH2 - tgtH2) > 1.0 else { return nil }
+        return tgtLong
+        #else
+        return nil
+        #endif
+    }
+
+    private var thumbnailCanvasShort: Double? {
+        #if canImport(UIKit)
+        guard thumbnailCanvasLong != nil else { return nil }
+        return LayoutRescaler.canvasDimsFromScreen().1
+        #else
+        return nil
+        #endif
     }
 
     // MARK: - Metadata
@@ -95,11 +163,6 @@ struct ImportSheet: View {
                 Label(deviceName, systemImage: "iphone")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            }
-            if modeMismatch {
-                Label("Mode mismatch — cannot apply this config to the current session.", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
             }
         }
     }
@@ -230,7 +293,7 @@ struct ImportSheet: View {
             }
         }
         .buttonStyle(.borderedProminent)
-        .disabled(isApplying || modeMismatch || nothingSelected)
+        .disabled(isApplying || nothingSelected)
         .controlSize(.large)
     }
 
@@ -267,13 +330,6 @@ struct ImportSheet: View {
     }
 
     // MARK: - Logic helpers
-
-    private var modeMismatch: Bool {
-        // Only warn if the target profile already has a mode-specific flow.
-        // We block applying a gamepad config if record.mode == "gamepad" but false
-        // vice versa. Since both modes are always stored per profile, we always allow.
-        false
-    }
 
     private var nothingSelected: Bool {
         if record.mode == "gamepad" { return gamepadSubsets.isEmpty }
@@ -313,6 +369,29 @@ struct ImportSheet: View {
         selectedPreset = .custom
     }
 
+    // MARK: - Rescaling helpers
+
+    private func rescaleIfNeeded(_ config: GamepadConfig, from rec: CommunityConfigRecord) -> GamepadConfig {
+        #if canImport(UIKit)
+        guard let srcWpx = rec.deviceScreenWidthPx,
+              let srcHpx = rec.deviceScreenHeightPx,
+              let srcDpi = rec.deviceScreenDensityDpi
+        else { return config }
+        let isLandscape = config.orientationPreference != .portrait
+        let (srcLong, srcShort) = LayoutRescaler.canvasDimsFromScreenPx(widthPx: srcWpx, heightPx: srcHpx, densityDpi: srcDpi)
+        let (tgtLong, tgtShort) = LayoutRescaler.canvasDimsFromScreen()
+        let srcW = isLandscape ? srcLong : srcShort
+        let srcH = isLandscape ? srcShort : srcLong
+        let tgtW = isLandscape ? tgtLong : tgtShort
+        let tgtH = isLandscape ? tgtShort : tgtLong
+        return LayoutRescaler.rescaleGamepad(config: config, srcW: srcW, srcH: srcH, tgtW: tgtW, tgtH: tgtH)
+        #else
+        return config
+        #endif
+    }
+
+    // MARK: - Apply import
+
     private func applyImport() async {
         isApplying = true
         applyError = nil
@@ -326,7 +405,8 @@ struct ImportSheet: View {
         }
 
         if importRecord.mode == "gamepad" {
-            let source = GamepadConfigSerializer.fromCanonicalJson(jsonDict)
+            let parsed = GamepadConfigSerializer.fromCanonicalJson(jsonDict)
+            let source = rescaleIfNeeded(parsed, from: importRecord)
             let target = appState.gamepadConfig(for: targetProfile)
             let merged = ConfigMerger.mergeGamepad(target: target, source: source, subsets: gamepadSubsets)
             appState.updateGamepadConfig(merged, profile: targetProfile)

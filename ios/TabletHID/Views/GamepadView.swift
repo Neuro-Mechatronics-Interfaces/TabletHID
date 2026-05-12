@@ -74,6 +74,43 @@ struct GamepadView: View {
                 appState.updateGamepadConfig(newConfig)
             }
         }
+        .onAppear {
+            applyConfigOrientation()
+        }
+        .onDisappear {
+            restoreGlobalOrientation()
+        }
+    }
+
+    /// Applies the config's orientationPreference to the current UIWindowScene.
+    /// SYSTEM defers to the global OrientationLock setting — no override is applied.
+    private func applyConfigOrientation() {
+        #if canImport(UIKit)
+        let pref = cfg.orientationPreference
+        guard pref != .system else { return }
+        let mask: UIInterfaceOrientationMask = pref == .landscape ? .landscape : .portrait
+        AppDelegate.orientationLock = mask
+        if #available(iOS 16.0, *),
+           let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            scene.requestGeometryUpdate(
+                UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
+            ) { _ in }
+        }
+        #endif
+    }
+
+    /// Restores the app-level orientation lock after leaving the GamepadView.
+    private func restoreGlobalOrientation() {
+        #if canImport(UIKit)
+        let mask = appState.orientationLock.interfaceOrientationMask
+        AppDelegate.orientationLock = mask
+        if #available(iOS 16.0, *),
+           let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            scene.requestGeometryUpdate(
+                UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: mask)
+            ) { _ in }
+        }
+        #endif
     }
 
     private var appBackgroundColor: Color {

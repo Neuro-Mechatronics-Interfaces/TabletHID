@@ -1,5 +1,13 @@
 import Foundation
 
+enum OrientationPreference: String, Codable, CaseIterable, Identifiable {
+    case system
+    case landscape
+    case portrait
+
+    var id: String { rawValue }
+}
+
 enum TriggerDragAxis: String, Codable, CaseIterable, Identifiable {
     case up
     case down
@@ -75,6 +83,7 @@ struct GamepadConfig: Codable, Equatable {
     var macroButtons: [KeyboardMacroButtonConfig] = []
     var vibrationIntensity = VibrationIntensity.off
     var customButtonLabels: [String: String] = [:]
+    var orientationPreference = OrientationPreference.system
 
     init() {}
 
@@ -83,6 +92,7 @@ struct GamepadConfig: Codable, Equatable {
         case dpadUp, dpadDown, dpadLeft, dpadRight, leftJoystick, rightJoystick
         case singleJoystickMode, singleJoystickSideToggleEnabled, singleJoystickOutputSide
         case macroHostDefaults, macroButtons, vibrationIntensity, customButtonLabels
+        case orientationPreference
     }
 
     init(from decoder: Decoder) throws {
@@ -111,6 +121,7 @@ struct GamepadConfig: Codable, Equatable {
         macroButtons = try values.decodeIfPresent([KeyboardMacroButtonConfig].self, forKey: .macroButtons) ?? defaults.macroButtons
         vibrationIntensity = try values.decodeIfPresent(VibrationIntensity.self, forKey: .vibrationIntensity) ?? defaults.vibrationIntensity
         customButtonLabels = try values.decodeIfPresent([String: String].self, forKey: .customButtonLabels) ?? defaults.customButtonLabels
+        orientationPreference = try values.decodeIfPresent(OrientationPreference.self, forKey: .orientationPreference) ?? defaults.orientationPreference
     }
 
     func withResetLayout() -> GamepadConfig {

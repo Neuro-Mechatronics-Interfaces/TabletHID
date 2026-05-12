@@ -119,6 +119,7 @@ enum ConfigMerger {
         result.dpadDown  = applyBehaviorToButton(target: result.dpadDown,  source: source.dpadDown,  isTrigger: false)
         result.dpadLeft  = applyBehaviorToButton(target: result.dpadLeft,  source: source.dpadLeft,  isTrigger: false)
         result.dpadRight = applyBehaviorToButton(target: result.dpadRight, source: source.dpadRight, isTrigger: false)
+        result.orientationPreference = source.orientationPreference
         return result
     }
 

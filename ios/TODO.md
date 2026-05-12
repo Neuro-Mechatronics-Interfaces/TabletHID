@@ -112,8 +112,13 @@ Use this platform TODO for iOS-specific implementation, parity, validation, and 
 - [x] Add URLSession API client for `/api/v1/configs`, disabled when `COMMUNITY_API_BASE_URL` is unset.
 - [x] Add canonical JSON serializers for iOS gamepad and touch-mouse configs.
 - [x] Add import sheet with Android-matching subset presets, target profile picker, and profile-specific save path.
+- [x] Port `GamepadLayoutResolver` (Swift) and `LayoutRescaler` (Swift) from Android; bundle `gamepad_layout.json`.
+- [x] Add `GamepadThumbnailView` (SwiftUI Canvas) to import sheet with landscape/portrait toggle; rescale offsets when source device canvas differs.
+- [x] Add `OrientationPreference` to `GamepadConfig`; serialise, merge under `buttonBehavior` subset; `GamepadView` applies on enter and restores global lock on exit.
 - [x] Add share/upload sheet with profile name, description, tags, category, device metadata, and public-upload disclosure.
 - [x] Wire community sources into the Xcode project and verify simulator build/test.
+- [ ] Validate gamepad layout preview rendering on a physical device and confirm thumbnail rescaling math against an Android-uploaded config with differing screen dimensions.
+- [ ] Validate `OrientationPreference` override in `GamepadView` on a physical device (landscape/portrait lock apply and release correctly).
 
 ## Phase 3 - TestFlight And App Store
 
