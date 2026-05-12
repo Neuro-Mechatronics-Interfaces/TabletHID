@@ -17,6 +17,7 @@ const supportedRoutes = new Map([
   ['/support/android', { name: 'support', scope: 'android', platform: 'android' }],
   ['/privacy', { name: 'privacy' }],
   ['/configs', { name: 'configs' }],
+  ['/beta', { name: 'beta' }],
   ['/admin', { name: 'admin' }],
 ]);
 

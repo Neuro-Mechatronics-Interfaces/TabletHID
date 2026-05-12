@@ -742,3 +742,81 @@ body {
   .admin-layout { flex-direction: column; overflow: visible; }
   .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
+
+/* ── Beta signup page ── */
+.beta-page { max-width: 560px; margin: 0 auto; padding: 32px 20px 64px; }
+
+.beta-hero { text-align: center; margin-bottom: 32px; }
+.beta-hero h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 10px; }
+.beta-hero p  { color: var(--text-muted); font-size: .95rem; }
+
+.beta-success-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #d1fae5; color: #065f46;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; margin: 0 auto 16px;
+}
+.beta-success-note { margin-top: 12px; font-size: .9rem; color: var(--text-muted); }
+.beta-success-note a { color: var(--primary); }
+
+.beta-form { display: flex; flex-direction: column; gap: 18px; }
+
+.beta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.beta-field { display: flex; flex-direction: column; gap: 5px; }
+.beta-field > span { font-size: .85rem; font-weight: 600; color: var(--text); }
+.beta-field > span em { font-weight: 400; color: var(--text-muted); }
+.beta-field input,
+.beta-field select,
+.beta-field textarea {
+  padding: 9px 12px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: #fff;
+  font-size: .9rem; color: var(--text); font-family: inherit;
+  transition: border-color .12s;
+}
+.beta-field input:focus,
+.beta-field select:focus,
+.beta-field textarea:focus { outline: none; border-color: var(--primary); }
+.beta-field textarea { resize: vertical; }
+.beta-hint { font-size: .78rem; color: var(--text-muted); }
+
+.beta-tf-box {
+  background: var(--primary-lt); border: 1.5px solid #c7d2fe;
+  border-radius: 10px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.beta-tf-title { font-weight: 700; font-size: .9rem; }
+.beta-tf-desc  { font-size: .85rem; color: var(--text-muted); }
+.beta-tf-link  {
+  display: inline-block; font-size: .85rem; font-weight: 600;
+  color: var(--primary); text-decoration: none;
+}
+.beta-tf-link:hover { text-decoration: underline; }
+.beta-tf-steps {
+  margin: 4px 0 0 16px; padding: 0;
+  font-size: .82rem; color: var(--text-muted);
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.beta-error {
+  padding: 10px 14px; border-radius: 8px;
+  background: #fee2e2; border: 1px solid #fca5a5;
+  color: #dc2626; font-size: .875rem;
+}
+
+.beta-submit { align-self: flex-start; }
+
+.beta-honeypot { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
+
+.nav-link-beta {
+  background: var(--primary-lt); color: var(--primary) !important;
+  border-radius: 6px; padding: 3px 10px;
+  font-weight: 700;
+}
+.nav-link-beta.active,
+.nav-link-beta:hover { background: var(--primary); color: #fff !important; }
+
+@media (max-width: 500px) {
+  .beta-row { grid-template-columns: 1fr; }
+  .beta-submit { align-self: stretch; }
+}

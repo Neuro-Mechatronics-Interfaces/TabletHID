@@ -6,6 +6,7 @@ import Support from './pages/Support.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Configs from './pages/Configs.jsx';
 import CloneConfigPage from './pages/configs/CloneConfigPage.jsx';
+import Beta from './pages/Beta.jsx';
 import Admin from './pages/Admin.jsx';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/configs" element={<Configs />} />
           <Route path="/configs/clone/:id" element={<CloneConfigPage />} />
+          <Route path="/beta" element={<Beta />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -8,6 +8,14 @@ export const uploadRateLimiter = rateLimit({
   message: { error: 'Too many uploads from this IP, please try again later.' },
 });
 
+export const betaRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again later.' },
+});
+
 export function bodySizeLimit(req, res, next) {
   const contentLength = req.headers['content-length'];
   if (contentLength !== undefined && Number(contentLength) > 65536) {

@@ -9,6 +9,7 @@ export default function Footer() {
         <Link to="/support/ios">iOS Support</Link>
         <Link to="/support/android">Android Support</Link>
         <Link to="/privacy">Privacy Policy</Link>
+        <Link to="/beta">Beta Testing</Link>
         <a href="github.com/Neuro-Mechatronics-Interfaces/TabletHID" target="_blank" rel="noreferrer">GitHub</a>
       </div>
       <p className="footer-copy">© {new Date().getFullYear()} TabletHID. All rights reserved.</p>
