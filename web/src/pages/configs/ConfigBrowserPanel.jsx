@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import ConfigCard from './ConfigCard.jsx';
 
 const FETCH_LIMIT = 100;
-const MAX_CARDS = 50;
+const MAX_CARDS = FETCH_LIMIT;
 
 export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, onTagSelect }) {
   const [configs, setConfigs] = useState([]);
@@ -13,6 +13,7 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
   const [sort, setSort] = useState('recent');
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const fetchConfigs = useCallback(async () => {
     setLoading(true);
@@ -79,6 +80,17 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
   return (
     <div className="cfg-browser">
       <div className="cfg-filters">
+        <div className="cfg-filter-head">
+          <span className="cfg-filter-title">Filters</span>
+          <button
+            className="cfg-filter-toggle"
+            type="button"
+            onClick={() => setFiltersOpen(v => !v)}
+            aria-expanded={filtersOpen}
+          >
+            {filtersOpen ? 'Collapse' : 'Expand'}
+          </button>
+        </div>
         <div className="cfg-search-row">
           <input
             className="cfg-search"
@@ -89,38 +101,42 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
           />
         </div>
 
-        <FilterRow label="Mode" chips={modeChips} value={mode} onChange={setMode} />
-        <FilterRow label="Platform" chips={platformChips} value={platform} onChange={setPlatform} />
-        <FilterRow label="Sort" chips={sortChips} value={sort} onChange={setSort} />
+        {filtersOpen && (
+          <div className="cfg-filter-options">
+            <FilterRow label="Mode" chips={modeChips} value={mode} onChange={setMode} />
+            <FilterRow label="Platform" chips={platformChips} value={platform} onChange={setPlatform} />
+            <FilterRow label="Sort" chips={sortChips} value={sort} onChange={setSort} />
 
-        {categories.length > 0 && (
-          <div className="cfg-filter-row">
-            <span className="cfg-filter-label">Category</span>
-            <select
-              className="cfg-cat-select"
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-            >
-              <option value="">All</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-        )}
-
-        {allTags.length > 0 && (
-          <div className="cfg-filter-row cfg-filter-row--wrap">
-            <span className="cfg-filter-label">Tags</span>
-            <div className="cfg-chips">
-              {allTags.map(t => (
-                <button
-                  key={t}
-                  className={'cfg-chip cfg-tag-chip' + (activeTag === t ? ' active' : '')}
-                  onClick={() => onTagSelect(activeTag === t ? '' : t)}
+            {categories.length > 0 && (
+              <div className="cfg-filter-row">
+                <span className="cfg-filter-label">Category</span>
+                <select
+                  className="cfg-cat-select"
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
                 >
-                  {t}
-                </button>
-              ))}
-            </div>
+                  <option value="">All</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            )}
+
+            {allTags.length > 0 && (
+              <div className="cfg-filter-row cfg-filter-row--wrap">
+                <span className="cfg-filter-label">Tags</span>
+                <div className="cfg-chips">
+                  {allTags.map(t => (
+                    <button
+                      key={t}
+                      className={'cfg-chip cfg-tag-chip' + (activeTag === t ? ' active' : '')}
+                      onClick={() => onTagSelect(activeTag === t ? '' : t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
