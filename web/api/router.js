@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { uploadRateLimiter, betaRateLimiter, bodySizeLimit, securityHeaders } from './middleware.js';
-import { listConfigs, getConfig, getConfigGraphRoute, uploadConfig } from './routes/configs.js';
+import { listConfigs, getConfig, getConfigGraphRoute, patchConfigGraphCluster, uploadConfig } from './routes/configs.js';
 import { adminMe, adminListConfigs, adminGetConfig, adminPatchConfig, adminDeleteConfig } from './routes/admin.js';
 import { requireAdmin } from './adminAuth.js';
 import { betaSignup } from './routes/beta.js';
@@ -11,6 +11,7 @@ router.use(securityHeaders);
 
 router.get('/configs',     listConfigs);
 router.get('/configs/:id/graph', getConfigGraphRoute);
+router.patch('/graph/clusters/:id', bodySizeLimit, patchConfigGraphCluster);
 router.get('/configs/:id', getConfig);
 router.post('/configs',    bodySizeLimit, uploadRateLimiter, uploadConfig);
 router.get('/devices', listDevices);

@@ -88,6 +88,15 @@ if (!hasMigration5) {
   `).run(new Date().toISOString());
 }
 
+const hasMigration6 = db.prepare('SELECT 1 FROM schema_migrations WHERE version = 6').get();
+if (!hasMigration6) {
+  ensureGraphSchema(db);
+  db.prepare(`
+    INSERT INTO schema_migrations (version, applied_at, description)
+    VALUES (6, ?, 'Added persistent config graph clusters')
+  `).run(new Date().toISOString());
+}
+
 db.exec(`
 CREATE TABLE IF NOT EXISTS device_presets (
   id         TEXT PRIMARY KEY,

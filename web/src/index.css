@@ -645,6 +645,16 @@ body {
 }
 .graph-node.gamepad { border-left: 5px solid #60a5fa; }
 .graph-node.touch_mouse { border-left: 5px solid #34d399; }
+.graph-node.cluster {
+  width: 178px; min-height: 86px;
+  border-color: #a855f7;
+  border-left: 6px solid #a855f7;
+  background: rgba(250,245,255,.98);
+}
+.graph-node.cluster:hover,
+.graph-node.cluster:focus-visible {
+  width: 292px; min-height: 142px;
+}
 .graph-node-title {
   width: 100%; font-size: .78rem; font-weight: 800;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

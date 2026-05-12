@@ -50,7 +50,7 @@ try {
     maxEdgesPerConfig: args.maxEdges,
   });
   db.close();
-  console.log(`Rebuilt config graph: ${result.configs} configs, ${result.edges} directed edges`);
+  console.log(`Rebuilt config graph: ${result.configs} configs, ${result.edges} directed edges, ${result.clusters} clusters`);
   console.log(`DB: ${args.db}`);
 } catch (error) {
   console.error(error.message);

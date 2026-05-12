@@ -1,5 +1,10 @@
+import crypto from 'crypto';
+
 const DEFAULT_THRESHOLD = 0.08;
 const DEFAULT_MAX_EDGES_PER_CONFIG = 32;
+const DEFAULT_CLUSTER_THRESHOLD = 0.86;
+const DEFAULT_CLUSTER_MIN_SIZE = 3;
+const CLUSTER_ALGORITHM = 'connected-components-v1';
 
 const STOPWORDS = new Set([
   'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'config', 'controller', 'for',
@@ -14,6 +19,7 @@ export function ensureGraphSchema(db) {
       target_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
       strength         REAL NOT NULL,
       dissimilarity    REAL NOT NULL DEFAULT 1,
+      cluster_id       TEXT REFERENCES config_graph_clusters(id) ON DELETE SET NULL,
       shared_tokens    TEXT NOT NULL DEFAULT '[]',
       updated_at       TEXT NOT NULL,
       PRIMARY KEY (source_config_id, target_config_id),
@@ -26,12 +32,38 @@ export function ensureGraphSchema(db) {
       ON config_graph_edges (source_config_id, strength DESC);
     CREATE INDEX IF NOT EXISTS idx_config_graph_target
       ON config_graph_edges (target_config_id);
+
+    CREATE TABLE IF NOT EXISTS config_graph_clusters (
+      id           TEXT PRIMARY KEY,
+      signature    TEXT NOT NULL UNIQUE,
+      name         TEXT,
+      description  TEXT,
+      algorithm    TEXT NOT NULL,
+      threshold    REAL NOT NULL,
+      member_count INTEGER NOT NULL,
+      created_at   TEXT NOT NULL,
+      updated_at   TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS config_graph_cluster_members (
+      cluster_id TEXT NOT NULL REFERENCES config_graph_clusters(id) ON DELETE CASCADE,
+      config_id  TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
+      strength   REAL NOT NULL DEFAULT 1,
+      PRIMARY KEY (cluster_id, config_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_config_graph_cluster_members_config
+      ON config_graph_cluster_members (config_id);
   `);
 
   const columns = db.prepare('PRAGMA table_info(config_graph_edges)').all().map(column => column.name);
   if (!columns.includes('dissimilarity')) {
     db.exec('ALTER TABLE config_graph_edges ADD COLUMN dissimilarity REAL NOT NULL DEFAULT 1');
   }
+  if (!columns.includes('cluster_id')) {
+    db.exec('ALTER TABLE config_graph_edges ADD COLUMN cluster_id TEXT REFERENCES config_graph_clusters(id) ON DELETE SET NULL');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_config_graph_cluster ON config_graph_edges (cluster_id)');
 }
 
 function parseJson(value, fallback) {
@@ -158,6 +190,110 @@ function pruneEdgesForSource(edges, maxEdgesPerConfig) {
   return pruned;
 }
 
+function stableClusterId(signature) {
+  const bytes = crypto.createHash('sha1').update(`tablethid:graph-cluster:${signature}`).digest().subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function reconcileGraphClusters(db, options = {}) {
+  ensureGraphSchema(db);
+  const threshold = options.clusterThreshold ?? DEFAULT_CLUSTER_THRESHOLD;
+  const minSize = options.clusterMinSize ?? DEFAULT_CLUSTER_MIN_SIZE;
+  const edges = db.prepare(`
+    SELECT source_config_id AS source, target_config_id AS target, strength
+    FROM config_graph_edges
+    WHERE strength >= ?
+  `).all(threshold);
+
+  const adjacency = new Map();
+  for (const edge of edges) {
+    adjacency.set(edge.source, [...(adjacency.get(edge.source) ?? []), edge.target]);
+    adjacency.set(edge.target, [...(adjacency.get(edge.target) ?? []), edge.source]);
+  }
+
+  const visited = new Set();
+  const clusters = [];
+  for (const id of adjacency.keys()) {
+    if (visited.has(id)) continue;
+    const stack = [id];
+    const members = [];
+    visited.add(id);
+    while (stack.length) {
+      const current = stack.pop();
+      members.push(current);
+      for (const next of adjacency.get(current) ?? []) {
+        if (visited.has(next)) continue;
+        visited.add(next);
+        stack.push(next);
+      }
+    }
+    if (members.length >= minSize) {
+      const sortedMembers = members.sort();
+      const signature = `${CLUSTER_ALGORITHM}:${threshold}:${sortedMembers.join('|')}`;
+      clusters.push({
+        id: stableClusterId(signature),
+        signature,
+        members: sortedMembers,
+      });
+    }
+  }
+
+  const now = new Date().toISOString();
+  const upsertCluster = db.prepare(`
+    INSERT INTO config_graph_clusters (
+      id, signature, name, description, algorithm, threshold, member_count, created_at, updated_at
+    ) VALUES (
+      @id, @signature, NULL, NULL, @algorithm, @threshold, @member_count, @now, @now
+    )
+    ON CONFLICT(signature) DO UPDATE SET
+      member_count = excluded.member_count,
+      threshold = excluded.threshold,
+      algorithm = excluded.algorithm,
+      updated_at = excluded.updated_at
+  `);
+  const insertMember = db.prepare(`
+    INSERT OR REPLACE INTO config_graph_cluster_members (cluster_id, config_id, strength)
+    VALUES (?, ?, ?)
+  `);
+  const avgStrength = db.prepare(`
+    SELECT AVG(strength) AS strength
+    FROM config_graph_edges
+    WHERE source_config_id = ? AND target_config_id IN (
+      SELECT value FROM json_each(?)
+    )
+  `);
+
+  db.prepare('UPDATE config_graph_edges SET cluster_id = NULL').run();
+  db.prepare('DELETE FROM config_graph_cluster_members').run();
+
+  for (const cluster of clusters) {
+    upsertCluster.run({
+      id: cluster.id,
+      signature: cluster.signature,
+      algorithm: CLUSTER_ALGORITHM,
+      threshold,
+      member_count: cluster.members.length,
+      now,
+    });
+    for (const member of cluster.members) {
+      const others = JSON.stringify(cluster.members.filter(id => id !== member));
+      insertMember.run(cluster.id, member, avgStrength.get(member, others)?.strength ?? 1);
+    }
+    const placeholders = cluster.members.map(() => '?').join(',');
+    db.prepare(`
+      UPDATE config_graph_edges
+      SET cluster_id = ?
+      WHERE source_config_id IN (${placeholders})
+        AND target_config_id IN (${placeholders})
+    `).run(cluster.id, ...cluster.members, ...cluster.members);
+  }
+
+  return { clusters: clusters.length };
+}
+
 export function rebuildGraph(db, options = {}) {
   ensureGraphSchema(db);
   const threshold = options.threshold ?? DEFAULT_THRESHOLD;
@@ -186,12 +322,14 @@ export function rebuildGraph(db, options = {}) {
   }
 
   const pruned = pruneEdgesForSource(directedEdges, maxEdgesPerConfig);
+  let clusterResult = { clusters: 0 };
   db.transaction(() => {
     db.prepare('DELETE FROM config_graph_edges').run();
     insertEdges(db, pruned);
+    clusterResult = reconcileGraphClusters(db, options);
   })();
 
-  return { configs: vectors.length, edges: pruned.length };
+  return { configs: vectors.length, edges: pruned.length, clusters: clusterResult.clusters };
 }
 
 export function updateConfigGraph(db, configId, options = {}) {
@@ -214,17 +352,36 @@ export function updateConfigGraph(db, configId, options = {}) {
   }
 
   const pruned = pruneEdgesForSource(edges, maxEdgesPerConfig);
+  let clusterResult = { clusters: 0 };
   db.transaction(() => {
     db.prepare('DELETE FROM config_graph_edges WHERE source_config_id = ? OR target_config_id = ?').run(configId, configId);
     insertEdges(db, pruned);
+    clusterResult = reconcileGraphClusters(db, options);
   })();
 
-  return { configs: rows.length, edges: pruned.length };
+  return { configs: rows.length, edges: pruned.length, clusters: clusterResult.clusters };
 }
 
 export function deleteConfigGraph(db, configId) {
   ensureGraphSchema(db);
-  db.prepare('DELETE FROM config_graph_edges WHERE source_config_id = ? OR target_config_id = ?').run(configId, configId);
+  db.transaction(() => {
+    db.prepare('DELETE FROM config_graph_edges WHERE source_config_id = ? OR target_config_id = ?').run(configId, configId);
+    reconcileGraphClusters(db);
+  })();
+}
+
+export function patchGraphCluster(db, clusterId, patch = {}) {
+  ensureGraphSchema(db);
+  const row = db.prepare('SELECT * FROM config_graph_clusters WHERE id = ?').get(clusterId);
+  if (!row) return null;
+  const name = 'name' in patch ? String(patch.name ?? '').trim().slice(0, 80) || null : row.name;
+  const description = 'description' in patch ? String(patch.description ?? '').trim().slice(0, 400) || null : row.description;
+  db.prepare(`
+    UPDATE config_graph_clusters
+    SET name = ?, description = ?, updated_at = ?
+    WHERE id = ?
+  `).run(name, description, new Date().toISOString(), clusterId);
+  return db.prepare('SELECT * FROM config_graph_clusters WHERE id = ?').get(clusterId);
 }
 
 function parseRow(row) {
@@ -269,6 +426,30 @@ export function getConfigGraph(db, configId, limit = 24) {
       });
     }
   }
+  const clusters = nodeIds.length > 1
+    ? db.prepare(`
+        SELECT cl.*
+        FROM config_graph_clusters cl
+        WHERE EXISTS (
+          SELECT 1 FROM config_graph_cluster_members m
+          WHERE m.cluster_id = cl.id
+            AND m.config_id IN (${placeholders})
+        )
+      `).all(...nodeIds)
+    : [];
+  const clusterMembers = clusters.length
+    ? db.prepare(`
+        SELECT cluster_id, config_id, strength
+        FROM config_graph_cluster_members
+        WHERE cluster_id IN (${clusters.map(() => '?').join(',')})
+      `).all(...clusters.map(cluster => cluster.id))
+    : [];
+  const membersByCluster = new Map();
+  for (const member of clusterMembers) {
+    const list = membersByCluster.get(member.cluster_id) ?? [];
+    list.push(member);
+    membersByCluster.set(member.cluster_id, list);
+  }
 
   return {
     center: parseRow(center),
@@ -285,8 +466,22 @@ export function getConfigGraph(db, configId, limit = 24) {
       target: edge.target_config_id,
       strength: edge.strength,
       dissimilarity: edge.dissimilarity,
+      cluster_id: edge.cluster_id,
       shared_tokens: parseJson(edge.shared_tokens, []),
     })),
     dissimilarities,
+    clusters: clusters.map(cluster => ({
+      id: cluster.id,
+      signature: cluster.signature,
+      name: cluster.name,
+      description: cluster.description,
+      algorithm: cluster.algorithm,
+      threshold: cluster.threshold,
+      member_count: cluster.member_count,
+      members: (membersByCluster.get(cluster.id) ?? []).map(member => ({
+        config_id: member.config_id,
+        strength: member.strength,
+      })),
+    })),
   };
 }

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-const GRAPH_LIMIT = 24;
+const GRAPH_VISIBLE_NEIGHBORS = 24;
+const GRAPH_FETCH_LIMIT = 60;
 const WORLD_SIZE = 1600;
 const MIN_ZOOM = 0.35;
 const MAX_ZOOM = 2.6;
+const CLUSTER_STRENGTH = 0.86;
+const CLUSTER_MIN_SIZE = 3;
 
 function shortName(name) {
   if (!name) return 'Config';
@@ -11,6 +14,7 @@ function shortName(name) {
 }
 
 function modeLabel(mode) {
+  if (mode === 'cluster') return 'Cluster';
   return mode === 'gamepad' ? 'Gamepad' : 'Touch Mouse';
 }
 
@@ -28,6 +32,159 @@ function undirectedEdges(edges) {
     result.push(edge);
   }
   return result;
+}
+
+function pairKey(a, b) {
+  return [a, b].sort().join(':');
+}
+
+function average(values) {
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function clusterGraph(graph, expandedClusters) {
+  if (!graph?.nodes?.length) return graph;
+
+  const centerId = graph.nodes[0]?.config?.id;
+  const nodeById = new Map(graph.nodes.map(node => [node.config.id, node]));
+
+  let clusters = (graph.clusters ?? [])
+    .map(cluster => ({
+      ...cluster,
+      members: (cluster.members ?? [])
+        .map(member => member.config_id)
+        .filter(id => id !== centerId && nodeById.has(id)),
+    }))
+    .filter(cluster => cluster.members.length >= CLUSTER_MIN_SIZE);
+
+  if (!clusters.length) {
+    const tightAdj = new Map();
+
+    for (const edge of undirectedEdges(graph.edges)) {
+      if (edge.source === centerId || edge.target === centerId) continue;
+      if ((edge.strength ?? 0) < CLUSTER_STRENGTH) continue;
+      if (!nodeById.has(edge.source) || !nodeById.has(edge.target)) continue;
+      tightAdj.set(edge.source, [...(tightAdj.get(edge.source) ?? []), edge.target]);
+      tightAdj.set(edge.target, [...(tightAdj.get(edge.target) ?? []), edge.source]);
+    }
+
+    const visited = new Set();
+    clusters = [];
+    for (const id of tightAdj.keys()) {
+      if (visited.has(id)) continue;
+      const stack = [id];
+      const members = [];
+      visited.add(id);
+      while (stack.length) {
+        const current = stack.pop();
+        members.push(current);
+        for (const next of tightAdj.get(current) ?? []) {
+          if (visited.has(next)) continue;
+          visited.add(next);
+          stack.push(next);
+        }
+      }
+      if (members.length >= CLUSTER_MIN_SIZE) {
+        const clusterId = `cluster:${members.sort().join('|')}`;
+        clusters.push({ id: clusterId, members });
+      }
+    }
+  }
+
+  const collapsedClusters = clusters.filter(cluster => !expandedClusters.has(cluster.id));
+  if (!collapsedClusters.length) return graph;
+
+  const visibleNodeById = new Map();
+  const idMap = new Map();
+  for (const node of graph.nodes) visibleNodeById.set(node.config.id, node);
+
+  for (const cluster of collapsedClusters) {
+    const memberNodes = cluster.members.map(id => nodeById.get(id)).filter(Boolean);
+    for (const id of cluster.members) {
+      idMap.set(id, cluster.id);
+      visibleNodeById.delete(id);
+    }
+
+    const strengths = memberNodes.map(node => node.strength ?? 0);
+    const modes = new Set(memberNodes.map(node => node.config.mode));
+    const names = memberNodes.map(node => node.config.profile_name).slice(0, 5);
+    const displayName = cluster.name || `${memberNodes.length} similar configs`;
+    visibleNodeById.set(cluster.id, {
+      cluster: true,
+      clusterId: cluster.id,
+      clusterName: cluster.name,
+      members: memberNodes,
+      strength: average(strengths),
+      shared_tokens: [...new Set(memberNodes.flatMap(node => node.shared_tokens ?? []))].slice(0, 8),
+      config: {
+        id: cluster.id,
+        mode: modes.size === 1 ? [...modes][0] : 'cluster',
+        profile_name: displayName,
+        description: names.join(', ') + (memberNodes.length > names.length ? `, +${memberNodes.length - names.length} more` : ''),
+      },
+    });
+  }
+
+  function mappedId(id) {
+    return idMap.get(id) ?? id;
+  }
+
+  const edgeByPair = new Map();
+  for (const edge of graph.edges) {
+    const source = mappedId(edge.source);
+    const target = mappedId(edge.target);
+    if (source === target) continue;
+    if (!visibleNodeById.has(source) || !visibleNodeById.has(target)) continue;
+    const key = `${source}:${target}`;
+    const existing = edgeByPair.get(key);
+    if (!existing || edge.strength > existing.strength) {
+      edgeByPair.set(key, {
+        source,
+        target,
+        strength: edge.strength,
+        dissimilarity: edge.dissimilarity ?? 1 - edge.strength,
+        shared_tokens: edge.shared_tokens ?? [],
+      });
+    }
+  }
+
+  const dissimilarityBuckets = new Map();
+  for (const item of graph.dissimilarities ?? []) {
+    const source = mappedId(item.source);
+    const target = mappedId(item.target);
+    if (source === target) continue;
+    if (!visibleNodeById.has(source) || !visibleNodeById.has(target)) continue;
+    const key = pairKey(source, target);
+    dissimilarityBuckets.set(key, [...(dissimilarityBuckets.get(key) ?? []), item.dissimilarity ?? 1]);
+  }
+
+  return {
+    ...graph,
+    nodes: [...visibleNodeById.values()],
+    edges: [...edgeByPair.values()],
+    dissimilarities: [...dissimilarityBuckets.entries()].map(([key, values]) => {
+      const [source, target] = key.split(':');
+      return { source, target, dissimilarity: average(values) };
+    }),
+    collapsedClusterCount: collapsedClusters.length,
+  };
+}
+
+function limitVisibleGraph(graph, maxNeighbors) {
+  if (!graph?.nodes?.length) return graph;
+  const center = graph.nodes[0];
+  const rest = graph.nodes
+    .slice(1)
+    .sort((a, b) => (b.strength ?? 0) - (a.strength ?? 0))
+    .slice(0, maxNeighbors);
+  const keep = new Set([center.config.id, ...rest.map(node => node.config.id)]);
+  return {
+    ...graph,
+    nodes: [center, ...rest],
+    edges: (graph.edges ?? []).filter(edge => keep.has(edge.source) && keep.has(edge.target)),
+    dissimilarities: (graph.dissimilarities ?? []).filter(item => keep.has(item.source) && keep.has(item.target)),
+  };
 }
 
 function forceLayout(graph) {
@@ -69,7 +226,7 @@ function forceLayout(graph) {
         const dist = Math.sqrt(distSq);
         const pairKey = [a.id, b.id].sort().join(':');
         const dissimilarity = dissimilarityByPair.get(pairKey) ?? 0;
-        const force = (2400 + dissimilarity * dissimilarity * 7200) / distSq;
+        const force = (5200 + dissimilarity * 32000) / distSq;
         const fx = (dx / dist) * force;
         const fy = (dy / dist) * force;
         if (!a.center) {
@@ -90,8 +247,8 @@ function forceLayout(graph) {
       const dy = b.y - a.y;
       const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
       const strength = clamp(edge.strength, 0.05, 1);
-      const targetDistance = 390 - strength * 240;
-      const spring = (dist - targetDistance) * (0.0025 + strength * 0.018);
+      const targetDistance = 460 - strength * 290;
+      const spring = (dist - targetDistance) * (0.0018 + strength * 0.014);
       const fx = (dx / dist) * spring;
       const fy = (dy / dist) * spring;
       if (!a.center) {
@@ -129,6 +286,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
+  const [expandedClusters, setExpandedClusters] = useState(() => new Set());
   const stageRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -141,7 +299,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`/api/v1/configs/${selectedConfig.id}/graph?limit=${GRAPH_LIMIT}`)
+    fetch(`/api/v1/configs/${selectedConfig.id}/graph?limit=${GRAPH_FETCH_LIMIT}`)
       .then(res => {
         if (!res.ok) throw new Error(`${res.status}`);
         return res.json();
@@ -150,6 +308,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
         if (!cancelled) {
           setGraph(data);
           setViewport({ x: 0, y: 0, zoom: 1 });
+          setExpandedClusters(new Set());
         }
       })
       .catch(err => {
@@ -188,7 +347,12 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     return () => stage.removeEventListener('wheel', onWheel);
   }, [graph?.nodes?.length]);
 
-  const layout = useMemo(() => forceLayout(graph), [graph]);
+  const visibleGraph = useMemo(
+    () => limitVisibleGraph(clusterGraph(graph, expandedClusters), GRAPH_VISIBLE_NEIGHBORS),
+    [graph, expandedClusters],
+  );
+
+  const layout = useMemo(() => forceLayout(visibleGraph), [visibleGraph]);
 
   const byId = useMemo(() => {
     const map = new Map();
@@ -236,14 +400,53 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     );
   }
 
-  const visibleEdges = undirectedEdges(graph.edges).filter(edge => byId.has(edge.source) && byId.has(edge.target));
+  const visibleEdges = undirectedEdges(visibleGraph.edges).filter(edge => byId.has(edge.source) && byId.has(edge.target));
+  const collapsedClusterCount = visibleGraph.collapsedClusterCount ?? 0;
+
+  async function nameCluster(node) {
+    const name = window.prompt('Cluster name', node.clusterName ?? '');
+    if (name === null) return;
+    const res = await fetch(`/api/v1/graph/clusters/${node.clusterId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) return;
+    const updated = await res.json();
+    setGraph(prev => ({
+      ...prev,
+      clusters: (prev?.clusters ?? []).map(cluster => (
+        cluster.id === updated.id ? { ...cluster, name: updated.name, description: updated.description } : cluster
+      )),
+    }));
+  }
+
+  function handleNodeClick(event, node) {
+    if (node.cluster) {
+      if (event.shiftKey) {
+        nameCluster(node);
+        return;
+      }
+      setExpandedClusters(prev => {
+        const next = new Set(prev);
+        if (next.has(node.clusterId)) next.delete(node.clusterId);
+        else next.add(node.clusterId);
+        return next;
+      });
+      return;
+    }
+    onSelect(node.config);
+  }
 
   return (
     <div className="graph-panel">
       <div className="graph-header">
         <div>
           <h2>{selectedConfig.profile_name}</h2>
-          <p>{graph.nodes.length - 1} nearby configs by metadata and layout-token similarity</p>
+          <p>
+            {visibleGraph.nodes.length - 1} visible configs from {graph.nodes.length - 1} nearby configs
+            {collapsedClusterCount > 0 ? `; ${collapsedClusterCount} tight cluster${collapsedClusterCount === 1 ? '' : 's'} collapsed` : ''}
+          </p>
         </div>
       </div>
 
@@ -284,10 +487,10 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
             return (
               <button
                 key={cfg.id}
-                className={'graph-node' + (center ? ' center' : '') + ` ${cfg.mode}`}
+                className={'graph-node' + (center ? ' center' : '') + (node.cluster ? ' cluster' : '') + ` ${cfg.mode}`}
                 style={{ left: x, top: y }}
-                onClick={() => onSelect(cfg)}
-                title={`${cfg.profile_name} (${Math.round(node.strength * 100)}%)`}
+                onClick={event => handleNodeClick(event, node)}
+                title={node.cluster ? 'Click to expand; Shift-click to name cluster' : `${cfg.profile_name} (${Math.round(node.strength * 100)}%)`}
               >
                 <span className="graph-node-title">{shortName(cfg.profile_name)}</span>
                 <span className="graph-node-full-title">{cfg.profile_name}</span>

@@ -42,6 +42,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `GET`  | `/api/v1/configs` | List configs with optional filters |
 | `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` and returns the incremented count |
 | `GET`  | `/api/v1/configs/:id/graph` | Fetch nearby config graph nodes/edges for one config |
+| `PATCH` | `/api/v1/graph/clusters/:id` | Rename or describe a reconciled config graph cluster |
 | `POST` | `/api/v1/configs` | Upload a config |
 | `GET`  | `/api/v1/devices` | List saved device presets for web config previews |
 | `POST` | `/api/v1/devices` | Save a custom device preset |
@@ -102,15 +103,42 @@ Response:
     { "config": { "...ConfigRecord": "..." }, "strength": 0.42, "shared_tokens": ["assassin", "mouse"] }
   ],
   "edges": [
-    { "source": "<config-id>", "target": "<config-id>", "strength": 0.42, "dissimilarity": 0.58, "shared_tokens": ["assassin", "mouse"] }
+    { "source": "<config-id>", "target": "<config-id>", "strength": 0.42, "dissimilarity": 0.58, "cluster_id": null, "shared_tokens": ["assassin", "mouse"] }
   ],
   "dissimilarities": [
     { "source": "<config-id>", "target": "<config-id>", "dissimilarity": 0.91 }
+  ],
+  "clusters": [
+    {
+      "id": "<cluster-uuid>",
+      "signature": "connected-components-v1:0.86:<sorted-member-ids>",
+      "name": "Assassin-style touch layouts",
+      "description": null,
+      "algorithm": "connected-components-v1",
+      "threshold": 0.86,
+      "member_count": 8,
+      "members": [
+        { "config_id": "<config-id>", "strength": 0.91 }
+      ]
+    }
   ]
 }
 ```
 
 `strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. `dissimilarity` is `1 - strength`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. For a zoomed-in graph response, the API also returns complete pairwise `dissimilarities` among only the visible nodes so the web force layout can push unlike configs apart without drawing extra edges. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
+
+Reconciled clusters are connected components of high-strength edges. Cluster IDs are stable UUID-shaped hashes of the algorithm, threshold, and sorted member IDs so labels can be reused when the same grouping reappears. Uploads and admin metadata edits update edges involving the changed config and then reconcile clusters.
+
+### PATCH /api/v1/graph/clusters/:id
+
+Request body:
+
+| Field | Required | Type | Notes |
+|-------|----------|------|-------|
+| `name` | no | string, max 80 chars | Empty string clears the label |
+| `description` | no | string, max 400 chars | Empty string clears the description |
+
+Response: the updated `config_graph_clusters` row, or 404 if the cluster has not been reconciled yet. The web Graph view uses this to label collapsed cluster nodes.
 
 ### GET /api/v1/devices
 
@@ -220,6 +248,7 @@ CREATE TABLE IF NOT EXISTS config_graph_edges (
   target_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
   strength         REAL NOT NULL,              -- cosine similarity, 0..1
   dissimilarity    REAL NOT NULL DEFAULT 1,    -- 1 - strength, 0..1
+  cluster_id       TEXT REFERENCES config_graph_clusters(id) ON DELETE SET NULL,
   shared_tokens    TEXT NOT NULL DEFAULT '[]', -- JSON array of strongest shared token strings
   updated_at       TEXT NOT NULL,
   PRIMARY KEY (source_config_id, target_config_id),
@@ -232,6 +261,32 @@ CREATE INDEX IF NOT EXISTS idx_config_graph_source_strength
   ON config_graph_edges (source_config_id, strength DESC);
 CREATE INDEX IF NOT EXISTS idx_config_graph_target
   ON config_graph_edges (target_config_id);
+CREATE INDEX IF NOT EXISTS idx_config_graph_cluster
+  ON config_graph_edges (cluster_id);
+
+-- Reconciled graph clusters. Historical rows are retained so a human label can
+-- be reused if the same algorithm/threshold/member signature reappears.
+CREATE TABLE IF NOT EXISTS config_graph_clusters (
+  id           TEXT PRIMARY KEY,       -- stable UUID-shaped hash of signature
+  signature    TEXT NOT NULL UNIQUE,   -- algorithm:threshold:sorted-member-ids
+  name         TEXT,
+  description  TEXT,
+  algorithm    TEXT NOT NULL,
+  threshold    REAL NOT NULL,
+  member_count INTEGER NOT NULL,
+  created_at   TEXT NOT NULL,
+  updated_at   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS config_graph_cluster_members (
+  cluster_id TEXT NOT NULL REFERENCES config_graph_clusters(id) ON DELETE CASCADE,
+  config_id  TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
+  strength   REAL NOT NULL DEFAULT 1,
+  PRIMARY KEY (cluster_id, config_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_config_graph_cluster_members_config
+  ON config_graph_cluster_members (config_id);
 
 -- Device presets used by the web config preview. Seeded with built-in defaults,
 -- then extended by user-saved custom devices.
@@ -440,6 +495,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 | — | v1 | 2026-05 | DB migration 3: added sparse `config_graph_edges` table and indexes for nearby-config graph queries |
 | — | v1 | 2026-05 | DB migration 4: added `device_presets` table seeded with web preview defaults |
 | — | v1 | 2026-05 | DB migration 5: added `dissimilarity` to sparse graph edge rows and graph API visible-node dissimilarity response |
+| - | v1 | 2026-05 | DB migration 6: added persistent graph cluster tables and `cluster_id` edge annotation for reconciled cluster labels |
 | 2 | v1 | 2026-05 | Added optional `orientationPreference` field to `gamepad` `config_json`; defaults to `"SYSTEM"`; backward-compatible additive change |
 
 ---
