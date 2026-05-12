@@ -53,15 +53,20 @@ export default function ConfigBrowserPanel({ onSelect, selectedId }) {
     return base.slice(0, MAX_CARDS);
   }, [configs, search]);
 
+  const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
+
   const categories = useMemo(() => {
     const seen = new Set();
-    for (const c of configs) if (c.category && !seen.has(c.category)) seen.add(c.category);
+    for (const c of configs) if (c.category) seen.add(toTitleCase(c.category.trim()));
     return [...seen].sort();
   }, [configs]);
 
   const allTags = useMemo(() => {
     const counts = {};
-    for (const c of configs) for (const t of c.tags ?? []) counts[t] = (counts[t] ?? 0) + 1;
+    for (const c of configs) for (const t of c.tags ?? []) {
+      const lower = t.toLowerCase().trim();
+      if (lower) counts[lower] = (counts[lower] ?? 0) + 1;
+    }
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 12)
