@@ -155,7 +155,7 @@ When the user reports a bug, add an entry to the **Active bugs** section of `BUG
 
 ## Platform Notes
 
-- Android uses Classic Bluetooth HID through `BluetoothHidDevice`; emulator support is not sufficient for HID peripheral validation.
+- Android uses BLE HID-over-GATT through `BluetoothGattServer` with `BluetoothLeAdvertiser`; emulator support is not sufficient for HID peripheral validation.
 - iOS BLE HID transport is experimental unless the spec says otherwise; be careful not to present it as fully equivalent to Android without validation.
 - HID descriptor or report-layout changes can require host re-pairing because hosts cache descriptors.
 

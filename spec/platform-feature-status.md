@@ -16,7 +16,7 @@ This spec tracks the Android implementation in `app/` and the iOS equivalent in 
 
 | Feature | Android status | iOS status |
 | --- | --- | --- |
-| Act as HID peripheral | Implemented with `BluetoothHidDevice` | Experimental BLE HID transport added via expanded `00001812-...` service UUID; needs physical-device validation |
+| Act as HID peripheral | Implemented with `BluetoothGattServer` BLE HID-over-GATT; DIS + HID services advertised via `BluetoothLeAdvertiser` | Experimental BLE HID transport added via expanded `00001812-...` service UUID; needs physical-device validation |
 | Combined mouse + gamepad + keyboard descriptor | Implemented with Report ID 1, 2, and 3 in one registration; BLE path exposes all three Report characteristics | Ported with Report IDs 1, 2, and 3; exposed through experimental HID-over-GATT Report characteristics; physical-device validation pending |
 | Discoverable pairing flow | Implemented with 120-second discoverable request and configurable Bluetooth name | Experimental `CBPeripheralManager` advertising with configurable local name from Home or Setup; new-pair action republishes DIS + HID services, requires encrypted report access, ignores known-host auto-reattach attempts, and requires on-iPad approval before accepting a new host |
 | Reconnect bonded host | Implemented; BLE GATT server kept open across disconnect so Windows can reconnect via cached handles without re-pairing; `disconnect()` no longer tears down GATT server | Implemented for the experimental transport by remembering subscribed hosts and restarting advertising; known hosts reconnect only through explicit Reconnect/auto-reconnect paths, not through new-pair discovery |

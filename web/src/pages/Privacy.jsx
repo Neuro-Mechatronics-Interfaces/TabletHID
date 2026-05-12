@@ -28,10 +28,10 @@ export default function Privacy() {
         <p>
           TabletHID uses your device's Bluetooth hardware to act as a HID peripheral
           (mouse, gamepad, and keyboard macro reports). Bluetooth data (input
-          reports) is sent directly to the paired host computer. Android uses the
-          platform Bluetooth HID device APIs; iOS uses an experimental BLE
-          HID-over-GATT transport. This data never leaves your local network and is
-          never sent to any server operated by us or any third party.
+          reports) is sent directly to the paired host computer. Both platforms use
+          BLE HID-over-GATT; the iOS transport is experimental pending physical-device
+          validation. This data never leaves your local network and is never sent to
+          any server operated by us or any third party.
         </p>
         <p>
           On Android, TabletHID requests <code>BLUETOOTH_ADVERTISE</code>,{' '}

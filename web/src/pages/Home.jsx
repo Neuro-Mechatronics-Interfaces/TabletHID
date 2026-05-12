@@ -144,7 +144,7 @@ export default function Home() {
         <div className="page">
           <div className="section-label">
             <h2>Two Modes, One App</h2>
-            <p>Android uses one Classic Bluetooth HID bond. iOS uses an experimental BLE HID path while host validation continues.</p>
+            <p>Both platforms use BLE HID-over-GATT. The Android implementation is fully validated; iOS is experimental pending physical-device testing.</p>
           </div>
           <div className="cards">
             <div className="card">
@@ -175,7 +175,7 @@ export default function Home() {
             <div className="card">
               <div className="card-icon"><IconBluetooth /></div>
               <h3>Single Bond</h3>
-              <p>Android shares one Bluetooth pairing across modes. iOS exposes the same report map through experimental BLE HID.</p>
+              <p>Both platforms use BLE HID-over-GATT with a combined mouse, gamepad, and keyboard descriptor shared across all modes.</p>
               <ul>
                 <li>Combined mouse, gamepad, and keyboard report map</li>
                 <li>Smart reconnect to last host</li>

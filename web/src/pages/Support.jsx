@@ -42,7 +42,7 @@ const FAQS = {
     },
     {
       q: 'Can I switch between Touch Mouse and Gamepad without re-pairing?',
-      a: 'On Android, yes: both modes share a single Bluetooth bond using a combined HID descriptor. On iOS, TabletHID exposes the same mouse/gamepad/keyboard report map through the experimental BLE HID transport, but host reconnect behavior still needs physical iPhone/iPad validation.',
+      a: 'Yes, on both platforms: all modes share a single BLE HID bond using a combined mouse/gamepad/keyboard descriptor. On iOS the transport is experimental — physical iPhone/iPad host validation is still pending.',
     },
     {
       q: 'What does Community Configs send to the server?',
@@ -60,7 +60,7 @@ const FAQS = {
     },
     {
       q: 'My Mac or PC doesn\'t discover the iPad.',
-      a: 'iPad uses Bluetooth LE HID-over-GATT rather than Android\'s Classic Bluetooth HID path, and iOS HID peripheral behavior is still experimental. Test with recent Windows or macOS hosts, tap "Make Discoverable" again if advertising expires, and forget/re-pair after updates that change the report map. Known hosts are ignored during new-pair discovery; new hosts require approval on the iPad before the app accepts them.',
+      a: 'Both Android and iPad use Bluetooth LE HID-over-GATT; iOS HID peripheral behavior is still experimental. Test with recent Windows or macOS hosts, tap "Make Discoverable" again if advertising expires, and forget/re-pair after updates that change the report map. Known hosts are ignored during new-pair discovery; new hosts require approval on the iPad before the app accepts them.',
     },
     {
       q: 'Gamepad inputs work in one app but not another on macOS.',
