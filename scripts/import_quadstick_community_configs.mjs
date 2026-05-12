@@ -717,23 +717,36 @@ function main() {
     console.log(`  ${family}: ${count}`);
   }
 
-  if (args.dryRun) {
-    if (rows[0]) {
-      console.log('\nFirst converted row preview:');
-      console.log(JSON.stringify({
-        id: rows[0].id,
-        profile_name: rows[0].profile_name,
-        tags: JSON.parse(rows[0].tags),
-        category: rows[0].category,
-        description: rows[0].description,
-        config_json: JSON.parse(rows[0].config_json),
-      }, null, 2));
-    }
-    qsDb.close();
-    return;
-  }
-
   if (args.macrosOnly) {
+    // Preview mode: show which rows would change and what their new macros would be
+    if (args.dryRun) {
+      const targetDb = new Database(args.target, { readonly: true });
+      const getStmt = targetDb.prepare('SELECT config_json FROM configs WHERE id = ?');
+      let wouldPatch = 0, wouldUnchange = 0, absent = 0;
+      for (const row of rows) {
+        const existing = getStmt.get(row.id);
+        if (!existing) { absent++; continue; }
+        const existingConfig = JSON.parse(existing.config_json);
+        const newConfig = JSON.parse(row.config_json);
+        if (JSON.stringify(existingConfig.macroButtons ?? []) === JSON.stringify(newConfig.macroButtons)) {
+          wouldUnchange++;
+        } else {
+          if (wouldPatch < 10) {
+            const old = (existingConfig.macroButtons ?? []).map(m => m.label);
+            const next = newConfig.macroButtons.map(m => m.label);
+            console.log(`  ${row.profile_name}`);
+            console.log(`    before: [${old.join(', ') || '—'}]`);
+            console.log(`    after:  [${next.join(', ') || '—'}]`);
+          }
+          wouldPatch++;
+        }
+      }
+      console.log(`\nDry run: would patch ${wouldPatch}, leave unchanged ${wouldUnchange}, absent ${absent}`);
+      targetDb.close();
+      qsDb.close();
+      return;
+    }
+
     const targetDb = new Database(args.target);
     const getStmt = targetDb.prepare('SELECT config_json FROM configs WHERE id = ?');
     const updateStmt = targetDb.prepare('UPDATE configs SET config_json = ? WHERE id = ?');
@@ -757,17 +770,33 @@ function main() {
 
     console.log(`Patched macroButtons: ${patched} updated, ${unchanged} unchanged, ${absent} not in target DB`);
     if (patched > 0) {
-      console.log('\nSample of patched configs (first 5):');
+      console.log('\nSample of patched configs (first 5 with macros):');
       let shown = 0;
       for (const row of rows) {
         if (shown >= 5) break;
         const newConfig = JSON.parse(row.config_json);
         if (!newConfig.macroButtons.length) continue;
-        console.log(`  ${row.id}  ${row.profile_name}  →  [${newConfig.macroButtons.map(m => m.label).join(', ')}]`);
+        console.log(`  ${row.profile_name}  →  [${newConfig.macroButtons.map(m => m.label).join(', ')}]`);
         shown++;
       }
     }
     targetDb.close();
+    qsDb.close();
+    return;
+  }
+
+  if (args.dryRun) {
+    if (rows[0]) {
+      console.log('\nFirst converted row preview:');
+      console.log(JSON.stringify({
+        id: rows[0].id,
+        profile_name: rows[0].profile_name,
+        tags: JSON.parse(rows[0].tags),
+        category: rows[0].category,
+        description: rows[0].description,
+        config_json: JSON.parse(rows[0].config_json),
+      }, null, 2));
+    }
     qsDb.close();
     return;
   }
