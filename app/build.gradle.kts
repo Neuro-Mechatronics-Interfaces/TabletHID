@@ -20,8 +20,8 @@ android {
         applicationId = "com.tablet.hid"
         minSdk = 29
         targetSdk = 35
-        versionCode = 44
-        versionName = "1.7.4"
+        versionCode = 45
+        versionName = "1.7.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "COMMUNITY_API_BASE_URL",

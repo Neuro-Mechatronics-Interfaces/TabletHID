@@ -102,9 +102,9 @@ export default function Home() {
               <AppleLogo />
               {hasIosOptedIn ? 'Joined TestFlight ✓' : 'Join iOS TestFlight'}
             </a>
-            <span className="badge badge-locked" aria-label="App Store install is not available yet">
+            <span className="badge badge-primary" aria-label="App Store install is not available yet">
               <AppleLogo />
-              App Store — not available yet
+              App Store
             </span>
           </div>
 

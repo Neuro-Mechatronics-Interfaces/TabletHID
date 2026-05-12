@@ -129,9 +129,8 @@
     <string name="btn_forget_device">Forget device</string>
 
     <!-- Exit-mode confirmation dialog (TouchMouse / Gamepad) -->
-    <string name="exit_mode_title">Disconnect and exit?</string>
-    <string name="exit_mode_message">Leaving this screen will disconnect from the host. You can reconnect from the Setup screen without re-pairing.</string>
-    <string name="exit_mode_confirm">Exit</string>
+    <string name="exit_mode_title">Leave this mode?</string>
+    <string name="exit_mode_confirm">Leave</string>
     <string name="exit_mode_stay">Stay</string>
 
     <!-- Orientation lock -->

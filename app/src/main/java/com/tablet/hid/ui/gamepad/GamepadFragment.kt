@@ -86,13 +86,11 @@ class GamepadFragment : Fragment() {
             if (editController.editMode) { editController.exitEditMode(); return }
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.exit_mode_title)
-                .setMessage(R.string.exit_mode_message)
                 .setPositiveButton(R.string.exit_mode_confirm) { _, _ ->
                     isEnabled = false
                     exitImmersiveMode()
                     requireActivity().requestedOrientation =
                         OrientationStore.toActivityOrientation(OrientationStore.get(requireContext()))
-                    viewModel.disconnect()
                     findNavController().navigate(R.id.action_gamepad_to_home)
                 }
                 .setNegativeButton(R.string.exit_mode_stay, null)
