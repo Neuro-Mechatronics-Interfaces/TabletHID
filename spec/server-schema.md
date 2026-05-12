@@ -18,6 +18,7 @@ API route modules live in `web/api/`:
 | `web/api/db.js` | SQLite initialisation and auto-migration |
 | `web/api/sanitize.js` | String sanitisation utilities |
 | `web/api/validate.js` | Canonical JSON schema validators for each config mode |
+| `web/api/graph.js` | Weighted token-vector graph builder and sparse edge query helpers |
 | `web/api/middleware.js` | Rate limiter, request size cap, security headers |
 | `web/api/routes/configs.js` | Route handler functions |
 | `web/api/router.js` | Express Router — mounts all three routes |
@@ -38,6 +39,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 |--------|------|-------------|
 | `GET`  | `/api/v1/configs` | List configs with optional filters |
 | `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` and returns the incremented count |
+| `GET`  | `/api/v1/configs/:id/graph` | Fetch nearby config graph nodes/edges for one config |
 | `POST` | `/api/v1/configs` | Upload a config |
 
 ### GET /api/v1/configs — query parameters
@@ -75,6 +77,30 @@ Response:
 ### GET /api/v1/configs/:id
 
 Response: full `ConfigRecord` after incrementing `download_count`. Returns 404 if not found.
+
+### GET /api/v1/configs/:id/graph
+
+Returns a zoomed-in sparse graph around one config, using precomputed edges from `config_graph_edges`. Query parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | integer, default 24, max 60 | Maximum nearby configs to return |
+
+Response:
+```json
+{
+  "center": { "...ConfigRecord": "..." },
+  "nodes": [
+    { "config": { "...ConfigRecord": "..." }, "strength": 1, "shared_tokens": [] },
+    { "config": { "...ConfigRecord": "..." }, "strength": 0.42, "shared_tokens": ["assassin", "mouse"] }
+  ],
+  "edges": [
+    { "source": "<config-id>", "target": "<config-id>", "strength": 0.42, "shared_tokens": ["assassin", "mouse"] }
+  ]
+}
+```
+
+`strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
 
 ### POST /api/v1/configs
 
@@ -149,6 +175,25 @@ CREATE INDEX IF NOT EXISTS idx_configs_popular        ON configs (download_count
 CREATE INDEX IF NOT EXISTS idx_configs_recent         ON configs (uploaded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_configs_diagonal       ON configs (device_screen_diagonal_in);
 CREATE INDEX IF NOT EXISTS idx_configs_category       ON configs (category);
+
+-- Sparse directed graph edges between similar community configs.
+-- Each logical neighbor relationship is stored as two directed rows so
+-- zoomed-in graph queries can read outgoing edges efficiently.
+CREATE TABLE IF NOT EXISTS config_graph_edges (
+  source_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
+  target_config_id TEXT NOT NULL REFERENCES configs(id) ON DELETE CASCADE,
+  strength         REAL NOT NULL,              -- cosine similarity, 0..1
+  shared_tokens    TEXT NOT NULL DEFAULT '[]', -- JSON array of strongest shared token strings
+  updated_at       TEXT NOT NULL,
+  PRIMARY KEY (source_config_id, target_config_id),
+  CHECK (source_config_id <> target_config_id),
+  CHECK (strength >= 0 AND strength <= 1)
+);
+
+CREATE INDEX IF NOT EXISTS idx_config_graph_source_strength
+  ON config_graph_edges (source_config_id, strength DESC);
+CREATE INDEX IF NOT EXISTS idx_config_graph_target
+  ON config_graph_edges (target_config_id);
 ```
 
 ---
@@ -333,6 +378,7 @@ Each value is a `ButtonConfig`. `lt` and `rt` may include `triggerTravelDp` and 
 |---------------|-------------|------|---------|
 | 1 | v1 | 2026-05 | Initial schema: `touch_mouse` and `gamepad` configs as defined above |
 | — | v1 | 2026-05 | DB migration 2: added `category` column and index (additive, no API version bump) |
+| — | v1 | 2026-05 | DB migration 3: added sparse `config_graph_edges` table and indexes for nearby-config graph queries |
 | 2 | v1 | 2026-05 | Added optional `orientationPreference` field to `gamepad` `config_json`; defaults to `"SYSTEM"`; backward-compatible additive change |
 
 ---

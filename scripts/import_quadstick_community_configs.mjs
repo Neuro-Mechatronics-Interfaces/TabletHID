@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from '../web/node_modules/better-sqlite3/lib/index.js';
 import { validateGamepadConfig, validateTouchMouseConfig } from '../web/api/validate.js';
+import { rebuildGraph } from '../web/api/graph.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_QS_DB = path.join(__dirname, 'output', 'quadstick.db');
@@ -752,8 +753,10 @@ function main() {
     return changed;
   });
   const changed = write(rows);
+  const graph = rebuildGraph(targetDb);
 
   console.log(`Inserted/replaced rows: ${changed}`);
+  console.log(`Rebuilt config graph: ${graph.configs} configs, ${graph.edges} directed edges`);
   console.log(`Target DB: ${args.target}`);
   qsDb.close();
   targetDb.close();
