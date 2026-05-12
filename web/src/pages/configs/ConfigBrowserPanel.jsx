@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import ConfigCard from './ConfigCard.jsx';
 
 const FETCH_LIMIT = 100;
-const MAX_CARDS = FETCH_LIMIT;
 const FILTERS_OPEN_KEY = 'configs:filtersOpen';
 
 export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, onTagSelect }) {
@@ -63,7 +62,7 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
           return hay.includes(q);
         })
       : configs;
-    return base.slice(0, MAX_CARDS);
+    return base;
   }, [configs, search]);
 
   const toTitleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
@@ -174,7 +173,7 @@ export default function ConfigBrowserPanel({ onSelect, selectedId, activeTag, on
 
       {!loading && filtered.length > 0 && (
         <div className="cfg-count">
-          {filtered.length}{filtered.length === MAX_CARDS ? '+' : ''} config{filtered.length !== 1 ? 's' : ''}
+          {filtered.length} config{filtered.length !== 1 ? 's' : ''}
         </div>
       )}
     </div>
