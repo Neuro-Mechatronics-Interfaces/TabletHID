@@ -45,7 +45,8 @@ final class AppState: ObservableObject {
         self.pendingConnectionHost = nil
         let lock = store.loadOrientationLock()
         self.orientationLock = lock
-        self.uiPalette = UiPalette.all.first(where: { $0.id == store.loadUiPaletteIndex() }) ?? .default
+        let paletteIndex = store.loadUiPaletteIndex()
+        self.uiPalette = UiPalette.all.first(where: { $0.id == paletteIndex }) ?? .default
         #if canImport(UIKit)
         AppDelegate.orientationLock = lock.interfaceOrientationMask
         #endif

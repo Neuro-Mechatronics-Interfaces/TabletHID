@@ -5,7 +5,7 @@ import AppKit
 #endif
 import SwiftUI
 
-struct UiPalette: Equatable, Identifiable {
+struct UiPalette: Hashable, Identifiable {
     let id: Int
     let name: String
     let leftRgb:   UInt32
