@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { resolveLayout } from './constants/layoutResolver.js';
+import { gridForCanvas, gridOverlayStyle, snapPoint } from './gridSnap.js';
 
 const BUTTON_COLORS = {
   a: '#4ade80', b: '#f87171', x: '#60a5fa', y: '#fbbf24',
@@ -75,8 +76,10 @@ export default function GamepadCanvas({
   canvasW, canvasH, config,
   editMode = false, canvasScale = 1, onConfigChange,
   selectedKey = null, onSelect,
+  snapToGrid = false,
 }) {
   const layout = useMemo(() => resolveLayout(canvasW, canvasH), [canvasW, canvasH]);
+  const grid = useMemo(() => gridForCanvas(canvasW, canvasH), [canvasW, canvasH]);
   const dragRef = useRef(null);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -126,7 +129,14 @@ export default function GamepadCanvas({
       const { sx, sy } = getElementOffset(config, key);
       const dx = screenDX / canvasScale;
       const dy = screenDY / canvasScale;
-      const { x, y } = clampOffset(nat, startOX + dx, startOY + dy, sx, sy, canvasW, canvasH);
+      let nextOX = startOX + dx;
+      let nextOY = startOY + dy;
+      if (snapToGrid) {
+        const snapped = snapPoint(nat.left + nat.w / 2 + nextOX, nat.top + nat.h / 2 + nextOY, grid);
+        nextOX = snapped.x - (nat.left + nat.w / 2);
+        nextOY = snapped.y - (nat.top + nat.h / 2);
+      }
+      const { x, y } = clampOffset(nat, nextOX, nextOY, sx, sy, canvasW, canvasH);
       onConfigChange?.(applyOffset(config, key, x, y));
     }
   }
@@ -263,6 +273,7 @@ export default function GamepadCanvas({
       onPointerUp={editMode ? handleUp : undefined}
       onPointerLeave={editMode ? handleUp : undefined}
     >
+      {editMode && snapToGrid && <div style={gridOverlayStyle(grid)} />}
       {BUTTON_KEYS.map(renderButton)}
       {renderJoystick('leftJoystick', true)}
       {renderJoystick('rightJoystick', false)}

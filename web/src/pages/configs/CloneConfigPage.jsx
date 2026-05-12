@@ -252,7 +252,7 @@ export default function CloneConfigPage() {
 
           {editLayout && (
             <div className="clone-edit-hint">
-              Drag to reposition. <strong>Shift+drag</strong> to resize. Click to select.
+              Drag to reposition on the device grid. <strong>Shift+drag</strong> to resize. Click to select.
             </div>
           )}
 
@@ -275,6 +275,7 @@ export default function CloneConfigPage() {
                   onConfigChange={setConfig}
                   selectedKey={editLayout ? selectedKey : null}
                   onSelect={editLayout ? setSelectedKey : undefined}
+                  snapToGrid={editLayout}
                 />
               ) : (
                 <TouchMouseCanvas
@@ -286,6 +287,7 @@ export default function CloneConfigPage() {
                   onConfigChange={setConfig}
                   selectedKey={editLayout ? selectedKey : null}
                   onSelect={editLayout ? setSelectedKey : undefined}
+                  snapToGrid={editLayout}
                 />
               )}
             </DevicePreviewEditor>

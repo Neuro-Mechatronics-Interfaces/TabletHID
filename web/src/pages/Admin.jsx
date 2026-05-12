@@ -329,7 +329,7 @@ export default function Admin() {
 
                   {editLayout && (
                     <div className="clone-edit-hint">
-                      Drag to reposition. <strong>Shift+drag</strong> to resize. Click to select.
+                      Drag to reposition on the device grid. <strong>Shift+drag</strong> to resize. Click to select.
                     </div>
                   )}
 
@@ -352,6 +352,7 @@ export default function Admin() {
                           onConfigChange={setConfigJson}
                           selectedKey={editLayout ? selectedKey : null}
                           onSelect={editLayout ? setSelectedKey : undefined}
+                          snapToGrid={editLayout}
                         />
                       ) : (
                         <TouchMouseCanvas
@@ -363,6 +364,7 @@ export default function Admin() {
                           onConfigChange={setConfigJson}
                           selectedKey={editLayout ? selectedKey : null}
                           onSelect={editLayout ? setSelectedKey : undefined}
+                          snapToGrid={editLayout}
                         />
                       )}
                     </DevicePreviewEditor>

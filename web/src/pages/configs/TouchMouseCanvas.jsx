@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { gridForCanvas, gridOverlayStyle, snap, snapPoint } from './gridSnap.js';
 
 const DRAG_THRESHOLD = 5;
 
@@ -63,7 +64,9 @@ export default function TouchMouseCanvas({
   canvasW, canvasH, config,
   editMode = false, canvasScale = 1, onConfigChange,
   selectedKey = null, onSelect,
+  snapToGrid = false,
 }) {
+  const grid = useMemo(() => gridForCanvas(canvasW, canvasH), [canvasW, canvasH]);
   const dragRef = useRef(null);
   const [activeKey, setActiveKey] = useState(null);
 
@@ -75,8 +78,14 @@ export default function TouchMouseCanvas({
     const zone = button.staticZone;
     const width = zone.right - zone.left;
     const height = zone.bottom - zone.top;
-    const left = Math.max(0, Math.min(1 - width, zone.left + deltaX));
-    const top = Math.max(0, Math.min(1 - height, zone.top + deltaY));
+    let left = zone.left + deltaX;
+    let top = zone.top + deltaY;
+    if (snapToGrid) {
+      left = snap(left * canvasW, grid.stepX) / canvasW;
+      top = snap(top * canvasH, grid.stepY) / canvasH;
+    }
+    left = Math.max(0, Math.min(1 - width, left));
+    top = Math.max(0, Math.min(1 - height, top));
     onConfigChange?.(setButton(config, key, {
       staticZone: { left, top, right: left + width, bottom: top + height },
     }));
@@ -85,11 +94,18 @@ export default function TouchMouseCanvas({
   function updateDynamicZone(key, dx, dy) {
     const button = config?.[key];
     if (!button?.dynamicZone) return;
+    let offsetX = button.dynamicZone.offsetX + dx / canvasW;
+    let offsetY = button.dynamicZone.offsetY + dy / canvasH;
+    if (snapToGrid) {
+      const snapped = snapPoint(canvasW * (0.5 + offsetX), canvasH * (0.5 + offsetY), grid);
+      offsetX = snapped.x / canvasW - 0.5;
+      offsetY = snapped.y / canvasH - 0.5;
+    }
     onConfigChange?.(setButton(config, key, {
       dynamicZone: {
         ...button.dynamicZone,
-        offsetX: Math.max(-1, Math.min(1, button.dynamicZone.offsetX + dx / canvasW)),
-        offsetY: Math.max(-1, Math.min(1, button.dynamicZone.offsetY + dy / canvasH)),
+        offsetX: Math.max(-1, Math.min(1, offsetX)),
+        offsetY: Math.max(-1, Math.min(1, offsetY)),
       },
     }));
   }
@@ -102,8 +118,14 @@ export default function TouchMouseCanvas({
     const zone = sniper.zone;
     const width = zone.right - zone.left;
     const height = zone.bottom - zone.top;
-    const left = Math.max(0, Math.min(1 - width, zone.left + deltaX));
-    const top = Math.max(0, Math.min(1 - height, zone.top + deltaY));
+    let left = zone.left + deltaX;
+    let top = zone.top + deltaY;
+    if (snapToGrid) {
+      left = snap(left * canvasW, grid.stepX) / canvasW;
+      top = snap(top * canvasH, grid.stepY) / canvasH;
+    }
+    left = Math.max(0, Math.min(1 - width, left));
+    top = Math.max(0, Math.min(1 - height, top));
     onConfigChange?.({ ...config, sniper: { ...sniper, zone: { left, top, right: left + width, bottom: top + height } } });
   }
 
@@ -115,9 +137,15 @@ export default function TouchMouseCanvas({
       const nextScale = Math.max(0.2, Math.min(4, (macro.layoutScaleX ?? 1) * factor));
       onConfigChange?.(setMacro(config, index, { layoutScaleX: nextScale, layoutScaleY: nextScale }));
     } else {
+      const nextX = (macro.layoutOffsetX ?? 0) + dx;
+      const nextY = (macro.layoutOffsetY ?? 0) + dy;
+      const paletteLeft = Math.max(12, canvasW - 190);
+      const snapped = snapToGrid
+        ? snapPoint(paletteLeft + nextX, 18 + nextY, grid)
+        : { x: paletteLeft + nextX, y: 18 + nextY };
       onConfigChange?.(setMacro(config, index, {
-        layoutOffsetX: (macro.layoutOffsetX ?? 0) + dx,
-        layoutOffsetY: (macro.layoutOffsetY ?? 0) + dy,
+        layoutOffsetX: snapped.x - paletteLeft,
+        layoutOffsetY: snapped.y - 18,
       }));
     }
   }
@@ -277,6 +305,7 @@ export default function TouchMouseCanvas({
       onPointerUp={editMode ? handleUp : undefined}
       onPointerLeave={editMode ? handleUp : undefined}
     >
+      {editMode && snapToGrid && <div style={gridOverlayStyle(grid)} />}
       <div className="touchmouse-surface-label">
         {config?.mode === 'MOUSE' ? 'Mouse Movement Surface' : 'Touch Surface'}
       </div>
