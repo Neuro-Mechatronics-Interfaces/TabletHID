@@ -102,12 +102,11 @@ class BleHidManager(private val context: Context) {
         try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (e: Exception) {
             Log.w(TAG, "setName: ${e.message}")
         }
-        // For a specific reconnect target, reuse the open GATT server so the host can
-        // reconnect via cached handles without re-pairing.  For a fresh-pair flow
-        // (reconnectTarget == null), always rebuild the server so there is no stale
-        // bonding or CCCD state from a previous session.
-        if (reconnectTarget != null && gattServer != null) {
-            startAdvertising()
+        if (reconnectTarget != null) {
+            // Reconnect flow: never remove bonds — the LTK must be preserved so the host can
+            // reconnect without re-pairing. Reuse the open GATT server when possible so the
+            // host can use cached handles; rebuild it if the service was restarted.
+            if (gattServer != null) startAdvertising() else startGattServer()
             scheduleReconnectTimeout(reconnectTarget.address)
         } else {
             // Fresh-pair flow: remove Android-side bonds for all previously-seen HID hosts.
