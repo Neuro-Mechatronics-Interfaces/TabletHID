@@ -184,6 +184,11 @@ class MainActivity : AppCompatActivity() {
         val lastAddress = HidPrefs.getLastDeviceAddress(this) ?: return
         val knownHosts = HidHostStore.getAll(this)
         if (knownHosts.none { it.address == lastAddress }) return
+        // Only trigger when genuinely idle — activity can be recreated by orientation changes
+        // (e.g. exiting Gamepad resets requestedOrientation), and we must not restart the
+        // BLE stack while a connection is already live or in progress.
+        val s = viewModel.state.value
+        if (s !is BleHidManager.State.Idle && s !is BleHidManager.State.Error) return
         viewModel.startServiceForMode(this, DeviceMode.TOUCH_MOUSE, lastAddress)
     }
 }

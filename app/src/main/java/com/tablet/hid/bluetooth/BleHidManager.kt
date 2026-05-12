@@ -32,7 +32,7 @@ class BleHidManager(private val context: Context) {
 
     companion object {
         private const val TAG = "BleHidManager"
-        private const val RECONNECT_TIMEOUT_MS = 30_000L
+        private const val RECONNECT_TIMEOUT_MS = 120_000L
         private val UUID_DIS         = UUID.fromString("0000180A-0000-1000-8000-00805F9B34FB")
         private val UUID_HID         = UUID.fromString("00001812-0000-1000-8000-00805F9B34FB")
         private val UUID_MANUF_NAME  = UUID.fromString("00002A29-0000-1000-8000-00805F9B34FB")
@@ -94,6 +94,10 @@ class BleHidManager(private val context: Context) {
             return
         }
         activeMode = mode
+        // Don't disrupt an active connection — spurious re-init calls (e.g. from activity
+        // recreation or "Reconnect" tapped while already connected) must not tear down the
+        // live session or restart advertising.
+        if (_state.value is State.Connected) return
         _state.value = if (reconnectTarget != null)
             State.Reconnecting(reconnectTarget.name ?: reconnectTarget.address)
         else

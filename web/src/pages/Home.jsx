@@ -57,6 +57,7 @@ const PLAY_TESTING_URL = 'https://play.google.com/apps/testing/com.tablet.hid';
 const PLAY_STORE_URL   = 'https://play.google.com/store/apps/details?id=com.tablet.hid';
 const TESTFLIGHT_OPT_IN_KEY = 'testflight_tester_optin';
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ZeFCbt44';
+const IOS_APP_STORE_URL = 'https://apps.apple.com/us/app/tablethid/id6766346670'; 
 
 export default function Home() {
   const [hasAndroidOptedIn, setHasAndroidOptedIn] = useState(
@@ -102,7 +103,12 @@ export default function Home() {
               <AppleLogo />
               {hasIosOptedIn ? 'Joined TestFlight ✓' : 'Join iOS TestFlight'}
             </a>
-            <span className="badge badge-primary" aria-label="App Store install is not available yet">
+            <span 
+            href={IOS_APP_STORE_URL} 
+            className="badge badge-primary" 
+            aria-label="Install the iOS app from Apple's app store."
+            target="_blank"
+            rel="noreferrer">
               <AppleLogo />
               App Store
             </span>
@@ -124,16 +130,19 @@ export default function Home() {
               <a
                 href={PLAY_STORE_URL}
                 className="badge badge-primary"
+                aria-label="Install the Android app from the Google Play Store."
                 target="_blank"
                 rel="noreferrer"
               >
                 <AndroidLogo />
-                Download on Google Play
+                Google Play
               </a>
             ) : (
-              <span className="badge badge-locked" aria-label="Join the beta above to unlock">
+              <span 
+                className="badge badge-locked" 
+                aria-label="Join the beta above to unlock">
                 <AndroidLogo />
-                Google Play — join beta first
+                Opt in to Beta
               </span>
             )}
           </div>
