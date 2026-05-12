@@ -198,6 +198,17 @@ function stableClusterId(signature) {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+function averageMemberStrength(db, member, members) {
+  const others = JSON.stringify(members.filter(id => id !== member));
+  return db.prepare(`
+    SELECT AVG(strength) AS strength
+    FROM config_graph_edges
+    WHERE source_config_id = ? AND target_config_id IN (
+      SELECT value FROM json_each(?)
+    )
+  `).get(member, others)?.strength ?? 1;
+}
+
 function reconcileGraphClusters(db, options = {}) {
   ensureGraphSchema(db);
   const threshold = options.clusterThreshold ?? DEFAULT_CLUSTER_THRESHOLD;
@@ -267,7 +278,12 @@ function reconcileGraphClusters(db, options = {}) {
   `);
 
   db.prepare('UPDATE config_graph_edges SET cluster_id = NULL').run();
-  db.prepare('DELETE FROM config_graph_cluster_members').run();
+  db.prepare(`
+    DELETE FROM config_graph_cluster_members
+    WHERE cluster_id IN (
+      SELECT id FROM config_graph_clusters WHERE algorithm = ?
+    )
+  `).run(CLUSTER_ALGORITHM);
 
   for (const cluster of clusters) {
     upsertCluster.run({
@@ -382,6 +398,64 @@ export function patchGraphCluster(db, clusterId, patch = {}) {
     WHERE id = ?
   `).run(name, description, new Date().toISOString(), clusterId);
   return db.prepare('SELECT * FROM config_graph_clusters WHERE id = ?').get(clusterId);
+}
+
+export function upsertGraphCluster(db, patch = {}) {
+  ensureGraphSchema(db);
+  const members = Array.isArray(patch.members)
+    ? [...new Set(patch.members.map(id => String(id)).filter(id => /^[0-9a-f-]{36}$/i.test(id)))].sort()
+    : [];
+  if (members.length < DEFAULT_CLUSTER_MIN_SIZE) return null;
+
+  const existingMembers = db.prepare(`
+    SELECT id FROM configs
+    WHERE id IN (${members.map(() => '?').join(',')})
+  `).all(...members).map(row => row.id);
+  if (existingMembers.length !== members.length) return null;
+
+  const algorithm = String(patch.algorithm ?? 'client-subcluster-v1').trim().slice(0, 80) || 'client-subcluster-v1';
+  const threshold = Number.isFinite(Number(patch.threshold)) ? Number(patch.threshold) : DEFAULT_CLUSTER_THRESHOLD;
+  const signature = String(patch.signature ?? `${algorithm}:${threshold}:${members.join('|')}`).trim().slice(0, 2000);
+  const id = stableClusterId(signature);
+  const name = String(patch.name ?? '').trim().slice(0, 80) || null;
+  const description = String(patch.description ?? '').trim().slice(0, 400) || null;
+  const now = new Date().toISOString();
+
+  db.transaction(() => {
+    db.prepare(`
+      INSERT INTO config_graph_clusters (
+        id, signature, name, description, algorithm, threshold, member_count, created_at, updated_at
+      ) VALUES (
+        @id, @signature, @name, @description, @algorithm, @threshold, @member_count, @now, @now
+      )
+      ON CONFLICT(signature) DO UPDATE SET
+        name = excluded.name,
+        description = excluded.description,
+        algorithm = excluded.algorithm,
+        threshold = excluded.threshold,
+        member_count = excluded.member_count,
+        updated_at = excluded.updated_at
+    `).run({
+      id,
+      signature,
+      name,
+      description,
+      algorithm,
+      threshold,
+      member_count: members.length,
+      now,
+    });
+    db.prepare('DELETE FROM config_graph_cluster_members WHERE cluster_id = ?').run(id);
+    const insertMember = db.prepare(`
+      INSERT OR REPLACE INTO config_graph_cluster_members (cluster_id, config_id, strength)
+      VALUES (?, ?, ?)
+    `);
+    for (const member of members) {
+      insertMember.run(id, member, averageMemberStrength(db, member, members));
+    }
+  })();
+
+  return db.prepare('SELECT * FROM config_graph_clusters WHERE id = ?').get(id);
 }
 
 function parseRow(row) {

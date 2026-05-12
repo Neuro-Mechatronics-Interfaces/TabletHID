@@ -41,6 +41,14 @@ function pairKey(a, b) {
   return [a, b].sort().join(':');
 }
 
+function memberKey(members) {
+  return [...members].sort().join('|');
+}
+
+function isUuid(value) {
+  return /^[0-9a-f-]{36}$/i.test(value ?? '');
+}
+
 function average(values) {
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -97,10 +105,10 @@ function splitCluster(cluster, graph, nodeById) {
     if (components.length <= 1) continue;
     return components.flatMap((members, index) => {
       if (members.length <= CLUSTER_SPLIT_SIZE) {
-        return [{ ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, members }];
+        return [{ ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, name: null, description: null, members }];
       }
       return splitCluster(
-        { ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, members },
+        { ...cluster, id: `${cluster.id}:sub:${threshold}:${index}`, parentClusterId: cluster.id, name: null, description: null, members },
         graph,
         nodeById,
       );
@@ -117,7 +125,7 @@ function splitCluster(cluster, graph, nodeById) {
       chunks[chunkIndex].push(node.config.id);
       return chunks;
     }, [])
-    .map((members, index) => ({ ...cluster, id: `${cluster.id}:chunk:${index}`, parentClusterId: cluster.id, members }));
+    .map((members, index) => ({ ...cluster, id: `${cluster.id}:chunk:${index}`, parentClusterId: cluster.id, name: null, description: null, members }));
 }
 
 function clusterGraph(graph, expandedClusters) {
@@ -172,6 +180,14 @@ function clusterGraph(graph, expandedClusters) {
   clusters = clusters
     .flatMap(cluster => splitCluster(cluster, graph, nodeById))
     .filter(cluster => cluster.members.length >= CLUSTER_MIN_SIZE);
+  clusters = [...clusters.reduce((byMembers, cluster) => {
+    const key = memberKey(cluster.members);
+    const existing = byMembers.get(key);
+    if (!existing || (!existing.name && cluster.name) || (!isUuid(existing.id) && isUuid(cluster.id))) {
+      byMembers.set(key, cluster);
+    }
+    return byMembers;
+  }, new Map()).values()];
 
   const collapsedClusters = clusters.filter(cluster => !expandedClusters.has(cluster.id));
   if (!collapsedClusters.length) return graph;
@@ -413,6 +429,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
   const [error, setError] = useState(null);
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
   const [expandedClusters, setExpandedClusters] = useState(() => new Set());
+  const [clusterEditor, setClusterEditor] = useState(null);
   const stageRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -435,6 +452,7 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
           setGraph(data);
           setViewport({ x: 0, y: 0, zoom: 1 });
           setExpandedClusters(new Set());
+          setClusterEditor(null);
         }
       })
       .catch(err => {
@@ -476,6 +494,15 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
     stage.addEventListener('wheel', handleWheel, { passive: false });
     return () => stage.removeEventListener('wheel', handleWheel);
   }, [handleWheel]);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === 'Escape') setClusterEditor(null);
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const visibleGraph = useMemo(
     () => limitVisibleGraph(clusterGraph(graph, expandedClusters), GRAPH_VISIBLE_NEIGHBORS),
@@ -534,31 +561,74 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
   const childEdges = visibleEdges.filter(edge => edge.source === selectedConfig.id || edge.target === selectedConfig.id);
   const collapsedClusterCount = visibleGraph.collapsedClusterCount ?? 0;
 
-  async function nameCluster(node) {
-    const name = window.prompt('Cluster name', node.clusterName ?? '');
-    if (name === null) return;
-    const targetClusterId = node.parentClusterId ?? node.clusterId;
-    const res = await fetch(`/api/v1/graph/clusters/${targetClusterId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+  function openClusterEditor(event, node) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!node.cluster) return;
+
+    const stageRect = stageRef.current?.getBoundingClientRect();
+    const x = stageRect ? clamp(event.clientX - stageRect.left, 12, Math.max(12, stageRect.width - 332)) : 24;
+    const y = stageRect ? clamp(event.clientY - stageRect.top, 12, Math.max(12, stageRect.height - 190)) : 24;
+    const members = node.members.map(member => member.config.id).sort();
+    const targetClusterId = isUuid(node.clusterId) ? node.clusterId : null;
+    setClusterEditor({
+      x,
+      y,
+      node,
+      targetClusterId,
+      signature: `client-subcluster-v1:${memberKey(members)}`,
+      members,
+      name: node.clusterName ?? '',
+      saving: false,
+      error: null,
+      confirmation: null,
     });
-    if (!res.ok) return;
+  }
+
+  async function submitClusterName(event) {
+    event.preventDefault();
+    if (!clusterEditor || clusterEditor.saving) return;
+
+    const name = clusterEditor.name;
+    setClusterEditor(prev => ({ ...prev, saving: true, error: null, confirmation: null }));
+    const res = await fetch(clusterEditor.targetClusterId ? `/api/v1/graph/clusters/${clusterEditor.targetClusterId}` : '/api/v1/graph/clusters', {
+      method: clusterEditor.targetClusterId ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        signature: clusterEditor.signature,
+        algorithm: 'client-subcluster-v1',
+        members: clusterEditor.members,
+        threshold: CLUSTER_STRENGTH,
+      }),
+    });
+    if (!res.ok) {
+      setClusterEditor(prev => ({ ...prev, saving: false, error: 'Cluster name could not be saved.' }));
+      return;
+    }
     const updated = await res.json();
     setGraph(prev => ({
       ...prev,
-      clusters: (prev?.clusters ?? []).map(cluster => (
-        cluster.id === updated.id ? { ...cluster, name: updated.name, description: updated.description } : cluster
-      )),
+      clusters: [
+        ...(prev?.clusters ?? []).filter(cluster => cluster.id !== updated.id),
+        {
+          ...updated,
+          members: clusterEditor.members.map(configId => ({ config_id: configId, strength: 1 })),
+        },
+      ],
+    }));
+    setClusterEditor(prev => ({
+      ...prev,
+      targetClusterId: updated.id,
+      name: updated.name ?? '',
+      saving: false,
+      error: null,
+      confirmation: `Saved cluster ${updated.id}`,
     }));
   }
 
   function handleNodeClick(event, node) {
     if (node.cluster) {
-      if (event.shiftKey) {
-        nameCluster(node);
-        return;
-      }
       setExpandedClusters(prev => {
         const next = new Set(prev);
         if (next.has(node.clusterId)) next.delete(node.clusterId);
@@ -623,7 +693,8 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
                 className={'graph-node' + (center ? ' center' : '') + (node.cluster ? ' cluster' : '') + ` ${cfg.mode}`}
                 style={{ left: x, top: y }}
                 onClick={event => handleNodeClick(event, node)}
-                title={node.cluster ? 'Click to expand; Shift-click to name cluster' : `${cfg.profile_name} (${Math.round(node.strength * 100)}%)`}
+                onContextMenu={node.cluster ? event => openClusterEditor(event, node) : undefined}
+                title={node.cluster ? 'Click to expand; right-click to name cluster' : `${cfg.profile_name} (${Math.round(node.strength * 100)}%)`}
               >
                 <span className="graph-node-title">{shortName(cfg.profile_name)}</span>
                 <span className="graph-node-full-title">{cfg.profile_name}</span>
@@ -640,6 +711,48 @@ export default function ConfigGraphPanel({ selectedConfig, onSelect }) {
             );
           })}
         </div>
+
+        {clusterEditor && (
+          <form
+            className="graph-cluster-editor"
+            style={{ left: clusterEditor.x, top: clusterEditor.y }}
+            onSubmit={submitClusterName}
+            onPointerDown={event => event.stopPropagation()}
+            onClick={event => event.stopPropagation()}
+            onWheel={event => event.stopPropagation()}
+          >
+            <div className="graph-cluster-editor-head">
+              <div>
+                <strong>Name Cluster</strong>
+                <span>{clusterEditor.node.members.length} configs</span>
+              </div>
+              <button type="button" className="graph-cluster-editor-close" onClick={() => setClusterEditor(null)} aria-label="Close cluster editor">
+                x
+              </button>
+            </div>
+            <label>
+              <span>Cluster name</span>
+              <input
+                autoFocus
+                value={clusterEditor.name}
+                maxLength={80}
+                onChange={event => setClusterEditor(prev => ({ ...prev, name: event.target.value, confirmation: null, error: null }))}
+                placeholder="e.g. Assassin-style touch layouts"
+              />
+            </label>
+            <div className="graph-cluster-editor-id">
+              UUID: <code>{clusterEditor.targetClusterId ?? 'created on save'}</code>
+            </div>
+            {clusterEditor.error && <div className="graph-cluster-editor-error">{clusterEditor.error}</div>}
+            {clusterEditor.confirmation && <div className="graph-cluster-editor-confirm">{clusterEditor.confirmation}</div>}
+            <div className="graph-cluster-editor-actions">
+              <button type="button" className="secondary" onClick={() => setClusterEditor(null)}>Close</button>
+              <button type="submit" disabled={clusterEditor.saving}>
+                {clusterEditor.saving ? 'Saving...' : 'Save Name'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

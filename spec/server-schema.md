@@ -42,6 +42,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 | `GET`  | `/api/v1/configs` | List configs with optional filters |
 | `GET`  | `/api/v1/configs/:id` | Fetch one config; increments `download_count` and returns the incremented count |
 | `GET`  | `/api/v1/configs/:id/graph` | Fetch nearby config graph nodes/edges for one config |
+| `POST` | `/api/v1/graph/clusters` | Create or update a client-detected config graph cluster annotation |
 | `PATCH` | `/api/v1/graph/clusters/:id` | Rename or describe a reconciled config graph cluster |
 | `POST` | `/api/v1/configs` | Upload a config |
 | `GET`  | `/api/v1/devices` | List saved device presets for web config previews |
@@ -128,6 +129,23 @@ Response:
 `strength` is cosine similarity in `[0,1]` over deterministic weighted token vectors derived from profile name, description, tags, category, mode, platform, device name, and relevant labels inside `config_json`. `dissimilarity` is `1 - strength`. The graph is intentionally stored sparsely as directed edge rows instead of an `nConfigs × nConfigs` matrix. For a zoomed-in graph response, the API also returns complete pairwise `dissimilarities` among only the visible nodes so the web force layout can push unlike configs apart without drawing extra edges. Use `scripts/rebuild_config_graph.mjs` for a full rebuild; uploads and admin metadata edits update edges involving the changed config.
 
 Reconciled clusters are connected components of high-strength edges. Cluster IDs are stable UUID-shaped hashes of the algorithm, threshold, and sorted member IDs so labels can be reused when the same grouping reappears. Uploads and admin metadata edits update edges involving the changed config and then reconcile clusters.
+
+### POST /api/v1/graph/clusters
+
+Creates or updates a client-detected cluster annotation, used when the web Graph view splits a large reconciled cluster into smaller visible groups.
+
+Request body:
+
+| Field | Required | Type | Notes |
+|-------|----------|------|-------|
+| `signature` | yes | string | Stable client signature, usually algorithm plus sorted member IDs |
+| `members` | yes | string[] | Config UUIDs in the cluster; at least 3 |
+| `name` | no | string, max 80 chars | Empty string clears the label |
+| `description` | no | string, max 400 chars | Empty string clears the description |
+| `algorithm` | no | string | Defaults to `client-subcluster-v1` |
+| `threshold` | no | number | Similarity threshold used by the client |
+
+Response: the upserted `config_graph_clusters` row.
 
 ### PATCH /api/v1/graph/clusters/:id
 
