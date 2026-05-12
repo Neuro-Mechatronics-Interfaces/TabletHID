@@ -54,7 +54,7 @@ struct GamepadView: View {
                         Spacer()
                         HStack {
                             Spacer()
-                            KeyboardMacroPanel(macros: cfg.macroButtons) { macro, pressed in
+                            KeyboardMacroPanel(macros: cfg.macroButtons, palette: appState.uiPalette) { macro, pressed in
                                 if pressed {
                                     appState.sendKeyboardReport(modifiers: macro.modifiers, keyUsages: macro.keyUsages)
                                 } else {
@@ -401,6 +401,12 @@ struct GamepadView: View {
             }
     }
 
+    private let layoutGridStep: CGFloat = 8.0
+
+    private func snapToGrid(_ v: CGFloat) -> CGFloat {
+        (v / layoutGridStep).rounded() * layoutGridStep
+    }
+
     private func layoutDragGesture(for item: GamepadLayoutItem) -> some Gesture {
         DragGesture()
             .onChanged { value in
@@ -409,10 +415,11 @@ struct GamepadView: View {
                 }
                 let start = dragStartOffsets[item] ?? layoutValues(for: item).offset
                 let values = layoutValues(for: item)
-                let offset = CGSize(
+                let raw = CGSize(
                     width: (start.width + value.translation.width).clamped(to: -500...500),
                     height: (start.height + value.translation.height).clamped(to: -500...500)
                 )
+                let offset = CGSize(width: snapToGrid(raw.width), height: snapToGrid(raw.height))
                 setLayout(item, offset: offset, scale: values.scale)
             }
             .onEnded { _ in
@@ -741,12 +748,13 @@ struct GamepadButton: View {
 
 struct KeyboardMacroPanel: View {
     let macros: [KeyboardMacroButtonConfig]
+    var palette: UiPalette = .default
     let onChanged: (KeyboardMacroButtonConfig, Bool) -> Void
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 8) {
             ForEach(macros) { macro in
-                KeyboardMacroButton(macro: macro, onChanged: onChanged)
+                KeyboardMacroButton(macro: macro, palette: palette, onChanged: onChanged)
             }
         }
         .padding(10)
@@ -757,6 +765,7 @@ struct KeyboardMacroPanel: View {
 
 private struct KeyboardMacroButton: View {
     let macro: KeyboardMacroButtonConfig
+    let palette: UiPalette
     let onChanged: (KeyboardMacroButtonConfig, Bool) -> Void
     @State private var pressed = false
 
@@ -767,7 +776,7 @@ private struct KeyboardMacroButton: View {
             .minimumScaleFactor(0.7)
             .frame(minWidth: 84, minHeight: 42)
             .padding(.horizontal, 10)
-            .background(pressed ? Color.accentColor.opacity(0.85) : Color.secondary.opacity(0.22))
+            .background(pressed ? palette.macroColor.opacity(0.85) : Color.secondary.opacity(0.22))
             .foregroundStyle(pressed ? .white : .primary)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .gesture(

@@ -19,6 +19,7 @@ import com.tablet.hid.model.CommunityConfigRecord
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.OrientationPreference
 import com.tablet.hid.model.Profile
+import com.tablet.hid.model.normalizeLayout
 import com.tablet.hid.util.ConfigApiClient
 import com.tablet.hid.util.ConfigMerger
 import com.tablet.hid.util.GamepadConfigSerializer
@@ -288,7 +289,7 @@ class ImportSheet : BottomSheetDialogFragment() {
                             if (binding.checkButtonLabels.isChecked)    add(ConfigMerger.GamepadSubset.GAMEPAD_LABELS)
                             if (binding.checkVibration.isChecked)       add(ConfigMerger.GamepadSubset.GAMEPAD_VIBRATION)
                         }
-                        val merged = ConfigMerger.mergeGamepad(target, source, subsets)
+                        val merged = ConfigMerger.mergeGamepad(target, source, subsets).normalizeLayout()
                         GamepadConfigStore.save(ctx, merged, profile)
                     } else {
                         val source = TouchMouseConfigSerializer.fromCanonicalJson(configJsonObj)
@@ -299,7 +300,7 @@ class ImportSheet : BottomSheetDialogFragment() {
                             if (binding.checkTouchButtonBehavior.isChecked) add(ConfigMerger.TouchMouseSubset.TOUCH_BUTTON_BEHAVIOR)
                             if (binding.checkTouchMacros.isChecked)        add(ConfigMerger.TouchMouseSubset.TOUCH_MACROS)
                         }
-                        val merged = ConfigMerger.mergeTouchMouse(target, source, subsets)
+                        val merged = ConfigMerger.mergeTouchMouse(target, source, subsets).normalizeLayout()
                         TouchMouseConfigStore.save(ctx, merged, profile)
                     }
                     shouldRefresh

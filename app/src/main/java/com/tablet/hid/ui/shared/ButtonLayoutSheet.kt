@@ -90,8 +90,8 @@ class ButtonLayoutSheet : BottomSheetDialogFragment() {
         applySnapStep(snap = true)
         binding.sliderOffsetX.value = roundToSnapStep(initialOffsetX.coerceIn(-400f, 400f))
         binding.sliderOffsetY.value = roundToSnapStep(initialOffsetY.coerceIn(-400f, 400f))
-        binding.sliderScaleX.value  = initialScaleX.coerceIn(0.3f, 3.0f)
-        binding.sliderScaleY.value  = initialScaleY.coerceIn(0.3f, 3.0f)
+        binding.sliderScaleX.value  = roundToStep(initialScaleX.coerceIn(0.3f, 3.0f), 0.1f).coerceIn(0.3f, 3.0f)
+        binding.sliderScaleY.value  = roundToStep(initialScaleY.coerceIn(0.3f, 3.0f), 0.1f).coerceIn(0.3f, 3.0f)
         ignoreChanges = false
 
         updateLabels()

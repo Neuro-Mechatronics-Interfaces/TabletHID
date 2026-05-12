@@ -180,6 +180,14 @@ struct ConfigStore {
         defaults.set(lock.rawValue, forKey: "orientation_lock")
     }
 
+    func loadUiPaletteIndex() -> Int {
+        defaults.integer(forKey: "ui_palette_index")
+    }
+
+    func saveUiPaletteIndex(_ index: Int) {
+        defaults.set(index, forKey: "ui_palette_index")
+    }
+
     private func touchKey(_ profile: Profile) -> String {
         "touch_mouse_config_\(profile.key)"
     }

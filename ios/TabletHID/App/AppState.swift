@@ -19,6 +19,7 @@ final class AppState: ObservableObject {
     @Published var autoReconnectEnabled: Bool
     @Published var onboardingCompleted: Bool
     @Published var orientationLock: OrientationLock
+    @Published var uiPalette: UiPalette
     @Published var pendingConnectionHost: HIDHost?
 
     private let store = ConfigStore()
@@ -44,6 +45,7 @@ final class AppState: ObservableObject {
         self.pendingConnectionHost = nil
         let lock = store.loadOrientationLock()
         self.orientationLock = lock
+        self.uiPalette = UiPalette.all.first(where: { $0.id == store.loadUiPaletteIndex() }) ?? .default
         #if canImport(UIKit)
         AppDelegate.orientationLock = lock.interfaceOrientationMask
         #endif
@@ -222,6 +224,11 @@ final class AppState: ObservableObject {
     func setAutoReconnectEnabled(_ enabled: Bool) {
         autoReconnectEnabled = enabled
         store.saveAutoReconnectEnabled(enabled)
+    }
+
+    func setUiPalette(_ palette: UiPalette) {
+        uiPalette = palette
+        store.saveUiPaletteIndex(palette.id)
     }
 
     func maybeAutoReconnectOnLaunch() {

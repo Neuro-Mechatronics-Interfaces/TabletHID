@@ -97,7 +97,7 @@ The iOS BLE HID report map now includes the keyboard Report ID 3 collection and 
 | D-pad with diagonals | Implemented | Initial buttons and diagonal hat mapping |
 | Momentary/latching buttons | Implemented | Implemented |
 | Turbo | Implemented | Implemented |
-| Drag-to-reposition controls | Implemented | Implemented for Gamepad controls via in-surface layout edit mode |
+| Drag-to-reposition controls | Implemented; 8dp grid snapping during drag edit with "Snap to grid" chip toggle in layout sheet | Implemented for Gamepad controls via in-surface layout edit mode; 8pt grid snapping applied during drag |
 | Pinch-to-resize controls | Implemented; Android gamepad widgets have no maximum scale cap | Implemented for Gamepad controls via in-surface layout edit mode |
 | Persist layout | Implemented | Implemented for Gamepad controls; offsets/scales persist per profile and are included in community config import/export |
 | Multiple presets | Built-in plus custom profiles | Built-in plus custom profiles |
@@ -121,6 +121,7 @@ The iOS BLE HID report map now includes the keyboard Report ID 3 collection and 
 | Configurable peripheral name | Settings screen stores the name; `HidManager` uses it for adapter rename and SDP registration on new pair | First-run onboarding and `AppSettingsView` store the HoG server name; `ExperimentalBLEHIDTransport` uses it for BLE local-name advertising |
 | Large Text | Settings screen stores preference; activity context applies enlarged font scale after recreate | `AppSettingsView` stores preference; SwiftUI root applies accessibility dynamic type |
 | High Contrast | Settings screen stores preference; activity applies high-contrast Material theme after recreate | `AppSettingsView` stores preference; SwiftUI root applies stronger contrast and primary tint |
+| Gaming color palette | Implemented; 5 presets (Default/Neon/Fire/Ice/Monochrome) selectable in Settings; stored via `UiPaletteStore`; applied to Touch Mouse zone fill colors, sniper zone, macro button tints, and layout-sheet preview dot; `UiPalette` data class with solid-RGB entries and alpha-composited computed properties | Ported; same 5 presets in `UiPalette.swift`; stored in `UserDefaults` via `ConfigStore`; `AppState.uiPalette` published; `AppSettingsView` Picker; Touch Mouse zone and touch-mode zone colors use palette; macro button pressed tint uses `palette.macroColor`; physical-device validation pending |
 | Session logging | Toggle in Settings screen; `.config` + timestamped `.log` per connection via `SessionLogger` | Toggle in `AppSettingsView`; writes to `Documents/sessions/` via `SessionLogger` |
 | Orientation lock | System / Portrait / Landscape; Settings screen + in-canvas cycle button on both status bars; `requestedOrientation` applied immediately | System / Portrait / Landscape; `AppDelegate.supportedInterfaceOrientationsFor` + `UIWindowScene.requestGeometryUpdate` (iOS 16+); `AppSettingsView` picker + in-canvas cycle button |
 | Connection status chip | Implemented via ActionBar subtitle in `MainActivity`; visible on Home and Tutorial screens; shows empty (Idle), Starting, Waiting, Connecting, Connected, and Error states | Implemented on Home connection card and control surfaces; shows idle, starting, waiting, reconnecting, connected, unavailable, and error states |

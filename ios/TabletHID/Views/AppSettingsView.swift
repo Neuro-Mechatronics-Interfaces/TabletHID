@@ -42,6 +42,22 @@ struct AppSettingsView: View {
                 }
 
                 Section {
+                    Picker("Color Theme", selection: Binding(
+                        get: { appState.uiPalette },
+                        set: { appState.setUiPalette($0) }
+                    )) {
+                        ForEach(UiPalette.all) { palette in
+                            Text(palette.name).tag(palette)
+                        }
+                    }
+                    Text("Color theme for touch zones and macro buttons.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("Gaming Colors")
+                }
+
+                Section {
                     Picker("Orientation", selection: Binding(
                         get: { appState.orientationLock },
                         set: { appState.setOrientationLock($0) }

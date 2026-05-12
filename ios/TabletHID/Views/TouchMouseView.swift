@@ -18,7 +18,7 @@ struct TouchMouseView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            TouchMouseSurface(config: appState.touchMouseConfig) { buttons, dx, dy, wheel, horizontalWheel in
+            TouchMouseSurface(config: appState.touchMouseConfig, palette: appState.uiPalette) { buttons, dx, dy, wheel, horizontalWheel in
                 appState.sendMouseReport(
                     buttons: buttons,
                     dx: dx,
@@ -103,7 +103,7 @@ struct TouchMouseView: View {
             if showingShortcutPanel {
                 HStack {
                     Spacer()
-                    KeyboardMacroPanel(macros: appState.touchMouseConfig.macroButtons) { macro, pressed in
+                    KeyboardMacroPanel(macros: appState.touchMouseConfig.macroButtons, palette: appState.uiPalette) { macro, pressed in
                         if pressed {
                             appState.sendKeyboardReport(modifiers: macro.modifiers, keyUsages: macro.keyUsages)
                         } else {
@@ -183,6 +183,7 @@ struct TouchMouseView: View {
 #if canImport(UIKit)
 struct TouchMouseSurface: UIViewRepresentable {
     let config: TouchMouseConfig
+    var palette: UiPalette = .default
     let sendReport: (Int, Int, Int, Int, Int) -> Void
 
     func makeUIView(context: Context) -> TouchMouseSurfaceView {
@@ -190,17 +191,20 @@ struct TouchMouseSurface: UIViewRepresentable {
         view.isMultipleTouchEnabled = true
         view.sendReport = sendReport
         view.config = config
+        view.palette = palette
         return view
     }
 
     func updateUIView(_ uiView: TouchMouseSurfaceView, context: Context) {
         uiView.config = config
+        uiView.palette = palette
         uiView.sendReport = sendReport
     }
 }
 
 final class TouchMouseSurfaceView: UIView {
     var config = TouchMouseConfig() { didSet { setNeedsDisplay() } }
+    var palette: UiPalette = .default { didSet { setNeedsDisplay() } }
     var sendReport: ((Int, Int, Int, Int, Int) -> Void)?
 
     private var primaryTouch: UITouch?
@@ -500,14 +504,14 @@ final class TouchMouseSurfaceView: UIView {
         if config.mode == .touch {
             drawTouchModeZone()
         } else {
-            if config.leftButton.enabled { drawZone(config.leftButton, label: "L", color: .systemBlue, active: leftLatched || !leftPointers.isEmpty) }
-            if config.rightButton.enabled { drawZone(config.rightButton, label: "R", color: .systemOrange, active: rightLatched || !rightPointers.isEmpty) }
+            if config.leftButton.enabled { drawZone(config.leftButton, label: "L", color: palette.leftUIColor(alpha: 1), active: leftLatched || !leftPointers.isEmpty) }
+            if config.rightButton.enabled { drawZone(config.rightButton, label: "R", color: palette.rightUIColor(alpha: 1), active: rightLatched || !rightPointers.isEmpty) }
         }
     }
 
     private func drawTouchModeZone() {
         let zone = CGRect(x: 0, y: bounds.height * rightZoneFraction, width: bounds.width, height: bounds.height * (1 - rightZoneFraction))
-        UIColor.systemRed.withAlphaComponent(rightClickTouch == nil ? 0.10 : 0.28).setFill()
+        palette.sniperUIColor(alpha: rightClickTouch == nil ? 0.10 : 0.28).setFill()
         UIBezierPath(rect: zone).fill()
         drawLabel("RIGHT CLICK ZONE", in: zone, color: UIColor.label.withAlphaComponent(0.45))
     }
@@ -664,23 +668,27 @@ struct CalibrationSurface: UIViewRepresentable {
 #elseif canImport(AppKit)
 struct TouchMouseSurface: NSViewRepresentable {
     let config: TouchMouseConfig
+    var palette: UiPalette = .default
     let sendReport: (Int, Int, Int, Int, Int) -> Void
 
     func makeNSView(context: Context) -> TouchMouseSurfaceView {
         let view = TouchMouseSurfaceView()
         view.sendReport = sendReport
         view.config = config
+        view.palette = palette
         return view
     }
 
     func updateNSView(_ nsView: TouchMouseSurfaceView, context: Context) {
         nsView.config = config
+        nsView.palette = palette
         nsView.sendReport = sendReport
     }
 }
 
 final class TouchMouseSurfaceView: NSView {
     var config = TouchMouseConfig() { didSet { needsDisplay = true } }
+    var palette: UiPalette = .default { didSet { needsDisplay = true } }
     var sendReport: ((Int, Int, Int, Int, Int) -> Void)?
 
     private var lastPoint = CGPoint.zero
@@ -836,14 +844,14 @@ final class TouchMouseSurfaceView: NSView {
         if config.mode == .touch {
             drawTouchModeZone()
         } else {
-            if config.leftButton.enabled { drawZone(config.leftButton, label: "L", color: .systemBlue, active: leftLatched || primaryDown) }
-            if config.rightButton.enabled { drawZone(config.rightButton, label: "R", color: .systemOrange, active: rightLatched || rightDown) }
+            if config.leftButton.enabled { drawZone(config.leftButton, label: "L", color: palette.leftNSColor(alpha: 1), active: leftLatched || primaryDown) }
+            if config.rightButton.enabled { drawZone(config.rightButton, label: "R", color: palette.rightNSColor(alpha: 1), active: rightLatched || rightDown) }
         }
     }
 
     private func drawTouchModeZone() {
         let zone = CGRect(x: 0, y: bounds.height * rightZoneFraction, width: bounds.width, height: bounds.height * (1 - rightZoneFraction))
-        NSColor.systemRed.withAlphaComponent(rightDown ? 0.28 : 0.10).setFill()
+        palette.sniperNSColor(alpha: rightDown ? 0.28 : 0.10).setFill()
         NSBezierPath(rect: zone).fill()
         drawLabel("RIGHT CLICK ZONE", in: zone, color: NSColor.labelColor.withAlphaComponent(0.45))
     }

@@ -5,6 +5,7 @@ import android.util.DisplayMetrics
 import com.tablet.hid.model.ButtonConfig
 import com.tablet.hid.model.GamepadConfig
 import com.tablet.hid.model.JoystickConfig
+import com.tablet.hid.model.normalizeLayout
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -86,6 +87,6 @@ object LayoutRescaler {
                     layoutOffsetY = macro.layoutOffsetY * yRatio,
                 )
             },
-        )
+        ).normalizeLayout()
     }
 }

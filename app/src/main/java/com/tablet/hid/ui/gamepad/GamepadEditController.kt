@@ -290,8 +290,8 @@ class GamepadEditController(
                 override fun onScale(d: ScaleGestureDetector): Boolean {
                     val fx = d.currentSpanX.coerceAtLeast(1f) / lastSpanX
                     val fy = d.currentSpanY.coerceAtLeast(1f) / lastSpanY
-                    view.scaleX = (view.scaleX * fx).coerceAtLeast(0.3f)
-                    view.scaleY = (view.scaleY * fy).coerceAtLeast(0.3f)
+                    view.scaleX = (view.scaleX * fx).coerceIn(0.3f, 3.0f)
+                    view.scaleY = (view.scaleY * fy).coerceIn(0.3f, 3.0f)
                     lastSpanX = d.currentSpanX.coerceAtLeast(1f)
                     lastSpanY = d.currentSpanY.coerceAtLeast(1f)
                     return true
@@ -306,7 +306,6 @@ class GamepadEditController(
             })
         var downRawX = 0f; var downRawY = 0f
         var lastRawX = 0f; var lastRawY = 0f
-        var rawTx = 0f; var rawTy = 0f
         var wasDragged = false
         return View.OnTouchListener { _, event ->
             scaleDetector.onTouchEvent(event)
@@ -315,17 +314,12 @@ class GamepadEditController(
                 MotionEvent.ACTION_DOWN -> {
                     downRawX = event.rawX; downRawY = event.rawY
                     lastRawX = event.rawX; lastRawY = event.rawY
-                    rawTx = view.translationX; rawTy = view.translationY
                     wasDragged = false
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val gridPx = GRID_SIZE_DP * resources.displayMetrics.density
-                    rawTx += event.rawX - lastRawX
-                    rawTy += event.rawY - lastRawY
-                    view.translationX = round(rawTx / gridPx) * gridPx
-                    view.translationY = round(rawTy / gridPx) * gridPx
+                    view.translationX += event.rawX - lastRawX
+                    view.translationY += event.rawY - lastRawY
                     clampTranslationToParent(view)
-                    rawTx = view.translationX; rawTy = view.translationY
                     lastRawX = event.rawX; lastRawY = event.rawY
                     if (abs(event.rawX - downRawX) > tapThresholdPx ||
                         abs(event.rawY - downRawY) > tapThresholdPx) wasDragged = true
@@ -335,6 +329,10 @@ class GamepadEditController(
                         showLayoutSheetForButton(view, getConfig, saveConfig)
                     } else {
                         val density = resources.displayMetrics.density
+                        val gridPx = GRID_SIZE_DP * density
+                        view.translationX = round(view.translationX / gridPx) * gridPx
+                        view.translationY = round(view.translationY / gridPx) * gridPx
+                        clampTranslationToParent(view)
                         saveConfig(getConfig().copy(
                             offsetX = view.translationX / density, offsetY = view.translationY / density,
                             scaleX  = view.scaleX, scaleY  = view.scaleY,
@@ -492,8 +490,10 @@ class GamepadEditController(
         val halfH = view.height * view.scaleY / 2f
         val naturalCX = (view.left + view.right)  / 2f
         val naturalCY = (view.top  + view.bottom) / 2f
-        view.translationX = view.translationX.coerceIn(halfW - naturalCX, pW - naturalCX - halfW)
-        view.translationY = view.translationY.coerceIn(halfH - naturalCY, pH - naturalCY - halfH)
+        val minX = halfW - naturalCX; val maxX = pW - naturalCX - halfW
+        val minY = halfH - naturalCY; val maxY = pH - naturalCY - halfH
+        if (minX <= maxX) view.translationX = view.translationX.coerceIn(minX, maxX)
+        if (minY <= maxY) view.translationY = view.translationY.coerceIn(minY, maxY)
     }
 
     @Suppress("ClickableViewAccessibility")
