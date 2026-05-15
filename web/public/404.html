@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TabletHID</title>
+  <script>
+    // GitHub Pages serves a 404 for any path that isn't a real file.  This page
+    // saves the intended URL into sessionStorage and immediately redirects to the
+    // SPA root so React Router can take over and render the right page.
+    //
+    // The base path ('/TabletHID') is only needed when the site is served from
+    // the default github.io subdomain.  A custom Pages domain serves from '/'
+    // and needs no prefix.
+    var base = location.hostname.endsWith('.github.io') ? '/TabletHID' : '';
+    var target = location.pathname.slice(base.length) || '/';
+    sessionStorage.setItem('spa_redirect', target + location.search + location.hash);
+    location.replace(location.origin + base + '/');
+  </script>
+</head>
+<body></body>
+</html>

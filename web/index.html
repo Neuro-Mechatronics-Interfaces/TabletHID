@@ -7,6 +7,13 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
     <title>TabletHID</title>
+    <!-- GitHub Pages SPA: restore the original path saved by 404.html -->
+    <script>
+      (function () {
+        var r = sessionStorage.getItem('spa_redirect');
+        if (r) { sessionStorage.removeItem('spa_redirect'); history.replaceState(null, '', r); }
+      }());
+    </script>
   </head>
   <body>
     <div id="root"></div>
