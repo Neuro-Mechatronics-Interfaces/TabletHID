@@ -19,6 +19,7 @@ export default function Nav() {
           <NavLink to="/support" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Support</NavLink>
           <NavLink to="/privacy" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>Privacy</NavLink>
           <NavLink to="/beta" className={({ isActive }) => 'nav-link nav-link-beta' + (isActive ? ' active' : '')}>Beta</NavLink>
+          <a href="https://myo.nml.wtf" className="nav-link" target="_blank" rel="noreferrer">MyoHID ↗</a>
         </div>
       </div>
     </nav>
