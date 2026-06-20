@@ -177,6 +177,15 @@
                         android:text="@string/btn_disconnect" />
 
                     <Button
+                        android:id="@+id/btnHomeStopAdvertising"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:contentDescription="@string/home_cd_stop_advertising"
+                        android:text="@string/btn_stop_advertising" />
+
+                    <Button
                         android:id="@+id/btnHomeDiscoverable"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

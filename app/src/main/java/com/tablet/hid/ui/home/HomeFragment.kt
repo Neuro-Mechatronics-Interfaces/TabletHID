@@ -93,8 +93,16 @@ class HomeFragment : Fragment() {
         binding.chipDeviceName.setOnClickListener { showEditNameDialog() }
 
         binding.btnHomeDiscoverable.setOnClickListener {
-            viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE)
+            // If the GATT server is still open (advertising was paused, not torn down), resume
+            // advertising directly so cached handles survive and no bonds are cleared. Otherwise
+            // start the foreground service fresh.
+            if (viewModel.canResumeAdvertising) {
+                viewModel.startAdvertising()
+            } else {
+                viewModel.startServiceForMode(requireContext(), DeviceMode.TOUCH_MOUSE)
+            }
         }
+        binding.btnHomeStopAdvertising.setOnClickListener { viewModel.stopAdvertising() }
         binding.btnHomeDisconnect.setOnClickListener { viewModel.disconnect() }
         binding.btnPendingAllow.setOnClickListener { viewModel.approvePendingConnection() }
         binding.btnPendingIgnore.setOnClickListener { viewModel.rejectPendingConnection() }
@@ -114,6 +122,13 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.state.collect { state -> updateConnectionUi(state) }
+            }
+        }
+
+        // ── Observe advertising axis (independent of connection state) ───────
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isAdvertising.collect { updateConnectionUi(viewModel.state.value) }
             }
         }
 
@@ -167,14 +182,23 @@ class HomeFragment : Fragment() {
             binding.pendingDeviceName.text = (state as BleHidManager.State.PendingApproval).deviceName
         }
 
-        // Discoverable button: visible when idle, label changes based on known hosts
+        // Discoverable button: visible when idle. Label reflects whether tapping resumes a
+        // paused advertising session, starts a fresh pair, or makes the device discoverable.
         binding.btnHomeDiscoverable.isVisible = idle
         if (idle) {
             val hasHosts = viewModel.knownHosts.value.isNotEmpty()
             binding.btnHomeDiscoverable.text = getString(
-                if (hasHosts) R.string.btn_new_pair else R.string.btn_make_discoverable
+                when {
+                    viewModel.canResumeAdvertising -> R.string.btn_resume_advertising
+                    hasHosts                       -> R.string.btn_new_pair
+                    else                           -> R.string.btn_make_discoverable
+                }
             )
         }
+
+        // Stop-advertising button: visible while broadcasting and not yet connected, so the
+        // user can free the radio for another peripheral to pair with a shared receiver.
+        binding.btnHomeStopAdvertising.isVisible = viewModel.isAdvertising.value && !connected
 
         // Disconnect button: visible only when connected
         binding.btnHomeDisconnect.isVisible = connected

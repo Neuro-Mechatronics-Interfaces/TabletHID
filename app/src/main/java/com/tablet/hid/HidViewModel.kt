@@ -37,6 +37,13 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
     val hidManager: BleHidManager = (app as TabletHidApplication).hidManager
     val state: StateFlow<BleHidManager.State> = hidManager.state
 
+    /** Whether the peripheral is currently advertising, and the host it targets (null = open pair). */
+    val isAdvertising: StateFlow<Boolean> = hidManager.isAdvertising
+    val advertisingTarget: StateFlow<String?> = hidManager.advertisingTarget
+
+    /** True once the GATT server is open, so advertising can resume without restarting the service. */
+    val canResumeAdvertising: Boolean get() = hidManager.hasGattServer
+
     // Set by MainActivity when the app is launched via a home-screen shortcut.
     var pendingStartMode: String? = null
 
@@ -266,6 +273,12 @@ class HidViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun disconnect() = hidManager.disconnect()
+
+    /** Pause advertising without disconnecting — frees the radio so a shared receiver can pair elsewhere. */
+    fun stopAdvertising() = hidManager.stopAdvertising()
+
+    /** Resume/begin advertising. Pass a host to advertise for reconnect; null for open pairing. */
+    fun startAdvertising(host: HidHost? = null) = hidManager.startAdvertising(host)
 
     // ── Foreground service helpers ────────────────────────────────────────────
 

@@ -34,6 +34,9 @@
     <string name="tutorial_status_error">Error: %1$s</string>
     <string name="btn_make_discoverable">Make Discoverable</string>
     <string name="btn_new_pair">New Pair</string>
+    <string name="btn_resume_advertising">Resume</string>
+    <string name="btn_stop_advertising">Stop Advertising</string>
+    <string name="home_cd_stop_advertising">Stop advertising so another device can pair with the shared receiver</string>
     <string name="home_known_hosts">Known hosts</string>
     <string name="home_pending_title">Incoming host</string>
     <string name="home_pending_desc">Allow only the computer you are pairing right now.</string>

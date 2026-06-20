@@ -59,11 +59,29 @@ class BleHidManager(private val context: Context) {
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
 
+    // Advertising is tracked as a separate axis from the connection [State] so callers can
+    // explicitly know whether the radio is broadcasting and for whom. This lets the user pause
+    // advertising (freeing the host/receiver to pair with another peripheral) without tearing
+    // down the GATT server or an active connection.
+    private val _isAdvertising = MutableStateFlow(false)
+    val isAdvertising: StateFlow<Boolean> = _isAdvertising.asStateFlow()
+
+    // Address of the known host we are currently advertising to reconnect to, or null when
+    // advertising openly for a new pairing. Mirrors [currentAdvertiseTarget] while advertising.
+    private val _advertisingTarget = MutableStateFlow<String?>(null)
+    val advertisingTarget: StateFlow<String?> = _advertisingTarget.asStateFlow()
+
+    /** True once the GATT server is open; advertising can then be resumed without a full rebuild. */
+    val hasGattServer: Boolean get() = gattServer != null
+
     private var gattServer: BluetoothGattServer? = null
     private var advertiseCallback: AdvertiseCallback? = null
     private var activeMode: DeviceMode? = null
     private var connectedDevice: BluetoothDevice? = null
     private var pendingApprovalDevice: BluetoothDevice? = null
+
+    // Host address the next/current advertising session targets (null = open pairing).
+    private var currentAdvertiseTarget: String? = null
 
     // Built fresh each time startGattServer() is called.
     private var mouseReportChar: BluetoothGattCharacteristic? = null
@@ -94,6 +112,7 @@ class BleHidManager(private val context: Context) {
             return
         }
         activeMode = mode
+        currentAdvertiseTarget = reconnectTarget?.address
         // Don't disrupt an active connection — spurious re-init calls (e.g. from activity
         // recreation or "Reconnect" tapped while already connected) must not tear down the
         // live session or restart advertising.
@@ -110,7 +129,7 @@ class BleHidManager(private val context: Context) {
             // Reconnect flow: never remove bonds — the LTK must be preserved so the host can
             // reconnect without re-pairing. Reuse the open GATT server when possible so the
             // host can use cached handles; rebuild it if the service was restarted.
-            if (gattServer != null) startAdvertising() else startGattServer()
+            if (gattServer != null) beginAdvertising() else startGattServer()
             scheduleReconnectTimeout(reconnectTarget.address)
         } else {
             // Fresh-pair flow: remove Android-side bonds for all previously-seen HID hosts.
@@ -144,10 +163,55 @@ class BleHidManager(private val context: Context) {
             return
         }
         activeMode = mode
+        currentAdvertiseTarget = host.address
         _state.value = State.Reconnecting(host.displayName)
         try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (_: Exception) {}
-        if (gattServer != null) startAdvertising() else startGattServer()
+        if (gattServer != null) beginAdvertising() else startGattServer()
         scheduleReconnectTimeout(host.address)
+    }
+
+    // -------------------------------------------------------------------------
+    // Advertising control (decoupled from connect/disconnect)
+    //
+    // Advertising is the peripheral-side equivalent of a central's scan: it is what makes the
+    // tablet discoverable/connectable. These public entry points let a caller pause and resume
+    // it independently of the GATT server and any live connection — e.g. to stop hogging a
+    // shared BLE receiver so another peripheral can pair with it.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Begin advertising on demand. Reuses the open GATT server when one exists (so cached
+     * handles survive), otherwise builds it first. Pass [target] to advertise for reconnecting
+     * to a specific known host; pass null to advertise openly for a new pairing.
+     *
+     * No-op while a host is connected (the peripheral does not advertise during a connection).
+     */
+    fun startAdvertising(target: HidHost? = null) {
+        val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
+        if (adapter == null || !adapter.isEnabled) {
+            _state.value = State.Error("Bluetooth is not available or disabled.")
+            return
+        }
+        if (_state.value is State.Connected) return
+        if (activeMode == null) activeMode = DeviceMode.TOUCH_MOUSE
+        currentAdvertiseTarget = target?.address
+        _state.value = if (target != null) State.Reconnecting(target.displayName) else State.Registering
+        try { adapter.setName(AppearanceStore.getDeviceName(context)) } catch (_: Exception) {}
+        if (gattServer != null) beginAdvertising() else startGattServer()
+        target?.let { scheduleReconnectTimeout(it.address) }
+    }
+
+    /**
+     * Stop advertising without disconnecting or tearing down the GATT server, leaving the
+     * peripheral idle but ready to resume via [startAdvertising]. No-op while connected (the
+     * peripheral is not advertising during a connection).
+     */
+    fun stopAdvertising() {
+        if (_state.value is State.Connected) return
+        cancelReconnectTimeout()
+        currentAdvertiseTarget = null
+        endAdvertising()
+        _state.value = State.Idle
     }
 
     fun forgetDevice(host: HidHost) {
@@ -167,7 +231,8 @@ class BleHidManager(private val context: Context) {
         cancelReconnectTimeout()
         pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
         pendingApprovalDevice = null
-        stopAdvertising()
+        currentAdvertiseTarget = null
+        endAdvertising()
         // Set Idle before cancelConnection so the onConnectionStateChange callback sees
         // state=Idle and does not restart advertising.
         _state.value = State.Idle
@@ -184,7 +249,8 @@ class BleHidManager(private val context: Context) {
         cancelReconnectTimeout()
         pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
         pendingApprovalDevice = null
-        stopAdvertising()
+        currentAdvertiseTarget = null
+        endAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
             try { gattServer?.cancelConnection(it) } catch (_: Exception) {}
@@ -199,7 +265,8 @@ class BleHidManager(private val context: Context) {
         cancelReconnectTimeout()
         pendingApprovalDevice?.let { try { gattServer?.cancelConnection(it) } catch (_: Exception) {} }
         pendingApprovalDevice = null
-        stopAdvertising()
+        currentAdvertiseTarget = null
+        endAdvertising()
         _state.value = State.Idle
         connectedDevice?.let {
             try { gattServer?.cancelConnection(it) } catch (_: Exception) {}
@@ -277,7 +344,7 @@ class BleHidManager(private val context: Context) {
 
     private fun drainServiceQueue() {
         val next = serviceQueue.removeFirstOrNull() ?: run {
-            startAdvertising()
+            beginAdvertising()
             return
         }
         try {
@@ -362,8 +429,8 @@ class BleHidManager(private val context: Context) {
     // BLE advertising
     // -------------------------------------------------------------------------
 
-    private fun startAdvertising() {
-        stopAdvertising()   // always cancel any existing session before registering a new one
+    private fun beginAdvertising() {
+        endAdvertising()   // always cancel any existing session before registering a new one
         val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
         val advertiser = adapter?.bluetoothLeAdvertiser ?: run {
             _state.value = State.Error("BLE advertising not supported on this device.")
@@ -384,15 +451,22 @@ class BleHidManager(private val context: Context) {
 
         val cb = object : AdvertiseCallback() {
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                Log.d(TAG, "BLE advertising started")
+                Log.d(TAG, "BLE advertising started (target=${currentAdvertiseTarget ?: "open"})")
+                _isAdvertising.value = true
+                _advertisingTarget.value = currentAdvertiseTarget
             }
             override fun onStartFailure(errorCode: Int) {
                 Log.e(TAG, "BLE advertising failed errorCode=$errorCode")
+                _isAdvertising.value = false
+                _advertisingTarget.value = null
                 _state.value = State.Error("BLE advertising failed (error $errorCode).")
             }
         }
         advertiseCallback = cb
         advertiser.startAdvertising(settings, data, cb)
+        // Optimistically reflect the advertising axis immediately; onStartFailure corrects it.
+        _isAdvertising.value = true
+        _advertisingTarget.value = currentAdvertiseTarget
 
         // For reconnect flow, stay in Reconnecting until host connects.
         if (_state.value !is State.Reconnecting) {
@@ -400,7 +474,9 @@ class BleHidManager(private val context: Context) {
         }
     }
 
-    private fun stopAdvertising() {
+    private fun endAdvertising() {
+        _isAdvertising.value = false
+        _advertisingTarget.value = null
         val cb = advertiseCallback ?: return
         advertiseCallback = null
         val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
@@ -428,7 +504,7 @@ class BleHidManager(private val context: Context) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     cancelReconnectTimeout()
-                    stopAdvertising()
+                    endAdvertising()
                     if (device.bondState == BluetoothDevice.BOND_NONE) {
                         // Unknown host — require explicit user approval before bonding.
                         pendingApprovalDevice = device
@@ -460,12 +536,13 @@ class BleHidManager(private val context: Context) {
                             // not connected → connected" flicker the user sees.
                             Log.d(TAG, "Disconnected from known host — staying in Reconnecting")
                             _state.value = State.Reconnecting(device.name ?: device.address)
-                            startAdvertising()
+                            currentAdvertiseTarget = device.address
+                            beginAdvertising()
                             scheduleReconnectTimeout(device.address)
                         } else {
                             Log.d(TAG, "Disconnected — re-advertising for reconnection")
                             _state.value = State.WaitingForConnection
-                            startAdvertising()
+                            beginAdvertising()
                         }
                     }
                 }
@@ -542,7 +619,7 @@ class BleHidManager(private val context: Context) {
         pendingApprovalDevice = null
         try { gattServer?.cancelConnection(device) } catch (_: Exception) {}
         _state.value = State.WaitingForConnection
-        startAdvertising()
+        beginAdvertising()
     }
 
     // -------------------------------------------------------------------------

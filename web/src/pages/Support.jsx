@@ -49,6 +49,10 @@ const FAQS = {
       a: 'Yes, on both platforms: all modes share a single BLE HID bond using a combined mouse/gamepad/keyboard descriptor. On iOS the transport is experimental — physical iPhone/iPad host validation is still pending.',
     },
     {
+      q: 'Another Bluetooth device won\'t pair with my receiver while TabletHID is discoverable (Android).',
+      a: 'While TabletHID is advertising it can keep a shared receiver busy so a second peripheral can\'t pair. On the Home screen tap "Stop Advertising" to pause broadcasting without disconnecting an active session or losing the pairing — the receiver is then free to pair with the other device. Tap "Resume" (or Make Discoverable) to start advertising again.',
+    },
+    {
       q: 'What does Community Configs send to the server?',
       a: 'Browsing requests public config records. Applying a config fetches that public record by ID and increments its public download count. Uploading is optional and public: it sends the selected config JSON, profile name, description, tags, category, app version, device model or hardware identifier, OS version/API level, and screen size/density. There are no accounts, analytics, or advertising identifiers. Community listings are user-generated and may contain language we do not condone; we remove or correct inappropriate content when detected, but cannot guarantee every listing is clean.',
     },

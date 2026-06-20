@@ -1,0 +1,6 @@
+name = "tablet-fallback"
+main = "tunnel-fallback-worker.js"
+compatibility_date = "2025-05-01"
+
+[vars]
+FALLBACK_ORIGIN = "https://neuro-mechatronics-interfaces.github.io/TabletHID"
