@@ -16,6 +16,15 @@ export const betaRateLimiter = rateLimit({
   message: { error: 'Too many requests from this IP, please try again later.' },
 });
 
+// Unauthenticated community writes (device presets, graph cluster labels).
+export const communityWriteRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many changes from this IP, please try again later.' },
+});
+
 export function bodySizeLimit(req, res, next) {
   const contentLength = req.headers['content-length'];
   if (contentLength !== undefined && Number(contentLength) > 65536) {

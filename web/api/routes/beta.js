@@ -1,3 +1,5 @@
+import { stripControlChars } from '../sanitize.js';
+
 const NOTIFY_TO   = 'dev@nml.wtf';
 const NOTIFY_FROM = 'TabletHID Beta <tablet@nml.wtf>';
 
@@ -5,13 +7,25 @@ function isEmail(s) {
   return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()) && s.length <= 200;
 }
 
+// Coerce untrusted body fields to strings. Non-string values (numbers, objects,
+// arrays) previously threw on .trim() inside this async handler, which Express 4
+// does not catch, producing an unhandled rejection that terminates the process.
+// Single-line fields also drop CR/LF/TAB, since names land in the email subject.
+function str(v, maxLen = 1000) {
+  return typeof v === 'string' ? stripControlChars(v).replace(/[\r\n\t]/g, ' ').slice(0, maxLen) : '';
+}
+
 export async function betaSignup(req, res) {
-  const {
-    honeypot = '',
-    firstName = '', lastName = '', email = '',
-    platform = '', platformEmail = '',
-    osVersion = '', deviceModel = '', comments = '',
-  } = req.body ?? {};
+  const raw = req.body && typeof req.body === 'object' ? req.body : {};
+  const honeypot      = str(raw.honeypot);
+  const firstName     = str(raw.firstName, 200);
+  const lastName      = str(raw.lastName, 200);
+  const email         = str(raw.email, 400);
+  const platform      = str(raw.platform, 40);
+  const platformEmail = str(raw.platformEmail, 400);
+  const osVersion     = str(raw.osVersion);
+  const deviceModel   = str(raw.deviceModel);
+  const comments      = typeof raw.comments === 'string' ? raw.comments.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, '') : '';
 
   // Silent bot discard
   if (honeypot) {
@@ -29,6 +43,7 @@ export async function betaSignup(req, res) {
       ? 'Valid Apple ID email is required.'
       : 'Valid Google Account email is required.',
   );
+  if (firstName.length > 100 || lastName.length > 100) errors.push('Name too long.');
   if (comments.length > 500)    errors.push('Comments must be 500 characters or fewer.');
   if (osVersion.length > 20)    errors.push('OS version too long.');
   if (deviceModel.length > 100) errors.push('Device model too long.');

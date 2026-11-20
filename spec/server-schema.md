@@ -9,7 +9,17 @@ See [Agent workflow](#agent-workflow) for the required steps.
 
 ## Server location
 
-The API runs inside the existing Express server at `web/server.js` (Node.js ESM, port 12122), which is exposed to the internet via a `cloudflared` tunnel and proxied through Cloudflare Zero Trust. `express.set('trust proxy', true)` is already in place.
+The API runs inside the existing Express server at `web/server.js` (Node.js ESM, port 12122), which is exposed to the internet via a `cloudflared` tunnel and proxied through Cloudflare Zero Trust. `app.set('trust proxy', 1)` is in place. The server binds to `127.0.0.1` by default so it is reachable only through the local tunnel; set `HOST=0.0.0.0` to expose it on the LAN.
+
+### Request filtering and admin authentication
+
+- `web/api/ipBlock.js` runs before every route and returns `403` for blocklisted addresses. It checks the socket peer, `req.ip`, `CF-Connecting-IP`, and every `X-Forwarded-For` hop. Defaults are hard-coded in `DEFAULT_BLOCKED`; extra addresses or CIDR ranges come from `BLOCKED_IPS` (comma-separated). The same middleware returns `403` when the `User-Agent` contains a blocklisted substring (case-insensitive; defaults in `DEFAULT_BLOCKED_USER_AGENTS`, extras via `BLOCKED_USER_AGENTS`), except on `/robots.txt`, which stays readable so compliant crawlers can see their `Disallow` rule.
+- `/api/v1/admin/*` routes use `requireAdmin` in `web/api/adminAuth.js`. It verifies the Cloudflare Access JWT in `Cf-Access-Jwt-Assertion` (RS256 signature against `<team domain>/cdn-cgi/access/certs`, `iss`, `aud`, `exp`/`nbf`/`iat` with 60 s skew) and takes the admin email from the verified `email` claim. The unsigned `Cf-Access-Authenticated-User-Email` header is ignored. The email must appear in `ADMIN_EMAILS`.
+- Required environment: `ADMIN_EMAILS`, `CF_ACCESS_TEAM_DOMAIN` (e.g. `https://<team>.cloudflareaccess.com`), `CF_ACCESS_AUD` (the Access application's AUD tag; comma-separate for several). If either Access variable is missing, admin routes return `503`.
+- The Cloudflare Access application must cover the `/api/v1/admin` path as well as `/admin`; Access injects the JWT header only on covered paths.
+- Access answers an unauthenticated request with a 302 to `<team>.cloudflareaccess.com`, which `fetch()` cannot follow (CORS). The admin page therefore sends admin requests with `redirect: 'manual'`; an opaque redirect means no Access session, and the page navigates at top level to `GET /api/v1/admin/login`. That route sits under the Access-covered path, so the navigation runs the Access login, sets the `CF_Authorization` cookie, and then 302s to the fixed path `/admin`. The page makes one automatic attempt per tab session (`sessionStorage` key `tablethid.adminLoginAttempt`) and otherwise shows a manual sign-in link.
+- Development bypass: with `NODE_ENV=development` exactly, `ADMIN_DEV_EMAIL` (if on the allowlist) skips JWT verification.
+- Unauthenticated community writes (`POST /api/v1/devices`, `POST /api/v1/graph/clusters`, `PATCH /api/v1/graph/clusters/:id`) are limited to 30 requests per IP per hour.
 
 API route modules live in `web/api/`:
 
@@ -57,7 +67,7 @@ All routes are prefixed `/api/:version/`. Current production version: **v1**.
 |-----------|------|-------------|
 | `mode` | `touch_mouse` \| `gamepad` | Filter by control mode |
 | `platform` | `android` \| `ios` | Filter by source platform |
-| `tags` | comma-separated strings | Filter configs that include all listed tags |
+| `tags` | comma-separated strings | Filter configs that include all listed tags (first 8, each clamped to 32 chars); repeated or array-form params return `400` |
 | `sort` | `recent` (default) \| `popular` | Sort order |
 | `limit` | integer, default 20, max 100 | Page size |
 | `offset` | integer, default 0 | Pagination offset |

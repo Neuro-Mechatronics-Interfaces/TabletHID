@@ -11,6 +11,33 @@ import useDevicePresets from './configs/useDevicePresets.js';
 
 const MAX_CANVAS_H = 400;
 
+// Cloudflare Access answers an unauthenticated request with a 302 to its
+// cross-origin login page. fetch() cannot follow that redirect (CORS), so admin
+// requests use redirect: 'manual' and treat an opaque redirect as "login
+// required"; the page then navigates to ADMIN_LOGIN_PATH at top level.
+const ADMIN_LOGIN_PATH = '/api/v1/admin/login';
+const LOGIN_ATTEMPT_KEY = 'tablethid.adminLoginAttempt';
+const LOGIN_REQUIRED = 'access-login-required';
+
+async function adminFetch(url, options = {}) {
+  const res = await fetch(url, { ...options, redirect: 'manual', credentials: 'same-origin' });
+  if (res.type === 'opaqueredirect' || res.status === 0) throw new Error(LOGIN_REQUIRED);
+  return res;
+}
+
+function readLoginAttempt() {
+  try { return sessionStorage.getItem(LOGIN_ATTEMPT_KEY) === '1'; } catch { return false; }
+}
+
+function writeLoginAttempt(value) {
+  try {
+    if (value) sessionStorage.setItem(LOGIN_ATTEMPT_KEY, '1');
+    else sessionStorage.removeItem(LOGIN_ATTEMPT_KEY);
+  } catch {
+    // storage unavailable; the loop guard is best-effort
+  }
+}
+
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -51,18 +78,33 @@ export default function Admin() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    fetch('/api/v1/admin/me')
+    adminFetch('/api/v1/admin/me')
       .then(r => {
-        if (r.status === 403) { setAuthError(true); throw new Error('forbidden'); }
+        if (r.status === 403) { setAuthError('forbidden'); throw new Error('forbidden'); }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then(data => {
+        writeLoginAttempt(false);
         setMe(data);
-        return fetch('/api/v1/admin/configs');
+        return adminFetch('/api/v1/admin/configs');
       })
       .then(r => r.json())
       .then(data => setConfigs(data.configs ?? []))
-      .catch(e => { if (e.message !== 'forbidden') console.error(e); });
+      .catch(e => {
+        if (e.message === LOGIN_REQUIRED) {
+          // One automatic attempt per tab session prevents a redirect loop if
+          // Access is misconfigured; after that, show a manual sign-in link.
+          if (!readLoginAttempt()) {
+            writeLoginAttempt(true);
+            window.location.assign(ADMIN_LOGIN_PATH);
+            return;
+          }
+          setAuthError('login');
+          return;
+        }
+        if (e.message !== 'forbidden') console.error(e);
+      });
   }, []);
 
   function selectConfig(cfg) {
@@ -108,7 +150,7 @@ export default function Admin() {
         body.device_screen_height_px = Math.round(canvasH * device.density);
         body.device_screen_density_dpi = Math.round(device.density * 160);
       }
-      const res = await fetch(`/api/v1/admin/configs/${selected.id}`, {
+      const res = await adminFetch(`/api/v1/admin/configs/${selected.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -120,7 +162,9 @@ export default function Admin() {
       if (data.config_json) setConfigJson(deepClone(data.config_json));
       setSaveSuccess(true);
     } catch (e) {
-      setSaveError(e.message);
+      setSaveError(e.message === LOGIN_REQUIRED
+        ? 'Your Cloudflare Access session expired. Sign in again (unsaved edits will be lost) and retry.'
+        : e.message);
     } finally {
       setSaving(false);
     }
@@ -128,7 +172,16 @@ export default function Admin() {
 
   async function handleDelete() {
     if (!selected) return;
-    const res = await fetch(`/api/v1/admin/configs/${selected.id}`, { method: 'DELETE' });
+    let res;
+    try {
+      res = await adminFetch(`/api/v1/admin/configs/${selected.id}`, { method: 'DELETE' });
+    } catch (e) {
+      setSaveError(e.message === LOGIN_REQUIRED
+        ? 'Your Cloudflare Access session expired. Sign in again and retry.'
+        : e.message);
+      setConfirmDelete(false);
+      return;
+    }
     if (res.ok) {
       setConfigs(prev => prev.filter(c => c.id !== selected.id));
       setSelected(null);
@@ -185,8 +238,20 @@ export default function Admin() {
     return (
       <div className="admin-page">
         <div className="admin-auth-error">
-          <h2>Access Denied</h2>
-          <p>This page is restricted to administrators. Authenticate via your organisation's access portal.</p>
+          {authError === 'login' ? (
+            <>
+              <h2>Sign-in Required</h2>
+              <p>Cloudflare Access did not issue a session for the admin API.</p>
+              <p>
+                <a href={ADMIN_LOGIN_PATH} onClick={() => writeLoginAttempt(true)}>Sign in through Cloudflare Access</a>
+              </p>
+            </>
+          ) : (
+            <>
+              <h2>Access Denied</h2>
+              <p>This page is restricted to administrators. Authenticate via your organisation's access portal.</p>
+            </>
+          )}
         </div>
       </div>
     );

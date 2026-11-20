@@ -3,13 +3,19 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import apiRouter from './api/router.js';
+import { ipBlock } from './api/ipBlock.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT ?? 12122);
+// Bind to loopback by default: cloudflared reaches the server on localhost, and
+// nothing else should reach it directly. Set HOST=0.0.0.0 to expose it on the LAN.
+const HOST = process.env.HOST ?? '127.0.0.1';
 const TIME_ZONE = 'America/New_York';
 
 app.set('trust proxy', 1);
+
+app.use(ipBlock);
 
 const supportedRoutes = new Map([
   ['/', { name: 'home' }],
@@ -123,6 +129,6 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`TabletHID web running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`TabletHID web running on http://${HOST}:${PORT}`);
 });

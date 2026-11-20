@@ -1,3 +1,9 @@
+User-agent: ExaSearchBot
+Disallow: /
+
+User-agent: OusanBot
+Disallow: /
+
 User-agent: *
 Allow: /
 

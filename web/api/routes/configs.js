@@ -67,9 +67,16 @@ export async function listConfigs(req, res) {
       return res.status(400).json({ error: 'Invalid since. Must be an ISO 8601 timestamp.' });
     }
 
-    // Parse tags
+    // Parse tags. Repeated or bracketed params (?tags=a&tags=b, ?tags[]=a) arrive
+    // as arrays or objects; only a single comma-separated string is accepted.
+    if (tagsParam !== undefined && typeof tagsParam !== 'string') {
+      return res.status(400).json({ error: 'Invalid tags. Must be a comma-separated string.' });
+    }
+    if (category !== undefined && typeof category !== 'string') {
+      return res.status(400).json({ error: 'Invalid category.' });
+    }
     const tagList = tagsParam
-      ? tagsParam.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      ? sanitizeTags(tagsParam.split(','))
       : [];
 
     // Build WHERE clause
@@ -268,21 +275,10 @@ export async function uploadConfig(req, res) {
       ? (stripControlChars(trimAndClamp(body.category, 40)) || null)
       : null;
 
-    const app_version = body.app_version !== undefined && body.app_version !== null
-      ? trimAndClamp(body.app_version, 20) || null
-      : null;
-
-    let device_name = body.device_name !== undefined && body.device_name !== null
-      ? trimAndClamp(body.device_name, 80) || null
-      : null;
-
-    const device_hw_id = body.device_hw_id !== undefined && body.device_hw_id !== null
-      ? trimAndClamp(body.device_hw_id, 40) || null
-      : null;
-
-    const device_os_version = body.device_os_version !== undefined && body.device_os_version !== null
-      ? trimAndClamp(body.device_os_version, 20) || null
-      : null;
+    const app_version = stripControlChars(trimAndClamp(body.app_version, 20)) || null;
+    let device_name = stripControlChars(trimAndClamp(body.device_name, 80)) || null;
+    const device_hw_id = stripControlChars(trimAndClamp(body.device_hw_id, 40)) || null;
+    const device_os_version = stripControlChars(trimAndClamp(body.device_os_version, 20)) || null;
 
     // 4. Validate config_json is a plain object
     const config_json = body.config_json;
@@ -303,7 +299,8 @@ export async function uploadConfig(req, res) {
     }
 
     // 6. Look up hw_id for friendly device name (iOS)
-    if (device_hw_id !== null && device_hw_id in hwMachineNames) {
+    // Object.hasOwn: `in` also matches inherited names such as "constructor".
+    if (device_hw_id !== null && Object.hasOwn(hwMachineNames, device_hw_id)) {
       device_name = hwMachineNames[device_hw_id];
     }
 
@@ -321,7 +318,8 @@ export async function uploadConfig(req, res) {
     }
 
     // Validate optional integer fields
-    const device_os_api_level = body.device_os_api_level !== undefined && body.device_os_api_level !== null
+    const device_os_api_level = Number.isInteger(body.device_os_api_level) &&
+      body.device_os_api_level > 0 && body.device_os_api_level < 1000
       ? body.device_os_api_level
       : null;
     const device_screen_width_px = Number.isInteger(w) && w > 0 ? w : null;
